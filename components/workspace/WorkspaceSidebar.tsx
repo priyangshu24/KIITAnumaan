@@ -49,11 +49,6 @@ const careerSubmenu = [
 
 const mainNavItems = [
   {
-    name: 'Predicted Questions',
-    href: '/workspace/predicted-questions',
-    icon: Sparkles,
-  },
-  {
     name: 'Profile & Settings',
     href: '/workspace/profile',
     icon: User,
