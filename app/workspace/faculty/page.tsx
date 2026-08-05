@@ -14,11 +14,26 @@ import {
   AlertCircle,
   X,
   Lock,
-  Plus
+  Plus,
+  BookOpen
 } from 'lucide-react'
 
 // Faculty Members
 const facultyList = [
+  {
+    id: 'f-5',
+    name: 'Dr. Suresh Senapati',
+    designation: 'Head of Department (HOD)',
+    department: 'School of Computer Engineering',
+    specialization: 'Software Engineering & Architecture',
+    cabin: 'Campus 15, Block A, Room 501',
+    officeHours: 'Mon, Wed, Fri: 10:00 AM - 12:00 PM',
+    email: 'hod.cs@kiit.ac.in',
+    subjects: ['CS-3005 Software Engineering', 'CS-4005 System Design'],
+    rating: 4.9,
+    reviewsCount: 120,
+    availability: 'Available in Cabin',
+  },
   {
     id: 'f-1',
     name: 'Dr. Ananya Mishra',
@@ -218,7 +233,14 @@ export default function FacultyWorkspacePage() {
                     </div>
                     <div>
                       <h3 className="text-base font-bold text-white leading-tight">{teacher.name}</h3>
-                      <p className="text-xs text-[#FF3B30] font-semibold">{teacher.designation}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-xs text-[#FF3B30] font-semibold">{teacher.designation}</p>
+                        {(teacher.designation.includes('Dean') || teacher.designation.includes('HOD')) && (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
+                            <ShieldCheck size={10} /> Leadership
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-[#6B7280] font-mono mt-0.5">{teacher.department}</p>
                     </div>
                   </div>
@@ -236,18 +258,31 @@ export default function FacultyWorkspacePage() {
                   </span>
                 </div>
 
-                <div className="space-y-2 border-t border-b border-[rgba(255,255,255,0.06)] py-3 text-xs">
-                  <div className="flex items-center gap-2 text-[#9CA3AF]">
-                    <MapPin size={14} className="text-[#FF3B30] shrink-0" />
-                    <span>Cabin: <span className="text-white font-semibold">{teacher.cabin}</span></span>
+                <div className="space-y-3 border-t border-b border-[rgba(255,255,255,0.06)] py-4 text-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-[#9CA3AF]">
+                      <MapPin size={14} className="text-[#FF3B30] shrink-0" />
+                      <span>Cabin: <span className="text-white font-semibold">{teacher.cabin}</span></span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[#9CA3AF]">
+                      <Clock size={14} className="text-[#FF3B30] shrink-0" />
+                      <span>Office Hours: <span className="text-white font-semibold">{teacher.officeHours}</span></span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[#9CA3AF]">
+                      <Mail size={14} className="text-[#FF3B30] shrink-0" />
+                      <span className="font-mono text-white">{teacher.email}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[#9CA3AF]">
-                    <Clock size={14} className="text-[#FF3B30] shrink-0" />
-                    <span>Office Hours: <span className="text-white font-semibold">{teacher.officeHours}</span></span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[#9CA3AF]">
-                    <Mail size={14} className="text-[#FF3B30] shrink-0" />
-                    <span className="font-mono text-white">{teacher.email}</span>
+
+                  <div className="flex items-start gap-2 text-[#9CA3AF] pt-1">
+                    <BookOpen size={14} className="text-[#FF3B30] shrink-0 mt-0.5" />
+                    <div className="flex flex-wrap gap-1.5">
+                      {teacher.subjects.map((sub, idx) => (
+                        <span key={idx} className="bg-[#141418] border border-[rgba(255,255,255,0.08)] px-2 py-0.5 rounded text-[10px] font-semibold text-white whitespace-nowrap">
+                          {sub}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
