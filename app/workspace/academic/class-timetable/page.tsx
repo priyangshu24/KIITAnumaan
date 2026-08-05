@@ -190,15 +190,16 @@ export default function ClassTimetablePage() {
           {/* Liquid Glassmorphic Section & Roll No Controls Container */}
           <div className="flex flex-wrap items-center gap-2.5 shrink-0 bg-white/[0.04] backdrop-blur-2xl p-2.5 sm:p-3 rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
             {/* Roll No Input Box */}
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 hover:border-[#FF453A]/50 focus-within:border-[#FF453A] rounded-xl px-3.5 py-2 text-xs transition-all shadow-inner">
-              <Hash size={15} className="text-[#FF453A] shrink-0 drop-shadow-[0_0_8px_rgba(255,69,58,0.5)]" />
-              <span className="text-xs text-white/70 font-mono font-semibold hidden sm:inline shrink-0">Roll:</span>
+            <div className="flex items-center gap-2 bg-[#16171B] backdrop-blur-md border border-[#FF453A]/40 hover:border-[#FF453A] focus-within:border-[#FF453A] rounded-xl px-3.5 py-2 text-xs transition-all shadow-[0_0_15px_rgba(255,69,58,0.15)]">
+              <Hash size={15} className="text-[#FF453A] shrink-0 drop-shadow-[0_0_8px_rgba(255,69,58,0.6)]" />
+              <span className="text-xs text-white font-mono font-bold hidden sm:inline shrink-0">Roll:</span>
               <input
                 type="text"
                 value={rollNumber}
                 onChange={(e) => setRollNumber(e.target.value)}
                 placeholder="Enter Roll No"
-                className="bg-transparent text-white font-mono font-bold text-xs sm:text-sm outline-none w-24 sm:w-28 tracking-wide placeholder:text-white/40"
+                style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF' }}
+                className="bg-transparent !text-white font-mono font-bold text-xs sm:text-sm outline-none w-24 sm:w-28 tracking-wider placeholder:text-white/40 opacity-100"
               />
             </div>
 
