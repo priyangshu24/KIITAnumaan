@@ -86,21 +86,7 @@ export default function WorkspaceNavbar() {
   }, [theme])
 
   return (
-    <header className="h-[56px] py-1 sticky top-0 z-20 flex items-center justify-between gap-4 px-2 sm:px-4 bg-transparent">
-      {/* Left-Aligned Search Bar (Dark Transparent Notch) */}
-      <div className="w-72 sm:w-80 md:w-[480px]">
-        <div className="flex items-center bg-[#111214]/80 border border-white/[0.06] rounded-full h-[44px] px-5 backdrop-blur-md shadow-sm focus-within:border-[#FF453A]/60 focus-within:bg-[#111214] transition-all duration-200">
-          <Search size={16} className="text-[#8A8A8A] mr-3 shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search papers, notes, PYQs..."
-            className="w-full bg-transparent text-xs text-white placeholder-[#8A8A8A] outline-none font-medium"
-          />
-        </div>
-      </div>
-
+    <header className="h-[56px] py-1 sticky top-0 z-20 flex items-center justify-end gap-4 px-2 sm:px-4 bg-transparent">
       {/* Right Controls: Notifications, Interactive Theme Selector, Profile Avatar Pill */}
       <div className="flex items-center gap-3 sm:gap-4">
         
@@ -255,3 +241,5 @@ export default function WorkspaceNavbar() {
     </header>
   )
 }
+
+

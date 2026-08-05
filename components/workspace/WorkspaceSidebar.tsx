@@ -8,10 +8,8 @@ import {
   MapPin,
   Briefcase,
   Users,
-  Bot,
   User,
   LogOut,
-  ChevronLeft,
   ChevronRight,
   Sparkles,
   FileText,
@@ -26,12 +24,13 @@ import {
 
 // Academic Submenu items specification
 const academicSubmenu = [
-  { name: 'Predicted Questions', tab: 'predictor', icon: Sparkles },
-  { name: 'PYQ Library', tab: 'pyq', icon: BookOpen },
-  { name: 'Notes Library', tab: 'notes', icon: FileText },
-  { name: 'Important Topics', tab: 'resources', icon: Bookmark },
-  { name: 'Class Timetable', tab: 'timetable', icon: Calendar },
+  { name: 'Predicted Questions', href: '/workspace/academic/predicted-questions', icon: Sparkles },
+  { name: 'PYQ Library', href: '/workspace/academic/pyq-library', icon: BookOpen },
+  { name: 'Notes Library', href: '/workspace/academic/notes-library', icon: FileText },
+  { name: 'Important Topics', href: '/workspace/academic/important-topics', icon: Bookmark },
+  { name: 'Class Timetable', href: '/workspace/academic/class-timetable', icon: Calendar },
 ]
+
 
 // Campus Submenu items specification
 const campusSubmenu = [
@@ -50,11 +49,17 @@ const careerSubmenu = [
 
 const mainNavItems = [
   {
+    name: 'Predicted Questions',
+    href: '/workspace/predicted-questions',
+    icon: Sparkles,
+  },
+  {
     name: 'Profile & Settings',
     href: '/workspace/profile',
     icon: User,
   },
 ]
+
 
 export default function WorkspaceSidebar() {
   const pathname = usePathname()
@@ -62,7 +67,7 @@ export default function WorkspaceSidebar() {
   const router = useRouter()
 
   const [isHovered, setIsHovered] = useState(false)
-  const [isManuallyCollapsed, setIsManuallyCollapsed] = useState(false)
+  const [isManuallyCollapsed] = useState(false)
   const [isAcademicOpen, setIsAcademicOpen] = useState(false)
   const [isCampusOpen, setIsCampusOpen] = useState(false)
   const [isCareerOpen, setIsCareerOpen] = useState(false)
@@ -202,12 +207,12 @@ export default function WorkspaceSidebar() {
               <div className="space-y-1">
                 {academicSubmenu.map((sub, index) => {
                   const SubIcon = sub.icon
-                  const isSubActive = isAcademicActive && currentTab === sub.tab
+                  const isSubActive = pathname === sub.href
 
                   return (
                     <Link
                       key={sub.name}
-                      href={`/workspace/academic?tab=${sub.tab}`}
+                      href={sub.href}
                       style={{ transitionDelay: `${index * 30}ms` }}
                       className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[14px] font-medium transition-all duration-200 ${
                         isSubActive
@@ -230,6 +235,7 @@ export default function WorkspaceSidebar() {
                   )
                 })}
               </div>
+
             </div>
           </div>
 
@@ -493,3 +499,4 @@ export default function WorkspaceSidebar() {
     </aside>
   )
 }
+

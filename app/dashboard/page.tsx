@@ -1,164 +1,60 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import Navbar from '@/components/shared/Navbar'
 import Footer from '@/components/shared/Footer'
-import Card from '@/components/shared/Card'
-import Button from '@/components/shared/Button'
-import Badge from '@/components/shared/Badge'
-import {
-  FileText,
-  BookOpen,
-  Cpu,
-  Briefcase,
-  Users,
-  Target,
-  TrendingUp,
-  Clock,
-  Download,
-  Star,
-  Sparkles,
-  ArrowUpRight
-} from 'lucide-react'
 import Link from 'next/link'
-
-const stats = [
-  { label: 'Available PYQs', value: '3,654', change: '+12% this month', icon: FileText, color: '#FF3B30' },
-  { label: 'Study Notes', value: '1,248', change: '+8% this month', icon: BookOpen, color: '#FF5A4D' },
-  { label: 'AI Accuracy', value: '87%', change: 'ML Model v2.4', icon: Cpu, color: '#22C55E' },
-  { label: 'Active Companies', value: '124', change: '+18% placement', icon: Briefcase, color: '#F59E0B' },
-]
+import { Sparkles, ArrowRight } from 'lucide-react'
 
 export default function DashboardPage() {
   return (
-    <div className="relative min-h-screen bg-[#080808] text-white noise-overlay bg-grid-lines bg-dot-matrix">
-      <Navbar />
+    <div className="relative min-h-screen bg-[#080808] text-white overflow-hidden selection:bg-[#FF3B30] selection:text-white">
+      {/* Background Grid Pattern */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[size:4rem_4rem] bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)]" />
 
-      <main className="pt-28 pb-20 px-6 lg:px-12 max-w-[1440px] mx-auto space-y-10">
+      <div className="relative z-10">
+        <Navbar />
 
-        {/* Dashboard Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[rgba(255,255,255,0.08)] pb-8">
+        <main className="pt-28 pb-20 px-6 lg:px-12 max-w-[1440px] mx-auto space-y-8">
+          {/* Overview Dashboard Header */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Badge status="primary" label="KIIT Student Workspace" />
-              <span className="text-xs font-mono text-[#71717A]">CSE · Sem 6 · Section A</span>
-            </div>
-            <h1 className="text-3xl font-extrabold uppercase text-white tracking-tight sm:text-4xl">
-              Welcome back, <span className="text-[#FF3B30]">Aryan</span>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Student Dashboard Overview
             </h1>
-            <p className="text-xs text-[#A1A1AA] mt-1 font-medium">
-              Your AI-powered academic overview & placement readiness dashboard.
+            <p className="text-xs text-[#8A8A8A] mt-1">
+              Welcome to KIITAnumaan academic portal.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button href="/academic" size="sm" variant="outline">
-              <FileText size={14} /> View PYQs
-            </Button>
-            <Button href="/career" size="sm" variant="primary">
-              <Sparkles size={14} /> Resume Builder
-            </Button>
-          </div>
-        </div>
-
-        {/* Stat Cards Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((s) => (
-            <Card key={s.label} className="flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#A1A1AA]">{s.label}</span>
-                <div className="w-9 h-9 rounded-xl bg-[#1A1A1A] border border-[rgba(255,255,255,0.08)] flex items-center justify-center text-[#FF3B30]">
-                  <s.icon size={18} />
-                </div>
-              </div>
-              <div>
-                <p className="text-3xl font-black text-white">{s.value}</p>
-                <p className="text-[11px] text-[#71717A] mt-1 font-mono">{s.change}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Quick Workspaces Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Academic Overview */}
-          <Card className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF3B30]/10 border border-[#FF3B30]/30 flex items-center justify-center text-[#FF3B30]">
-                  <Cpu size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold uppercase text-white">AI Examination Forecast</h3>
-                  <p className="text-xs text-[#A1A1AA]">Computer Networks (CS4201) · End Term 2025</p>
-                </div>
-              </div>
-              <Badge status="success" label="High Confidence" />
+          {/* Reserved Placeholder for AI Prediction Module */}
+          <div className="bg-[#111214] border border-white/[0.06] rounded-[24px] p-8 sm:p-12 text-center shadow-[0_12px_40px_rgba(0,0,0,0.35)] flex flex-col items-center justify-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#FF453A]/10 border border-[#FF453A]/20 flex items-center justify-center text-[#FF453A] shadow-sm">
+              <Sparkles size={24} />
             </div>
-
-            <div className="space-y-3">
-              {[
-                { topic: "Dijkstra's Algorithm & Link State Routing", prob: '92% Chance', tag: 'High Priority' },
-                { topic: 'TCP/IP Congestion Control (Tahoe vs Reno)', prob: '87% Chance', tag: 'High Priority' },
-                { topic: 'OSI Model vs TCP/IP Layer Mapping', prob: '81% Chance', tag: 'Medium Priority' },
-                { topic: 'DNS Resolution & Socket Programming', prob: '74% Chance', tag: 'Medium Priority' },
-              ].map((item) => (
-                <div key={item.topic} className="flex items-center justify-between p-3.5 bg-[#101010] border border-[rgba(255,255,255,0.05)] rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#FF3B30]" />
-                    <span className="text-xs font-semibold text-white">{item.topic}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-[#22C55E] font-bold">{item.prob}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-2 flex justify-end">
-              <Button href="/academic" size="sm" variant="outline">
-                Open AI Predictor <ArrowUpRight size={14} />
-              </Button>
-            </div>
-          </Card>
-
-          {/* Active Placement Drives */}
-          <Card className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold uppercase text-white flex items-center gap-2">
-                <Briefcase size={18} className="text-[#FF3B30]" /> Active Drives
+            
+            <div className="max-w-md space-y-1.5">
+              <h3 className="text-lg font-bold text-white tracking-tight">
+                AI Predicted Questions Module
               </h3>
-              <Badge status="primary" label="Open" />
+              <p className="text-xs text-[#8A8A8A] leading-relaxed">
+                This workspace is reserved for the AI Prediction Module. Open &quot;Predicted Questions&quot; from the sidebar to upload papers and generate predictions.
+              </p>
             </div>
 
-            <div className="space-y-4">
-              {[
-                { company: 'Google', role: 'Software Engineer', pkg: '45 LPA', deadline: 'Feb 28' },
-                { company: 'Microsoft', role: 'SDE Intern', pkg: '80K/mo', deadline: 'Feb 20' },
-                { company: 'Amazon', role: 'SDE-1', pkg: '32 LPA', deadline: 'Mar 10' },
-              ].map((drive) => (
-                <div key={drive.company} className="p-4 bg-[#101010] border border-[rgba(255,255,255,0.05)] rounded-xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-white">{drive.company}</span>
-                    <span className="text-xs font-bold text-[#22C55E]">{drive.pkg}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-[#71717A]">
-                    <span>{drive.role}</span>
-                    <span>Deadline: {drive.deadline}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Link
+              href="/workspace/academic/predicted-questions"
+              className="mt-2 bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm"
+            >
+              Go to Predicted Questions <ArrowRight size={14} />
+            </Link>
 
-            <Button href="/career" fullWidth size="sm" variant="outline">
-              View All Drives
-            </Button>
-          </Card>
-        </div>
+          </div>
+        </main>
 
-      </main>
-
-      <Footer />
+        <Footer />
+      </div>
     </div>
   )
 }
+
+
+

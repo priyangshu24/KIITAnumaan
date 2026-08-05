@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 
 export default function LandingFooter() {
   return (
@@ -16,12 +17,12 @@ export default function LandingFooter() {
           >
             GitHub
           </a>
-          <Link href="/workspace" className="hover:text-white transition-colors">
-            Workspace
+          <Link href="/login" className="hover:text-white transition-colors">
+            Login
           </Link>
-          <a href="#contact" className="hover:text-white transition-colors">
-            Contact
-          </a>
+          <Link href="/signup" className="hover:text-white transition-colors">
+            Sign Up
+          </Link>
         </div>
 
         {/* Copyright */}

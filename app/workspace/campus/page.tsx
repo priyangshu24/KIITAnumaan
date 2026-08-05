@@ -174,6 +174,7 @@ const campusPins: PinData[] = [
 
 export default function CampusWorkspacePage() {
   const [activeTab, setActiveTab] = useState<CampusTab>('map')
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null)
   const [selectedPin, setSelectedPin] = useState<PinData>(campusPins[0])
   const [zoomLevel, setZoomLevel] = useState<number>(1)
 
@@ -187,8 +188,11 @@ export default function CampusWorkspacePage() {
       {/* ----------------------------------------------------
           TOP NAVIGATION CARD (Animated Capsule Bar)
       ---------------------------------------------------- */}
-      <div className="bg-[#111214] border border-white/[0.04] rounded-full p-2 shadow-[0_8px_24px_rgba(0,0,0,0.18)] flex justify-center">
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none max-w-full px-1 py-0.5">
+      <div className="flex justify-center">
+        <div
+          onMouseLeave={() => setHoveredTab(null)}
+          className="bg-[#111214] border border-white/[0.04] rounded-full p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.18)] inline-flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none max-w-full"
+        >
           {[
             { id: 'map', name: 'Interactive Map', icon: MapPin },
             { id: 'faculty', name: 'Faculty Directory', icon: Users },
@@ -201,16 +205,27 @@ export default function CampusWorkspacePage() {
           ].map((nav) => {
             const NavIcon = nav.icon
             const isActive = activeTab === nav.id
+            const isHovered = hoveredTab === nav.id
             return (
               <button
                 key={nav.id}
                 onClick={() => setActiveTab(nav.id as CampusTab)}
+                onMouseEnter={() => setHoveredTab(nav.id)}
                 className={`relative px-4 py-2 rounded-full text-xs font-medium transition-colors duration-200 flex flex-col items-center justify-center whitespace-nowrap cursor-pointer shrink-0 ${
                   isActive
                     ? 'text-white font-semibold'
-                    : 'text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
+                    : 'text-[#8A8A8A] hover:text-white'
                 }`}
               >
+                {/* Hover Spotlight Pill with Framer Motion Animation */}
+                {isHovered && !isActive && (
+                  <motion.div
+                    layoutId="hoverCampusTabPill"
+                    className="absolute inset-0 bg-white/[0.05] rounded-full z-0 pointer-events-none"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+
                 {/* Active Pill Container with Framer Motion Layout Animation */}
                 {isActive && (
                   <motion.div
@@ -223,7 +238,7 @@ export default function CampusWorkspacePage() {
                 <div className="relative z-10 flex items-center gap-2">
                   <NavIcon
                     size={15}
-                    className={isActive ? 'text-[#FF4D4D]' : 'text-[#8A8A8A]'}
+                    className={isActive ? 'text-[#FF4D4D]' : isHovered ? 'text-white' : 'text-[#8A8A8A]'}
                   />
                   <span>{nav.name}</span>
                 </div>

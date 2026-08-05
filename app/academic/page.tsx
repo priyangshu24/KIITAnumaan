@@ -57,18 +57,9 @@ export default function AcademicPage() {
 
         {/* Filter Bar */}
         <Card className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="relative flex-1 w-full">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#71717A]" />
-              <input
-                type="text"
-                placeholder="Filter by subject name or course code..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-10 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#101010] pl-10 pr-4 text-xs text-white placeholder-[#71717A] outline-none focus:border-[#FF3B30]"
-              />
-            </div>
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-4">
             <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
+
               <span className="text-xs text-[#71717A] font-bold uppercase mr-2">Semester:</span>
               {['All', '5', '6', '7'].map((s) => (
                 <button

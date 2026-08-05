@@ -1,24 +1,25 @@
 'use client'
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import {
-  Briefcase,
   FileCheck,
-  Target,
   Sparkles,
+  Target,
+  Award,
   Bot,
   Download,
-  CheckCircle2,
-  AlertTriangle,
-  Award,
-  Calendar,
-  Layers,
-  ArrowRight,
-  Send,
   Eye,
-  Plus
+  Send,
+  Briefcase,
+  TrendingUp,
+  Building2,
+  CheckCircle2,
+  Clock,
+  Zap,
 } from 'lucide-react'
 
+// Navigation tab types
 type CareerTab = 'resume' | 'ats' | 'placement' | 'blueprint' | 'mentor'
 
 const companyDrives = [
@@ -70,6 +71,7 @@ const companyDrives = [
 
 export default function CareerWorkspacePage() {
   const [activeTab, setActiveTab] = useState<CareerTab>('resume')
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null)
 
   // Resume Builder state
   const [builderMode, setBuilderMode] = useState<'manual' | 'ai'>('manual')
@@ -85,12 +87,15 @@ export default function CareerWorkspacePage() {
   const [targetJd, setTargetJd] = useState(
     'Software Engineer at HighRadius. Requires React, TypeScript, Java, Spring Boot, Microservices, System Design, SQL, Docker.'
   )
-  const [atsAnalyzed, setAtsAnalyzed] = useState(true)
+  const [atsAnalyzed] = useState(true)
 
   // Mentor Chat state
   const [chatInput, setChatInput] = useState('')
   const [chatMessages, setChatMessages] = useState([
-    { sender: 'ai', text: 'Hello Soumya! I am your AI Placement Mentor. HighRadius online assessment is scheduled in 10 days. Would you like a 10-day preparation sprint for Operating Systems & SQL?' }
+    {
+      sender: 'ai',
+      text: 'Hello Soumya! I am your AI Placement Mentor. HighRadius online assessment is scheduled in 10 days. Would you like a 10-day preparation sprint for Operating Systems & SQL?',
+    },
   ])
 
   const handleSendChat = () => {
@@ -103,70 +108,80 @@ export default function CareerWorkspacePage() {
         ...prev,
         {
           sender: 'ai',
-          text: 'Great focus! For HighRadius, focus heavily on SQL Join queries, B-Trees index optimization, process scheduling numericals, and 2 medium LeetCode array questions daily.'
-        }
+          text: 'Great focus! For HighRadius, focus heavily on SQL Join queries, B-Trees index optimization, process scheduling numericals, and 2 medium LeetCode array questions daily.',
+        },
       ])
     }, 600)
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded bg-[#FF3B30]/10 text-[#FF3B30] border border-[#FF3B30]/30 text-[10px] font-bold uppercase tracking-wider">
-              PLACEMENT & RESUME ENGINE
-            </span>
-            <span className="text-xs text-[#6B7280] font-mono">KIIT Training & Placement Cell 2026</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white uppercase tracking-tight mt-1">
-            Career Workspace
-          </h1>
-        </div>
+    <div className="space-y-6 max-w-[1600px] mx-auto text-white pb-12">
+      {/* ----------------------------------------------------
+          TOP NAVIGATION CARD (Animated Capsule Bar)
+      ---------------------------------------------------- */}
+      <div className="flex justify-center">
+        <div
+          onMouseLeave={() => setHoveredTab(null)}
+          className="bg-[#111214] border border-white/[0.04] rounded-full p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.18)] inline-flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none max-w-full"
+        >
+          {[
+            { id: 'resume', name: 'Resume Builder', icon: FileCheck },
+            { id: 'ats', name: 'ATS Checker', icon: Sparkles },
+            { id: 'placement', name: 'Placement Planner', icon: Target },
+            { id: 'blueprint', name: 'AI Blueprint', icon: Award },
+            { id: 'mentor', name: 'AI Mentor', icon: Bot },
+          ].map((nav) => {
+            const NavIcon = nav.icon
+            const isActive = activeTab === nav.id
+            const isHovered = hoveredTab === nav.id
+            return (
+              <button
+                key={nav.id}
+                onClick={() => setActiveTab(nav.id as CareerTab)}
+                onMouseEnter={() => setHoveredTab(nav.id)}
+                className={`relative px-5 py-2.5 rounded-full text-xs font-medium transition-colors duration-200 flex flex-col items-center justify-center whitespace-nowrap cursor-pointer shrink-0 ${
+                  isActive
+                    ? 'text-white font-semibold'
+                    : 'text-[#8A8A8A] hover:text-white'
+                }`}
+              >
+                {/* Hover Spotlight Pill with Framer Motion Animation */}
+                {isHovered && !isActive && (
+                  <motion.div
+                    layoutId="hoverCareerTabPill"
+                    className="absolute inset-0 bg-white/[0.05] rounded-full z-0 pointer-events-none"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
 
-        {/* Sub Tabs */}
-        <div className="flex flex-wrap items-center bg-[#101010] border border-[rgba(255,255,255,0.08)] p-1 rounded-xl gap-1">
-          <button
-            onClick={() => setActiveTab('resume')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'resume' ? 'bg-[#FF3B30] text-white shadow-md' : 'text-[#9CA3AF] hover:text-white'
-            }`}
-          >
-            <FileCheck size={14} /> Resume Builder
-          </button>
-          <button
-            onClick={() => setActiveTab('ats')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'ats' ? 'bg-[#FF3B30] text-white shadow-md' : 'text-[#9CA3AF] hover:text-white'
-            }`}
-          >
-            <Sparkles size={14} /> ATS Checker
-          </button>
-          <button
-            onClick={() => setActiveTab('placement')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'placement' ? 'bg-[#FF3B30] text-white shadow-md' : 'text-[#9CA3AF] hover:text-white'
-            }`}
-          >
-            <Target size={14} /> Placement Planner
-          </button>
-          <button
-            onClick={() => setActiveTab('blueprint')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'blueprint' ? 'bg-[#FF3B30] text-white shadow-md' : 'text-[#9CA3AF] hover:text-white'
-            }`}
-          >
-            <Award size={14} /> AI Blueprint
-          </button>
-          <button
-            onClick={() => setActiveTab('mentor')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'mentor' ? 'bg-[#FF3B30] text-white shadow-md' : 'text-[#9CA3AF] hover:text-white'
-            }`}
-          >
-            <Bot size={14} /> AI Mentor
-          </button>
+                {/* Active Pill Container with Framer Motion Layout Animation */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeCareerTabPill"
+                    className="absolute inset-0 bg-white/[0.08] border border-white/15 rounded-full shadow-inner z-0 pointer-events-none"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+
+                <div className="relative z-10 flex items-center gap-2">
+                  <NavIcon
+                    size={15}
+                    className={isActive ? 'text-[#FF4D4D]' : isHovered ? 'text-white' : 'text-[#8A8A8A]'}
+                  />
+                  <span>{nav.name}</span>
+                </div>
+
+                {/* Centered Red Dash with Framer Motion Layout Animation */}
+                {isActive && (
+                  <motion.span
+                    layoutId="activeCareerTabRedDash"
+                    className="relative z-10 w-3.5 h-[2.5px] bg-[#FF4D4D] rounded-full mt-1 shadow-sm block"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -174,117 +189,157 @@ export default function CareerWorkspacePage() {
           TAB 1: RESUME BUILDER
       ---------------------------------------------------- */}
       {activeTab === 'resume' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Builder Form Pane */}
-          <div className="lg:col-span-6 bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 space-y-5">
-            <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-3">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Resume Form Editor</h3>
-              <div className="flex items-center bg-[#101010] p-0.5 rounded-lg border border-[rgba(255,255,255,0.08)] text-[10px] font-bold">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* LEFT COLUMN (70% -> lg:col-span-8) */}
+          <div className="lg:col-span-8 bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] flex flex-col justify-between space-y-5 hover:-translate-y-0.5 transition-all duration-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-[18px] font-semibold text-white tracking-tight">
+                  Interactive Resume Form Editor
+                </h2>
+                <p className="text-xs text-[#8A8A8A] mt-0.5">
+                  Build ATS-optimized resumes targeted for top tier tech recruiters
+                </p>
+              </div>
+
+              <div className="flex items-center bg-[#0B0B0D] border border-white/[0.06] p-1 rounded-full text-xs">
                 <button
                   onClick={() => setBuilderMode('manual')}
-                  className={`px-2.5 py-1 rounded ${builderMode === 'manual' ? 'bg-[#FF3B30] text-white' : 'text-[#9CA3AF]'}`}
+                  className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${
+                    builderMode === 'manual'
+                      ? 'bg-white/10 text-white font-semibold'
+                      : 'text-[#8A8A8A] hover:text-white'
+                  }`}
                 >
-                  Manual Builder
+                  Manual Editor
                 </button>
                 <button
                   onClick={() => setBuilderMode('ai')}
-                  className={`px-2.5 py-1 rounded ${builderMode === 'ai' ? 'bg-[#FF3B30] text-white' : 'text-[#9CA3AF]'}`}
+                  className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${
+                    builderMode === 'ai'
+                      ? 'bg-[#FF4D4D] text-white font-semibold'
+                      : 'text-[#8A8A8A] hover:text-white'
+                  }`}
                 >
-                  AI Builder
+                  AI Copilot
                 </button>
               </div>
             </div>
 
-            <div className="space-y-4 text-xs">
-              <div>
-                <label className="text-[10px] font-bold text-[#6B7280] uppercase block mb-1">Full Name</label>
-                <input
-                  type="text"
-                  value={resumeName}
-                  onChange={(e) => setResumeName(e.target.value)}
-                  className="w-full bg-[#101010] border border-[rgba(255,255,255,0.08)] text-white p-2.5 rounded-lg outline-none font-medium focus:border-[#FF3B30]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-[#6B7280] uppercase block mb-1">Target Headline</label>
-                <input
-                  type="text"
-                  value={resumeRole}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full bg-[#101010] border border-[rgba(255,255,255,0.08)] text-white p-2.5 rounded-lg outline-none font-medium focus:border-[#FF3B30]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            <div className="bg-[#0B0B0D] border border-white/[0.05] rounded-[16px] p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-[#6B7280] uppercase block mb-1">KIIT CGPA</label>
+                  <label className="text-[11px] font-mono text-[#71717A] uppercase block mb-1.5">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={resumeName}
+                    onChange={(e) => setResumeName(e.target.value)}
+                    className="w-full bg-[#111214] border border-white/10 text-white text-xs p-3 rounded-[12px] outline-none font-medium focus:border-[#FF4D4D] transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-mono text-[#71717A] uppercase block mb-1.5">
+                    Target Role Headline
+                  </label>
+                  <input
+                    type="text"
+                    value={resumeRole}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full bg-[#111214] border border-white/10 text-white text-xs p-3 rounded-[12px] outline-none font-medium focus:border-[#FF4D4D] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[11px] font-mono text-[#71717A] uppercase block mb-1.5">
+                    KIIT CGPA
+                  </label>
                   <input
                     type="text"
                     value={resumeCgpa}
                     onChange={(e) => setCgpa(e.target.value)}
-                    className="w-full bg-[#101010] border border-[rgba(255,255,255,0.08)] text-white p-2.5 rounded-lg outline-none font-mono"
+                    className="w-full bg-[#111214] border border-white/10 text-white text-xs p-3 rounded-[12px] outline-none font-mono focus:border-[#FF4D4D] transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#6B7280] uppercase block mb-1">Template Style</label>
+                  <label className="text-[11px] font-mono text-[#71717A] uppercase block mb-1.5">
+                    Template Format
+                  </label>
                   <select
                     value={resumeTemplate}
                     onChange={(e) => setTemplate(e.target.value)}
-                    className="w-full bg-[#101010] border border-[rgba(255,255,255,0.08)] text-white p-2.5 rounded-lg outline-none font-medium"
+                    className="w-full bg-[#111214] border border-white/10 text-white text-xs p-3 rounded-[12px] outline-none font-medium focus:border-[#FF4D4D] transition-colors"
                   >
-                    <option value="minimal">Minimal Single-Page (ATS)</option>
-                    <option value="modern">Modern Executive</option>
+                    <option value="minimal">Minimal Single-Page (ATS Optimized)</option>
+                    <option value="modern">Modern Executive Tier</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="flex justify-end pt-2">
               <button
                 onClick={() => alert('Downloading PDF Resume...')}
-                className="bg-[#FF3B30] text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-lg hover:bg-[#E03126] transition-all flex items-center gap-2"
+                className="bg-[#FF4D4D] hover:brightness-110 text-white text-xs font-bold uppercase tracking-wider rounded-[14px] h-[44px] px-6 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Download size={14} /> Export PDF
+                <Download size={15} /> Export Resume PDF
               </button>
             </div>
           </div>
 
-          {/* Live Preview Pane */}
-          <div className="lg:col-span-6 bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-3">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Eye size={16} className="text-[#FF3B30]" /> Live ATS Resume Preview
-              </h3>
-              <span className="text-[10px] font-mono text-[#6B7280]">Targeting 1-Page Layout</span>
-            </div>
-
-            {/* Resume Sheet Preview */}
-            <div className="bg-white text-black p-6 rounded-lg font-sans text-[11px] leading-relaxed shadow-xl space-y-3 min-h-[420px]">
-              <div className="border-b border-black/20 pb-2 text-center">
-                <h2 className="text-base font-bold uppercase tracking-wide">{resumeName}</h2>
-                <p className="text-[10px] text-gray-700 font-semibold">{resumeRole}</p>
-                <p className="text-[9px] text-gray-600 font-mono mt-0.5">
-                  soumya.samantray@kiit.ac.in | Roll: 22051892 | KIIT CGPA: {resumeCgpa}
-                </p>
+          {/* RIGHT COLUMN (30% -> lg:col-span-4) */}
+          <div className="lg:col-span-4 bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] flex flex-col justify-between space-y-5 hover:-translate-y-0.5 transition-all duration-200">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#FF4D4D]/10 text-[#FF4D4D] border border-[#FF4D4D]/20 text-[10px] uppercase font-bold tracking-wider inline-block">
+                  Live Preview
+                </span>
+                <span className="text-[11px] font-mono text-[#8A8A8A] flex items-center gap-1">
+                  <Eye size={12} className="text-[#FF4D4D]" /> Realtime ATS View
+                </span>
               </div>
 
-              <div>
-                <h4 className="text-[10px] font-bold uppercase border-b border-black/20 pb-0.5 mb-1">Education</h4>
-                <p className="font-bold">Kalinga Institute of Industrial Technology (KIIT University)</p>
-                <p className="text-[10px] text-gray-600">B.Tech in Computer Science & Engineering (2022 - 2026) · CGPA: {resumeCgpa}</p>
-              </div>
+              {/* Resume Sheet Preview */}
+              <div className="bg-white text-black p-5 rounded-[14px] font-sans text-[11px] leading-relaxed shadow-xl space-y-3 min-h-[360px]">
+                <div className="border-b border-black/20 pb-2 text-center">
+                  <h2 className="text-sm font-bold uppercase tracking-wide">{resumeName}</h2>
+                  <p className="text-[10px] text-gray-700 font-semibold">{resumeRole}</p>
+                  <p className="text-[9px] text-gray-600 font-mono mt-0.5">
+                    soumya.samantray@kiit.ac.in | Roll: 22051892 | KIIT CGPA: {resumeCgpa}
+                  </p>
+                </div>
 
-              <div>
-                <h4 className="text-[10px] font-bold uppercase border-b border-black/20 pb-0.5 mb-1">Key Projects</h4>
-                <p className="font-bold">KIITAnumaan Platform (Full Stack SaaS)</p>
-                <p className="text-[10px] text-gray-700">Built AI exam paper prediction & ATS resume engine using Next.js & TypeScript.</p>
-              </div>
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase border-b border-black/20 pb-0.5 mb-1">
+                    Education
+                  </h4>
+                  <p className="font-bold">Kalinga Institute of Industrial Technology (KIIT)</p>
+                  <p className="text-[10px] text-gray-600">
+                    B.Tech Computer Science (2022 - 2026) · CGPA: {resumeCgpa}
+                  </p>
+                </div>
 
-              <div>
-                <h4 className="text-[10px] font-bold uppercase border-b border-black/20 pb-0.5 mb-1">Technical Skills</h4>
-                <p className="text-[10px]">Languages: C++, JavaScript, TypeScript, Python, SQL</p>
-                <p className="text-[10px]">Frameworks: React, Next.js, Node.js, Express, TailwindCSS</p>
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase border-b border-black/20 pb-0.5 mb-1">
+                    Key Projects
+                  </h4>
+                  <p className="font-bold">KIITAnumaan Platform (Full Stack SaaS)</p>
+                  <p className="text-[10px] text-gray-700">
+                    Built AI exam paper prediction & ATS resume engine using Next.js & TypeScript.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase border-b border-black/20 pb-0.5 mb-1">
+                    Technical Skills
+                  </h4>
+                  <p className="text-[10px]">Languages: C++, JavaScript, TypeScript, Python, SQL</p>
+                  <p className="text-[10px]">Frameworks: React, Next.js, Node.js, Express, Tailwind</p>
+                </div>
               </div>
             </div>
           </div>
@@ -295,64 +350,93 @@ export default function CareerWorkspacePage() {
           TAB 2: ATS CHECKER
       ---------------------------------------------------- */}
       {activeTab === 'ats' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-xl p-5 space-y-3">
-              <label className="text-xs font-bold text-white uppercase block">1. Paste Resume Content</label>
-              <textarea
-                rows={6}
-                value={resumeText}
-                onChange={(e) => setResumeText(e.target.value)}
-                className="w-full bg-[#101010] border border-[rgba(255,255,255,0.08)] text-xs text-white p-3 rounded-lg outline-none font-mono focus:border-[#FF3B30]"
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* LEFT COLUMN (70% -> lg:col-span-8) */}
+          <div className="lg:col-span-8 bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] flex flex-col justify-between space-y-5 hover:-translate-y-0.5 transition-all duration-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[18px] font-semibold text-white tracking-tight">
+                Resume & Job Description Analysis
+              </h2>
+              <div className="flex items-center gap-2 bg-[#0B0B0D] border border-white/[0.06] px-3 py-1 rounded-full text-xs text-[#8A8A8A] font-mono">
+                <span className="w-2 h-2 rounded-full bg-[#FF4D4D] animate-ping" />
+                <span>Parser Ready</span>
+              </div>
             </div>
 
-            <div className="bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-xl p-5 space-y-3">
-              <label className="text-xs font-bold text-white uppercase block">2. Target Job Description</label>
-              <textarea
-                rows={6}
-                value={targetJd}
-                onChange={(e) => setTargetJd(e.target.value)}
-                className="w-full bg-[#101010] border border-[rgba(255,255,255,0.08)] text-xs text-white p-3 rounded-lg outline-none font-mono focus:border-[#FF3B30]"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-[#0B0B0D] border border-white/[0.05] rounded-[16px] p-4 space-y-2">
+                <label className="text-[11px] font-mono text-[#71717A] uppercase block">
+                  Resume Content
+                </label>
+                <textarea
+                  rows={8}
+                  value={resumeText}
+                  onChange={(e) => setResumeText(e.target.value)}
+                  className="w-full bg-[#111214] border border-white/10 text-xs text-white p-3 rounded-[12px] outline-none font-mono focus:border-[#FF4D4D] transition-colors"
+                />
+              </div>
+
+              <div className="bg-[#0B0B0D] border border-white/[0.05] rounded-[16px] p-4 space-y-2">
+                <label className="text-[11px] font-mono text-[#71717A] uppercase block">
+                  Target Job Description
+                </label>
+                <textarea
+                  rows={8}
+                  value={targetJd}
+                  onChange={(e) => setTargetJd(e.target.value)}
+                  className="w-full bg-[#111214] border border-white/10 text-xs text-white p-3 rounded-[12px] outline-none font-mono focus:border-[#FF4D4D] transition-colors"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Score & Audit Analysis */}
-          {atsAnalyzed && (
-            <div className="bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-4">
-                <div>
-                  <h3 className="text-xl font-black text-white uppercase">ATS Match Audit: 88 / 100</h3>
-                  <p className="text-xs text-green-400 font-bold mt-0.5">High Compatibility for Recruiter Screening</p>
-                </div>
-                <button
-                  onClick={() => alert('Auditing Resume ATS Score...')}
-                  className="bg-[#FF3B30] text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-lg"
-                >
-                  Re-Audit ATS Score
-                </button>
+          {/* RIGHT COLUMN (30% -> lg:col-span-4) */}
+          <div className="lg:col-span-4 bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] flex flex-col justify-between space-y-5 hover:-translate-y-0.5 transition-all duration-200">
+            <div className="space-y-4">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#FF4D4D]/10 text-[#FF4D4D] border border-[#FF4D4D]/20 text-[10px] uppercase font-bold tracking-wider inline-block">
+                  Audit Results
+                </span>
+                <h3 className="text-[28px] font-bold text-white tracking-tight mt-2 leading-none">
+                  88 <span className="text-sm font-normal text-[#8A8A8A]">/ 100 Match</span>
+                </h3>
+                <p className="text-xs text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                  <CheckCircle2 size={13} /> High Compatibility for Recruiter Screening
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                <div className="bg-[#101010] p-4 rounded-lg border border-[rgba(255,255,255,0.06)] space-y-1">
-                  <span className="text-[10px] text-[#6B7280] font-bold uppercase block">Missing Keywords</span>
-                  <p className="text-white font-bold">Docker, Spring Boot, Microservices</p>
-                  <p className="text-[10px] text-[#FF3B30] mt-1">Add these to pass 95%+ threshold</p>
+              <div className="h-[1px] bg-white/[0.04]" />
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <span className="text-[11px] font-mono text-[#71717A] uppercase block">
+                    Missing Keywords
+                  </span>
+                  <div className="bg-[#0B0B0D] border border-white/[0.04] rounded-[12px] p-3 mt-1 text-white font-mono text-[11px]">
+                    <p className="text-white">Docker, Spring Boot, Microservices</p>
+                    <p className="text-[#FF4D4D] text-[10px] mt-1">• Add these to pass 95%+ threshold</p>
+                  </div>
                 </div>
-                <div className="bg-[#101010] p-4 rounded-lg border border-[rgba(255,255,255,0.06)] space-y-1">
-                  <span className="text-[10px] text-[#6B7280] font-bold uppercase block">Formatting Compliance</span>
-                  <p className="text-white font-bold">100% Plain Text Compliant</p>
-                  <p className="text-[10px] text-green-400 mt-1">No tables or complex columns</p>
-                </div>
-                <div className="bg-[#101010] p-4 rounded-lg border border-[rgba(255,255,255,0.06)] space-y-1">
-                  <span className="text-[10px] text-[#6B7280] font-bold uppercase block">Skill Gap Analysis</span>
-                  <p className="text-white font-bold">System Design (LLD)</p>
-                  <p className="text-[10px] text-yellow-400 mt-1">Add 1 project with DB scaling</p>
+
+                <div>
+                  <span className="text-[11px] font-mono text-[#71717A] uppercase block">
+                    Compliance & Skill Gaps
+                  </span>
+                  <div className="bg-[#0B0B0D] border border-white/[0.04] rounded-[12px] p-3 mt-1 space-y-1 text-white font-mono text-[11px]">
+                    <p>• Format: 100% Plain Text Compliant</p>
+                    <p>• Skill Gap: System Design (LLD)</p>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
+
+            <button
+              onClick={() => alert('Auditing Resume ATS Score...')}
+              className="w-full bg-[#FF4D4D] hover:brightness-110 text-white text-xs font-bold uppercase tracking-wider rounded-[14px] h-[44px] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+            >
+              <Sparkles size={15} /> Re-Audit ATS Score
+            </button>
+          </div>
         </div>
       )}
 
@@ -360,48 +444,53 @@ export default function CareerWorkspacePage() {
           TAB 3: PLACEMENT PLANNER
       ---------------------------------------------------- */}
       {activeTab === 'placement' && (
-        <div className="space-y-6">
-          <div className="bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between">
-              <h4 className="text-sm font-bold text-white uppercase tracking-wider">
-                Upcoming KIIT Placement Drives
-              </h4>
-              <span className="text-xs text-[#6B7280] font-mono">4 Companies Registered</span>
+        <div className="bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] space-y-5 hover:-translate-y-0.5 transition-all duration-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-[18px] font-semibold text-white tracking-tight">
+                Upcoming KIIT Placement Drives (2026 Batch)
+              </h2>
+              <p className="text-xs text-[#8A8A8A] mt-0.5">
+                Official drives scheduled via Training & Placement Cell
+              </p>
             </div>
+            <span className="text-xs text-[#8A8A8A] font-mono bg-[#0B0B0D] px-3 py-1 rounded-full border border-white/[0.06]">
+              4 Companies Active
+            </span>
+          </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-[#101010] text-[#6B7280] font-bold uppercase tracking-wider border-b border-[rgba(255,255,255,0.08)]">
-                    <th className="p-4">Company & Tier</th>
-                    <th className="p-4">Package (CTC)</th>
-                    <th className="p-4">Eligibility</th>
-                    <th className="p-4">Deadline</th>
-                    <th className="p-4">Recruitment Stages</th>
-                    <th className="p-4 text-right">Status</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#0B0B0D] text-[#71717A] font-mono uppercase text-[11px] border-b border-white/[0.06]">
+                  <th className="p-4 rounded-l-[12px]">Company & Tier</th>
+                  <th className="p-4">Package (CTC)</th>
+                  <th className="p-4">Eligibility Criteria</th>
+                  <th className="p-4">Deadline</th>
+                  <th className="p-4">Recruitment Stages</th>
+                  <th className="p-4 text-right rounded-r-[12px]">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {companyDrives.map((c) => (
+                  <tr key={c.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="p-4">
+                      <p className="font-bold text-white text-sm tracking-tight">{c.company}</p>
+                      <p className="text-[10px] text-[#8A8A8A] uppercase font-mono mt-0.5">{c.tier}</p>
+                    </td>
+                    <td className="p-4 font-bold text-[#FF4D4D] font-mono text-sm">{c.ctc}</td>
+                    <td className="p-4 text-[#8A8A8A]">{c.eligibility}</td>
+                    <td className="p-4 text-[#8A8A8A] font-mono">{c.deadline}</td>
+                    <td className="p-4 text-[#8A8A8A]">{c.stages}</td>
+                    <td className="p-4 text-right">
+                      <span className="px-3 py-1 rounded-full bg-[#FF4D4D]/10 text-[#FF4D4D] border border-[#FF4D4D]/20 text-[10px] font-bold uppercase tracking-wider inline-block">
+                        {c.status}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-[rgba(255,255,255,0.06)] font-medium">
-                  {companyDrives.map((c) => (
-                    <tr key={c.id} className="hover:bg-[#101010] transition-colors">
-                      <td className="p-4">
-                        <p className="font-bold text-white text-sm">{c.company}</p>
-                        <p className="text-[10px] text-[#6B7280] uppercase">{c.tier}</p>
-                      </td>
-                      <td className="p-4 font-black text-[#FF3B30]">{c.ctc}</td>
-                      <td className="p-4 text-[#9CA3AF]">{c.eligibility}</td>
-                      <td className="p-4 text-[#9CA3AF] font-mono">{c.deadline}</td>
-                      <td className="p-4 text-xs text-[#9CA3AF]">{c.stages}</td>
-                      <td className="p-4 text-right">
-                        <span className="px-2.5 py-1 rounded bg-[#FF3B30]/10 text-[#FF3B30] border border-[#FF3B30]/30 text-[10px] font-bold uppercase">
-                          {c.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -410,38 +499,63 @@ export default function CareerWorkspacePage() {
           TAB 4: AI PLACEMENT BLUEPRINT
       ---------------------------------------------------- */}
       {activeTab === 'blueprint' && (
-        <div className="space-y-6">
-          <div className="bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 space-y-6">
-            <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-3">
-              <div>
-                <h3 className="text-base font-bold text-white uppercase tracking-wider">
-                  Target Company Blueprint: HighRadius
-                </h3>
-                <p className="text-xs text-[#9CA3AF]">Customized DSA & Technical Prep Roadmap</p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* LEFT COLUMN (70% -> lg:col-span-8) */}
+          <div className="lg:col-span-8 bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] flex flex-col justify-between space-y-5 hover:-translate-y-0.5 transition-all duration-200">
+            <div>
+              <div className="flex items-center justify-between border-b border-white/[0.04] pb-4">
+                <div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#FF4D4D]/10 text-[#FF4D4D] border border-[#FF4D4D]/20 text-[10px] uppercase font-bold tracking-wider inline-block">
+                    Target Blueprint
+                  </span>
+                  <h2 className="text-[22px] font-bold text-white tracking-tight mt-1">
+                    HighRadius Sprint Roadmap
+                  </h2>
+                </div>
+                <button
+                  onClick={() => alert('Launching Mock Technical Interview Simulator...')}
+                  className="bg-[#FF4D4D] hover:brightness-110 text-white text-xs font-bold uppercase tracking-wider rounded-[14px] h-[40px] px-5 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Zap size={14} /> Launch Mock Interview
+                </button>
               </div>
-              <button
-                onClick={() => alert('Launching Mock Technical Interview Simulator...')}
-                className="bg-[#FF3B30] text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-[#E03126]"
-              >
-                Launch Mock Interview
-              </button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5 text-xs">
+                <div className="bg-[#0B0B0D] border border-white/[0.05] p-4 rounded-[16px] space-y-2">
+                  <span className="text-[11px] font-mono text-[#FF4D4D] uppercase font-bold block">
+                    Top Asked Technical Topics
+                  </span>
+                  <ul className="space-y-1.5 text-white font-mono text-[11px]">
+                    <li>• Find Subarray with Given Sum (Sliding Window)</li>
+                    <li>• Explain B-Tree vs B+ Tree Indexing in SQL</li>
+                    <li>• Process Synchronization & Deadlock Banker's Algorithm</li>
+                  </ul>
+                </div>
+
+                <div className="bg-[#0B0B0D] border border-white/[0.05] p-4 rounded-[16px] space-y-2">
+                  <span className="text-[11px] font-mono text-[#FF4D4D] uppercase font-bold block">
+                    10-Day Preparation Timeline
+                  </span>
+                  <div className="space-y-1 text-white font-mono text-[11px]">
+                    <p>• Day 1-3: Array & String Hashing</p>
+                    <p>• Day 4-6: SQL Joins & Subqueries</p>
+                    <p>• Day 7-10: OS Numericals & Mock Interviews</p>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="bg-[#101010] p-4 rounded-lg border border-[rgba(255,255,255,0.06)] space-y-2">
-                <span className="text-[10px] text-[#FF3B30] font-bold uppercase">Top Asked Technical Questions</span>
-                <ul className="space-y-1 text-white font-medium list-disc list-inside">
-                  <li>Find Subarray with Given Sum (HashMap / Sliding Window)</li>
-                  <li>Explain B-Tree vs B+ Tree Indexing in SQL</li>
-                  <li>Process Synchronization & Deadlock Banker's Algorithm</li>
-                </ul>
-              </div>
-
-              <div className="bg-[#101010] p-4 rounded-lg border border-[rgba(255,255,255,0.06)] space-y-2">
-                <span className="text-[10px] text-[#FF3B30] font-bold uppercase">10-Day Sprint Roadmap</span>
-                <p className="text-white">Day 1-3: Array & String Hashing</p>
-                <p className="text-white">Day 4-6: SQL Joins & Subqueries</p>
-                <p className="text-white">Day 7-10: OS Numericals & Mock Interviews</p>
+          {/* RIGHT COLUMN (30% -> lg:col-span-4) */}
+          <div className="lg:col-span-4 bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] flex flex-col justify-between space-y-5 hover:-translate-y-0.5 transition-all duration-200">
+            <div className="space-y-4">
+              <span className="text-[11px] font-mono text-[#71717A] uppercase block">
+                Recommended Resources
+              </span>
+              <div className="bg-[#0B0B0D] border border-white/[0.04] rounded-[12px] p-3 space-y-2 text-white font-mono text-[11px]">
+                <p className="text-white">• LeetCode HighRadius Tagged (15 Qs)</p>
+                <p className="text-white">• Operating Systems Notes (Galvin Summary)</p>
+                <p className="text-white">• Top 50 SQL Queries for Placements</p>
               </div>
             </div>
           </div>
@@ -452,15 +566,27 @@ export default function CareerWorkspacePage() {
           TAB 5: AI CAREER MENTOR
       ---------------------------------------------------- */}
       {activeTab === 'mentor' && (
-        <div className="bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 space-y-6 min-h-[480px] flex flex-col justify-between">
-          <div className="border-b border-[rgba(255,255,255,0.08)] pb-3 flex items-center gap-2">
-            <Bot size={20} className="text-[#FF3B30]" />
-            <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">AI Career Mentor Chat</h3>
-              <p className="text-[10px] text-[#6B7280]">Trained on KIIT T&P Cell historical data & interviews</p>
+        <div className="bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] min-h-[480px] flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between border-b border-white/[0.04] pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#FF4D4D]/10 border border-[#FF4D4D]/20 flex items-center justify-center text-[#FF4D4D]">
+                <Bot size={18} />
+              </div>
+              <div>
+                <h3 className="text-[16px] font-bold text-white tracking-tight">
+                  AI Career Placement Mentor
+                </h3>
+                <p className="text-xs text-[#8A8A8A]">
+                  Trained on KIIT T&P Cell historical data & previous interview questions
+                </p>
+              </div>
             </div>
+            <span className="text-xs text-[#8A8A8A] font-mono bg-[#0B0B0D] px-3 py-1 rounded-full border border-white/[0.06]">
+              Online & Ready
+            </span>
           </div>
 
+          {/* Chat Stream */}
           <div className="space-y-3 overflow-y-auto max-h-[300px] pr-2">
             {chatMessages.map((msg, index) => (
               <div
@@ -468,37 +594,96 @@ export default function CareerWorkspacePage() {
                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-md p-3.5 rounded-xl text-xs leading-relaxed ${
+                  className={`max-w-md p-3.5 rounded-[14px] text-xs leading-relaxed ${
                     msg.sender === 'user'
-                      ? 'bg-[#FF3B30] text-white rounded-br-none'
-                      : 'bg-[#101010] border border-[rgba(255,255,255,0.08)] text-[#9CA3AF] rounded-bl-none'
+                      ? 'bg-[#FF4D4D] text-white font-medium'
+                      : 'bg-[#0B0B0D] border border-white/[0.06] text-[#8A8A8A]'
                   }`}
                 >
-                  <p className="text-white font-medium">{msg.text}</p>
+                  <p className="text-white font-normal">{msg.text}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Chat Input */}
-          <div className="flex items-center bg-[#101010] border border-[rgba(255,255,255,0.08)] rounded-xl p-1.5 focus-within:border-[#FF3B30]">
+          {/* Chat Input Bar */}
+          <div className="flex items-center bg-[#0B0B0D] border border-white/[0.06] rounded-[16px] p-1.5 focus-within:border-[#FF4D4D] transition-colors">
             <input
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
               placeholder="Ask for interview advice, daily study plan, or resume tips..."
-              className="w-full bg-transparent px-3 py-2 text-xs text-white placeholder-[#6B7280] outline-none font-medium"
+              className="w-full bg-transparent px-3 py-2 text-xs text-white placeholder-[#8A8A8A] outline-none font-medium"
             />
             <button
               onClick={handleSendChat}
-              className="bg-[#FF3B30] text-white p-2 rounded-lg hover:bg-[#E03126] transition-all"
+              className="bg-[#FF4D4D] hover:brightness-110 text-white p-2 rounded-[12px] transition-all cursor-pointer"
             >
               <Send size={15} />
             </button>
           </div>
         </div>
       )}
+
+      {/* ----------------------------------------------------
+          BOTTOM STATS ROW (Four Equal Cards)
+      ---------------------------------------------------- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+        {[
+          {
+            number: '120+',
+            label: 'Recruiter Drives',
+            sub: 'Active for 2026 Batch',
+            icon: Building2,
+          },
+          {
+            number: '₹44.0 L',
+            label: 'Highest Package',
+            sub: 'Super Dream CTC Tier',
+            icon: TrendingUp,
+          },
+          {
+            number: '88%',
+            label: 'Average ATS Score',
+            sub: 'Across KIIT Candidates',
+            icon: CheckCircle2,
+          },
+          {
+            number: '10 Days',
+            label: 'Sprint Duration',
+            sub: 'HighRadius Prep Timeline',
+            icon: Clock,
+          },
+        ].map((stat, idx) => {
+          const StatIcon = stat.icon
+          return (
+            <div
+              key={idx}
+              className="bg-[#111214] border border-white/[0.04] rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] flex flex-col justify-between h-[150px] hover:-translate-y-1 transition-all duration-200 cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[14px] font-semibold text-white tracking-tight">
+                  {stat.label}
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.05] flex items-center justify-center text-[#FF4D4D] group-hover:scale-105 transition-transform">
+                  <StatIcon size={18} />
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[38px] font-bold text-white font-mono tracking-tight leading-none block">
+                  {stat.number}
+                </span>
+                <span className="text-xs text-[#8A8A8A] font-normal mt-1.5 block">
+                  {stat.sub}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
+
