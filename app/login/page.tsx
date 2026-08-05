@@ -85,23 +85,6 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {/* 3. BOTTOM-LEFT: FLOATING GLASS CARDS (HORIZONTAL) */}
-        <div className="relative z-20 flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-[16px] bg-white/[0.07] backdrop-blur-md border border-white/10 shadow-xl hover:border-[#ff3b30]/40 transition-all hover:-translate-y-0.5">
-            <span className="text-lg">📚</span>
-            <span className="text-xs font-bold text-white tracking-wide">Previous Year Questions</span>
-          </div>
-
-          <div className="flex items-center gap-3 px-4 py-3 rounded-[16px] bg-white/[0.07] backdrop-blur-md border border-white/10 shadow-xl hover:border-[#ff3b30]/40 transition-all hover:-translate-y-0.5">
-            <span className="text-lg">🤖</span>
-            <span className="text-xs font-bold text-white tracking-wide">AI Predicted Papers</span>
-          </div>
-
-          <div className="flex items-center gap-3 px-4 py-3 rounded-[16px] bg-white/[0.07] backdrop-blur-md border border-white/10 shadow-xl hover:border-[#ff3b30]/40 transition-all hover:-translate-y-0.5">
-            <span className="text-lg">📖</span>
-            <span className="text-xs font-bold text-white tracking-wide">Notes Library</span>
-          </div>
-        </div>
       </div>
 
       {/* ----------------------------------------------------
