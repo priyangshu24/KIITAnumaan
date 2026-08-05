@@ -1,6 +1,4 @@
-'use client'
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Calendar,
   Clock,
@@ -12,7 +10,45 @@ import {
   Hash,
   BookOpen,
   Sparkles,
+  Lock,
 } from 'lucide-react'
+
+// Automatic Roll Number Student Lookup & Derivation Engine
+function deriveStudentDetailsFromRoll(roll: string) {
+  const cleanRoll = roll.trim()
+  if (!cleanRoll) {
+    return { section: 'CSE-21', sem: 'Semester 6', branch: 'CSE' }
+  }
+
+  // Exact database lookup for sample roll numbers
+  if (cleanRoll === '21052341') return { section: 'CSE-21', sem: 'Semester 6', branch: 'CSE' }
+  if (cleanRoll === '21051289') return { section: 'CSE-22', sem: 'Semester 6', branch: 'CSE' }
+  if (cleanRoll === '21060012') return { section: 'CSSE-01', sem: 'Semester 6', branch: 'CSSE' }
+  if (cleanRoll === '21070445') return { section: 'IT-02', sem: 'Semester 6', branch: 'IT' }
+  if (cleanRoll === '22050119') return { section: 'CSE-05', sem: 'Semester 4', branch: 'CSE' }
+  if (cleanRoll === '20050882') return { section: 'CSE-12', sem: 'Semester 8', branch: 'CSE' }
+
+  // Generic Pattern Fallback Parser
+  const lastDigits = parseInt(cleanRoll.slice(-2)) || 21
+  const sectionNum = (lastDigits % 25) + 1
+  const formattedSec = sectionNum < 10 ? `0${sectionNum}` : `${sectionNum}`
+
+  let branch = 'CSE'
+  if (cleanRoll.includes('06')) branch = 'CSSE'
+  else if (cleanRoll.includes('07')) branch = 'IT'
+  else if (cleanRoll.includes('04')) branch = 'ECE'
+
+  let sem = 'Semester 6'
+  if (cleanRoll.startsWith('22')) sem = 'Semester 4'
+  else if (cleanRoll.startsWith('20')) sem = 'Semester 8'
+  else if (cleanRoll.startsWith('23')) sem = 'Semester 2'
+
+  return {
+    section: `${branch}-${formattedSec}`,
+    sem: sem,
+    branch: branch,
+  }
+}
 
 // Schedule Grid Data Types
 interface SlotData {
@@ -147,10 +183,19 @@ const timetableMatrix: (SlotData | null)[][] = [
 
 export default function ClassTimetablePage() {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0) // 0 = Monday
+  const [rollNumber, setRollNumber] = useState('21052341')
   const [selectedSection, setSelectedSection] = useState('CSE-21')
   const [selectedBranch, setSelectedBranch] = useState('CSE')
   const [selectedSemester, setSelectedSemester] = useState('Semester 6')
-  const [rollNumber, setRollNumber] = useState('21052341')
+
+  // Auto-detect section and semester whenever Roll Number changes
+  const handleRollNumberChange = (newRoll: string) => {
+    setRollNumber(newRoll)
+    const derived = deriveStudentDetailsFromRoll(newRoll)
+    setSelectedSection(derived.section)
+    setSelectedSemester(derived.sem)
+    setSelectedBranch(derived.branch)
+  }
 
   return (
     <div className="space-y-6 pb-12 w-full text-white">
@@ -189,49 +234,36 @@ export default function ClassTimetablePage() {
 
           {/* Liquid Glassmorphic Section & Roll No Controls Container */}
           <div className="flex flex-wrap items-center gap-2.5 shrink-0 bg-white/[0.04] backdrop-blur-2xl p-2.5 sm:p-3 rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
-            {/* Roll No Input Box */}
-            <div className="flex items-center gap-2 bg-[#16171B] backdrop-blur-md border border-[#FF453A]/40 hover:border-[#FF453A] focus-within:border-[#FF453A] rounded-xl px-3.5 py-2 text-xs transition-all shadow-[0_0_15px_rgba(255,69,58,0.15)]">
+            {/* Roll No Input Box (Primary Input) */}
+            <div className="flex items-center gap-2 bg-[#16171B] backdrop-blur-md border border-[#FF453A]/50 focus-within:border-[#FF453A] rounded-xl px-3.5 py-2 text-xs transition-all shadow-[0_0_15px_rgba(255,69,58,0.2)]">
               <Hash size={15} className="text-[#FF453A] shrink-0 drop-shadow-[0_0_8px_rgba(255,69,58,0.6)]" />
               <span className="text-xs text-white font-mono font-bold hidden sm:inline shrink-0">Roll:</span>
               <input
                 type="text"
                 value={rollNumber}
-                onChange={(e) => setRollNumber(e.target.value)}
+                onChange={(e) => handleRollNumberChange(e.target.value)}
                 placeholder="Enter Roll No"
                 style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF' }}
                 className="bg-transparent !text-white font-mono font-bold text-xs sm:text-sm outline-none w-24 sm:w-28 tracking-wider placeholder:text-white/40 opacity-100"
               />
             </div>
 
-            {/* Select Section Dropdown Box */}
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 hover:border-white/30 rounded-xl px-3.5 py-2 text-xs cursor-pointer shadow-inner">
-              <span className="text-xs text-white/70 font-mono font-semibold shrink-0">Section:</span>
-              <select
-                value={selectedSection}
-                onChange={(e) => setSelectedSection(e.target.value)}
-                className="bg-transparent text-white font-bold outline-none cursor-pointer text-xs sm:text-sm"
-              >
-                <option value="CSE-21" className="bg-[#111214] text-white">CSE-21</option>
-                <option value="CSE-22" className="bg-[#111214] text-white">CSE-22</option>
-                <option value="CSE-23" className="bg-[#111214] text-white">CSE-23</option>
-                <option value="CSSE-01" className="bg-[#111214] text-white">CSSE-01</option>
-                <option value="IT-02" className="bg-[#111214] text-white">IT-02</option>
-                <option value="ECE-05" className="bg-[#111214] text-white">ECE-05</option>
-              </select>
+            {/* Auto-Locked Section Capsule (Derived directly from Roll No) */}
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 rounded-xl px-3.5 py-2 text-xs select-none shadow-inner opacity-90">
+              <span className="text-xs text-white/60 font-mono font-semibold shrink-0">Section:</span>
+              <span className="text-xs sm:text-sm font-bold text-white font-mono">{selectedSection}</span>
+              <div className="flex items-center gap-1 bg-[#FF453A]/10 border border-[#FF453A]/30 text-[#FF453A] px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase ml-1">
+                <Lock size={10} /> Auto
+              </div>
             </div>
 
-            {/* Select Semester Dropdown Box */}
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 hover:border-white/30 rounded-xl px-3.5 py-2 text-xs cursor-pointer shadow-inner">
-              <span className="text-xs text-white/70 font-mono font-semibold shrink-0">Sem:</span>
-              <select
-                value={selectedSemester}
-                onChange={(e) => setSelectedSemester(e.target.value)}
-                className="bg-transparent text-white font-bold outline-none cursor-pointer text-xs sm:text-sm"
-              >
-                <option value="Semester 5" className="bg-[#111214] text-white">Sem 5</option>
-                <option value="Semester 6" className="bg-[#111214] text-white">Sem 6</option>
-                <option value="Semester 7" className="bg-[#111214] text-white">Sem 7</option>
-              </select>
+            {/* Auto-Locked Semester Capsule (Derived directly from Roll No) */}
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 rounded-xl px-3.5 py-2 text-xs select-none shadow-inner opacity-90">
+              <span className="text-xs text-white/60 font-mono font-semibold shrink-0">Sem:</span>
+              <span className="text-xs sm:text-sm font-bold text-white font-mono">{selectedSemester}</span>
+              <div className="flex items-center gap-1 bg-[#FF453A]/10 border border-[#FF453A]/30 text-[#FF453A] px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase ml-1">
+                <Lock size={10} /> Auto
+              </div>
             </div>
           </div>
         </div>
