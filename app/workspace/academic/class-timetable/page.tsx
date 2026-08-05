@@ -158,15 +158,22 @@ export default function ClassTimetablePage() {
       {/* ----------------------------------------------------
           TOP BANNER HEADER WITH SECTION & ROLL NO CONTROLS
       ---------------------------------------------------- */}
-      <div className="relative overflow-hidden w-full bg-[#0B0B0D] border border-white/10 rounded-[28px] p-6 lg:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
-        {/* Background Ambient Glow */}
-        <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-[radial-gradient(ellipse_at_top_right,rgba(255,69,58,0.12),transparent_70%)] pointer-events-none" />
+      <div className="relative overflow-hidden w-full bg-[#0B0B0D] border border-white/10 rounded-[28px] p-6 lg:p-8 shadow-[0_16px_40px_rgba(0,0,0,0.45)] min-h-[160px]">
+        {/* Full Cover High-Res KIIT Red Wireframe Image */}
+        <img
+          src="/kiit-campus-dotted.jpg"
+          alt="KIIT Campus Wireframe Background"
+          className="absolute inset-0 w-full h-full object-cover object-[75%_center] opacity-90 pointer-events-none z-0 rounded-[28px]"
+        />
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+        {/* Left-to-Right Seamless Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0D] via-[#0B0B0D]/80 to-transparent pointer-events-none z-10 rounded-[28px]" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-20">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-3 py-1 rounded-full bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/30 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles size={12} /> KIIT ACADEMIC TIMETABLE
+              <span className="px-3 py-1 rounded-full bg-[#FF453A]/20 text-[#FF453A] border border-[#FF453A]/40 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 font-mono shadow-[0_0_15px_rgba(255,69,58,0.2)]">
+                <Sparkles size={12} /> CLASS TIMETABLE
               </span>
               <span className="px-3 py-1 rounded-full bg-white/[0.04] text-white/70 border border-white/10 text-[10px] font-bold font-mono">
                 {selectedSection} · {selectedBranch}
