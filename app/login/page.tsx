@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Check } from 'lucide-react'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -25,40 +25,65 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen w-full bg-[#050505] flex flex-col lg:flex-row overflow-x-hidden">
       {/* ----------------------------------------------------
-          LEFT SIDE: KIIT RED WIREFRAME BACKGROUND (60%)
+          LEFT SIDE: KIIT RED WIREFRAME HERO BACKGROUND (65%)
       ---------------------------------------------------- */}
-      <div className="hidden lg:block lg:w-[60%] md:w-[50%] relative min-h-screen overflow-hidden">
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/kiit-campus-dotted.jpg')" }}
+      <div className="hidden lg:block lg:w-[65%] md:w-[55%] relative min-h-screen overflow-hidden">
+        {/* Background Image - Object Cover, Crisp & Clearly Visible */}
+        <img
+          src="/kiit-campus-dotted.jpg"
+          alt="KIIT Campus Illustration"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-85 transition-opacity duration-500"
         />
 
-        {/* Subtle Black Overlay */}
-        <div className="absolute inset-0 bg-black/35" />
+        {/* Subtle Black Overlay for Contrast */}
+        <div className="absolute inset-0 bg-black/25" />
 
-        {/* Smooth Gradient Fade into Right Panel */}
+        {/* Smooth Gradient Fade toward Right Panel */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(90deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.35) 70%, #0b0b0d 100%)',
+              'linear-gradient(90deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0.4) 65%, #0b0b0d 100%)',
           }}
         />
 
-        {/* Optional Logo Watermark on Left */}
-        <div className="absolute bottom-10 left-10 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#ff3b30]/20 border border-[#ff3b30]/40 flex items-center justify-center font-bold text-[#ff3b30] text-sm backdrop-blur-md shadow-lg shadow-[#ff3b30]/20">
+        {/* Top-Left Branding Header */}
+        <div className="absolute top-10 left-10 z-20 flex items-center gap-3 animate-in fade-in duration-500">
+          <div className="w-10 h-10 rounded-xl bg-[#ff3b30] flex items-center justify-center font-black text-white text-lg shadow-lg shadow-[#ff3b30]/30 shrink-0">
             K
+          </div>
+          <div>
+            <h1 className="text-xl font-extrabold text-white tracking-wide leading-none">
+              KIIT<span className="text-[#ff3b30]">Anumaan</span>
+            </h1>
+            <p className="text-[11px] text-white/70 font-mono tracking-wider uppercase mt-1">
+              AI Academic Workspace
+            </p>
+          </div>
+        </div>
+
+        {/* Bottom-Left Subtle Glass Feature Badges */}
+        <div className="absolute bottom-10 left-10 z-20 flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.06] backdrop-blur-md border border-white/10 shadow-lg text-xs font-semibold text-white/90 hover:border-[#ff3b30]/40 transition-colors">
+            <Check className="w-3.5 h-3.5 text-[#ff3b30]" />
+            <span>AI Powered Predictions</span>
+          </div>
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.06] backdrop-blur-md border border-white/10 shadow-lg text-xs font-semibold text-white/90 hover:border-[#ff3b30]/40 transition-colors">
+            <Check className="w-3.5 h-3.5 text-[#ff3b30]" />
+            <span>Smart PYQ Library</span>
+          </div>
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.06] backdrop-blur-md border border-white/10 shadow-lg text-xs font-semibold text-white/90 hover:border-[#ff3b30]/40 transition-colors">
+            <Check className="w-3.5 h-3.5 text-[#ff3b30]" />
+            <span>KIIT Academic Workspace</span>
           </div>
         </div>
       </div>
 
       {/* ----------------------------------------------------
-          RIGHT SIDE: CENTERED LOGIN CARD PANEL (40%)
+          RIGHT SIDE: CENTERED LOGIN CARD PANEL (35%)
       ---------------------------------------------------- */}
-      <div className="w-full lg:w-[40%] md:w-[50%] min-h-screen flex items-center justify-center p-6 bg-[#0b0b0d] relative z-10">
-        <div className="w-full max-w-[440px] bg-[#0e0e12]/92 backdrop-blur-[16px] border border-white/[0.06] rounded-[28px] p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.45),0_0_40px_rgba(255,59,48,0.08)] transition-all duration-300 animate-in fade-in slide-in-from-right-4">
+      <div className="w-full lg:w-[35%] md:w-[45%] min-h-screen flex items-center justify-center p-6 bg-[#0b0b0d] relative z-10">
+        <div className="w-full max-w-[440px] bg-[#0e0e12]/92 backdrop-blur-[16px] border border-white/[0.06] rounded-[28px] p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(255,59,48,0.08)] transition-all duration-300 animate-in fade-in slide-in-from-right-4">
           {/* ----------------------------------------------------
               LOGIN VIEW
           ---------------------------------------------------- */}
