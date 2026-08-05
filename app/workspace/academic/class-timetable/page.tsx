@@ -187,49 +187,49 @@ export default function ClassTimetablePage() {
             </p>
           </div>
 
-          {/* Section & Roll No Controls Container */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0 bg-[#141418]/80 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-lg">
-            {/* Roll No Input */}
-            <div className="flex items-center gap-2 bg-[#0B0B0D] border border-white/10 rounded-xl px-3 py-2 text-xs focus-within:border-[#FF453A]/50 transition-all">
-              <Hash size={14} className="text-[#FF453A]" />
-              <span className="text-[10px] text-[#8A8A8A] font-mono hidden sm:inline">Roll:</span>
+          {/* Liquid Glassmorphic Section & Roll No Controls Container */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 bg-white/[0.04] backdrop-blur-2xl p-2.5 sm:p-3 rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+            {/* Roll No Input Box */}
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 hover:border-[#FF453A]/50 focus-within:border-[#FF453A] rounded-xl px-3.5 py-2 text-xs transition-all shadow-inner">
+              <Hash size={15} className="text-[#FF453A] shrink-0 drop-shadow-[0_0_8px_rgba(255,69,58,0.5)]" />
+              <span className="text-xs text-white/70 font-mono font-semibold hidden sm:inline shrink-0">Roll:</span>
               <input
                 type="text"
                 value={rollNumber}
                 onChange={(e) => setRollNumber(e.target.value)}
                 placeholder="Enter Roll No"
-                className="bg-transparent text-white font-mono font-bold text-xs outline-none w-24 sm:w-28"
+                className="bg-transparent text-white font-mono font-bold text-xs sm:text-sm outline-none w-24 sm:w-28 tracking-wide placeholder:text-white/40"
               />
             </div>
 
-            {/* Select Section Dropdown */}
-            <div className="flex items-center gap-1.5 bg-[#0B0B0D] border border-white/10 rounded-xl px-3 py-2 text-xs cursor-pointer">
-              <span className="text-[10px] text-[#8A8A8A] font-mono">Section:</span>
+            {/* Select Section Dropdown Box */}
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 hover:border-white/30 rounded-xl px-3.5 py-2 text-xs cursor-pointer shadow-inner">
+              <span className="text-xs text-white/70 font-mono font-semibold shrink-0">Section:</span>
               <select
                 value={selectedSection}
                 onChange={(e) => setSelectedSection(e.target.value)}
-                className="bg-transparent text-white font-bold outline-none cursor-pointer text-xs"
+                className="bg-transparent text-white font-bold outline-none cursor-pointer text-xs sm:text-sm"
               >
-                <option value="CSE-21" className="bg-[#141418]">CSE-21</option>
-                <option value="CSE-22" className="bg-[#141418]">CSE-22</option>
-                <option value="CSE-23" className="bg-[#141418]">CSE-23</option>
-                <option value="CSSE-01" className="bg-[#141418]">CSSE-01</option>
-                <option value="IT-02" className="bg-[#141418]">IT-02</option>
-                <option value="ECE-05" className="bg-[#141418]">ECE-05</option>
+                <option value="CSE-21" className="bg-[#111214] text-white">CSE-21</option>
+                <option value="CSE-22" className="bg-[#111214] text-white">CSE-22</option>
+                <option value="CSE-23" className="bg-[#111214] text-white">CSE-23</option>
+                <option value="CSSE-01" className="bg-[#111214] text-white">CSSE-01</option>
+                <option value="IT-02" className="bg-[#111214] text-white">IT-02</option>
+                <option value="ECE-05" className="bg-[#111214] text-white">ECE-05</option>
               </select>
             </div>
 
-            {/* Select Semester Dropdown */}
-            <div className="flex items-center gap-1.5 bg-[#0B0B0D] border border-white/10 rounded-xl px-3 py-2 text-xs cursor-pointer">
-              <span className="text-[10px] text-[#8A8A8A] font-mono">Sem:</span>
+            {/* Select Semester Dropdown Box */}
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 hover:border-white/30 rounded-xl px-3.5 py-2 text-xs cursor-pointer shadow-inner">
+              <span className="text-xs text-white/70 font-mono font-semibold shrink-0">Sem:</span>
               <select
                 value={selectedSemester}
                 onChange={(e) => setSelectedSemester(e.target.value)}
-                className="bg-transparent text-white font-bold outline-none cursor-pointer text-xs"
+                className="bg-transparent text-white font-bold outline-none cursor-pointer text-xs sm:text-sm"
               >
-                <option value="Semester 5" className="bg-[#141418]">Sem 5</option>
-                <option value="Semester 6" className="bg-[#141418]">Sem 6</option>
-                <option value="Semester 7" className="bg-[#141418]">Sem 7</option>
+                <option value="Semester 5" className="bg-[#111214] text-white">Sem 5</option>
+                <option value="Semester 6" className="bg-[#111214] text-white">Sem 6</option>
+                <option value="Semester 7" className="bg-[#111214] text-white">Sem 7</option>
               </select>
             </div>
           </div>
