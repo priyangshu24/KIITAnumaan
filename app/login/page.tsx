@@ -2,7 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Check } from 'lucide-react'
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  ArrowRight,
+  BookOpen,
+  Bot,
+  FileText,
+} from 'lucide-react'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -25,65 +35,80 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen w-full bg-[#050505] flex flex-col lg:flex-row overflow-x-hidden">
       {/* ----------------------------------------------------
-          LEFT SIDE: KIIT RED WIREFRAME HERO BACKGROUND (65%)
+          LEFT SIDE: HERO IMAGE & CONTENT (60%)
       ---------------------------------------------------- */}
-      <div className="hidden lg:block lg:w-[65%] md:w-[55%] relative min-h-screen overflow-hidden">
-        {/* Background Image - Object Cover, Crisp & Clearly Visible */}
+      <div className="hidden lg:flex lg:w-[60%] md:w-[50%] relative min-h-screen flex-col justify-between p-12 overflow-hidden">
+        {/* KIIT Campus Background Image - Fully Visible */}
         <img
           src="/kiit-campus-dotted.jpg"
           alt="KIIT Campus Illustration"
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-85 transition-opacity duration-500"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-90 transition-opacity duration-500 animate-in fade-in duration-700"
         />
 
-        {/* Subtle Black Overlay for Contrast */}
-        <div className="absolute inset-0 bg-black/25" />
+        {/* Light Black Overlay (45% opacity) */}
+        <div className="absolute inset-0 bg-black/45" />
 
-        {/* Smooth Gradient Fade toward Right Panel */}
+        {/* Gradient Blend overlay towards login panel */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(90deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0.4) 65%, #0b0b0d 100%)',
+              'linear-gradient(90deg, rgba(5,5,5,0.1) 0%, rgba(5,5,5,0.4) 70%, #0b0b0d 100%)',
           }}
         />
 
-        {/* Top-Left Branding Header */}
-        <div className="absolute top-10 left-10 z-20 flex items-center gap-3 animate-in fade-in duration-500">
-          <div className="w-10 h-10 rounded-xl bg-[#ff3b30] flex items-center justify-center font-black text-white text-lg shadow-lg shadow-[#ff3b30]/30 shrink-0">
+        {/* 1. TOP-LEFT: BRANDING */}
+        <div className="relative z-20 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="w-11 h-11 rounded-2xl bg-[#ff3b30] flex items-center justify-center font-black text-white text-xl shadow-lg shadow-[#ff3b30]/30 shrink-0">
             K
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-white tracking-wide leading-none">
+            <h1 className="text-2xl font-black text-white tracking-wide leading-none">
               KIIT<span className="text-[#ff3b30]">Anumaan</span>
             </h1>
-            <p className="text-[11px] text-white/70 font-mono tracking-wider uppercase mt-1">
+            <p className="text-xs text-white/70 font-mono tracking-wider uppercase mt-1">
               AI Academic Workspace
             </p>
           </div>
         </div>
 
-        {/* Bottom-Left Subtle Glass Feature Badges */}
-        <div className="absolute bottom-10 left-10 z-20 flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.06] backdrop-blur-md border border-white/10 shadow-lg text-xs font-semibold text-white/90 hover:border-[#ff3b30]/40 transition-colors">
-            <Check className="w-3.5 h-3.5 text-[#ff3b30]" />
-            <span>AI Powered Predictions</span>
+        {/* 2. CENTER-LEFT: HERO HEADING & SUBTITLE */}
+        <div className="relative z-20 my-auto py-12 max-w-xl space-y-4 animate-in fade-in slide-in-from-left-4 duration-500">
+          <h2 className="text-4xl sm:text-5xl font-black text-white leading-[1.15] tracking-tight">
+            One Workspace for Every{' '}
+            <span className="text-[#ff3b30] drop-shadow-[0_0_25px_rgba(255,59,48,0.4)]">
+              KIIT Student
+            </span>
+          </h2>
+          <p className="text-sm sm:text-base text-white/80 leading-relaxed font-normal">
+            Access notes, PYQs, AI predictions, timetable, placements and everything you need.
+          </p>
+        </div>
+
+        {/* 3. BOTTOM-LEFT: FLOATING GLASS CARDS (HORIZONTAL) */}
+        <div className="relative z-20 flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-[16px] bg-white/[0.07] backdrop-blur-md border border-white/10 shadow-xl hover:border-[#ff3b30]/40 transition-all hover:-translate-y-0.5">
+            <span className="text-lg">📚</span>
+            <span className="text-xs font-bold text-white tracking-wide">Previous Year Questions</span>
           </div>
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.06] backdrop-blur-md border border-white/10 shadow-lg text-xs font-semibold text-white/90 hover:border-[#ff3b30]/40 transition-colors">
-            <Check className="w-3.5 h-3.5 text-[#ff3b30]" />
-            <span>Smart PYQ Library</span>
+
+          <div className="flex items-center gap-3 px-4 py-3 rounded-[16px] bg-white/[0.07] backdrop-blur-md border border-white/10 shadow-xl hover:border-[#ff3b30]/40 transition-all hover:-translate-y-0.5">
+            <span className="text-lg">🤖</span>
+            <span className="text-xs font-bold text-white tracking-wide">AI Predicted Papers</span>
           </div>
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.06] backdrop-blur-md border border-white/10 shadow-lg text-xs font-semibold text-white/90 hover:border-[#ff3b30]/40 transition-colors">
-            <Check className="w-3.5 h-3.5 text-[#ff3b30]" />
-            <span>KIIT Academic Workspace</span>
+
+          <div className="flex items-center gap-3 px-4 py-3 rounded-[16px] bg-white/[0.07] backdrop-blur-md border border-white/10 shadow-xl hover:border-[#ff3b30]/40 transition-all hover:-translate-y-0.5">
+            <span className="text-lg">📖</span>
+            <span className="text-xs font-bold text-white tracking-wide">Notes Library</span>
           </div>
         </div>
       </div>
 
       {/* ----------------------------------------------------
-          RIGHT SIDE: CENTERED LOGIN CARD PANEL (35%)
+          RIGHT SIDE: CENTERED LOGIN PANEL (40%)
       ---------------------------------------------------- */}
-      <div className="w-full lg:w-[35%] md:w-[45%] min-h-screen flex items-center justify-center p-6 bg-[#0b0b0d] relative z-10">
-        <div className="w-full max-w-[440px] bg-[#0e0e12]/92 backdrop-blur-[16px] border border-white/[0.06] rounded-[28px] p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(255,59,48,0.08)] transition-all duration-300 animate-in fade-in slide-in-from-right-4">
+      <div className="w-full lg:w-[40%] md:w-[50%] min-h-screen flex items-center justify-center p-6 bg-[#0b0b0d] relative z-10">
+        <div className="w-full max-w-[420px] bg-[#0e0e12]/92 backdrop-blur-[16px] border border-white/[0.06] rounded-[24px] p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(255,59,48,0.08)] transition-all duration-300 animate-in fade-in slide-in-from-right-4">
           {/* ----------------------------------------------------
               LOGIN VIEW
           ---------------------------------------------------- */}
@@ -103,7 +128,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => router.push('/workspace')}
-                className="w-full h-[52px] bg-[#101014] border border-white/10 hover:border-[#ff3b30]/50 rounded-xl text-xs text-white font-semibold flex items-center justify-center gap-3 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer shadow-sm mb-6"
+                className="w-full h-[52px] bg-[#101014] border border-white/10 hover:border-[#ff3b30]/50 rounded-xl text-xs text-white font-semibold flex items-center justify-center gap-3 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm mb-6"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -196,7 +221,7 @@ export default function AuthPage() {
                 {/* Primary Submit Button */}
                 <button
                   type="submit"
-                  className="w-full h-[58px] bg-[#ff3b30] hover:bg-[#e03126] text-white rounded-[16px] py-3 text-sm font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-3"
+                  className="w-full h-[56px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[16px] py-3 text-sm font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-3"
                 >
                   <span>Login</span>
                   <ArrowRight className="w-4 h-4" />
@@ -309,7 +334,7 @@ export default function AuthPage() {
                 {/* Primary Submit Button */}
                 <button
                   type="submit"
-                  className="w-full h-[58px] bg-[#ff3b30] hover:bg-[#e03126] text-white rounded-[16px] py-3 text-sm font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-3"
+                  className="w-full h-[56px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[16px] py-3 text-sm font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-3"
                 >
                   <span>Create Account</span>
                   <ArrowRight className="w-4 h-4" />
