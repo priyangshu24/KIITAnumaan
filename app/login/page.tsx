@@ -90,16 +90,16 @@ export default function AuthPage() {
       {/* ----------------------------------------------------
           RIGHT SIDE: CENTERED LOGIN PANEL (40%)
       ---------------------------------------------------- */}
-      <div className="w-full lg:w-[40%] md:w-[50%] min-h-screen flex items-center justify-center p-6 bg-[#0b0b0d] relative z-10">
-        <div className="w-full max-w-[420px] bg-[#0e0e12]/92 backdrop-blur-[16px] border border-white/[0.06] rounded-[24px] p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(255,59,48,0.08)] transition-all duration-300 animate-in fade-in slide-in-from-right-4">
+      <div className="w-full lg:w-[40%] md:w-[50%] min-h-screen flex items-center justify-center p-4 bg-[#0b0b0d] relative z-10 overflow-hidden">
+        <div className="w-full max-w-[380px] bg-[#0e0e12]/92 backdrop-blur-[16px] border border-white/[0.06] rounded-[24px] p-6 sm:p-7 shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(255,59,48,0.08)] transition-all duration-300 animate-in fade-in slide-in-from-right-4">
           {/* ----------------------------------------------------
               LOGIN VIEW
           ---------------------------------------------------- */}
           {mode === 'login' ? (
             <div>
               {/* Header */}
-              <div className="mb-7">
-                <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
+              <div className="mb-5">
+                <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">
                   Login to your <span className="text-[#ff3b30]">Account</span>
                 </h1>
                 <p className="text-[#8c8c96] text-xs leading-relaxed font-normal">
@@ -111,7 +111,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => router.push('/workspace')}
-                className="w-full h-[52px] bg-[#101014] border border-white/10 hover:border-[#ff3b30]/50 rounded-xl text-xs text-white font-semibold flex items-center justify-center gap-3 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm mb-6"
+                className="w-full h-[44px] bg-[#101014] border border-white/10 hover:border-[#ff3b30]/50 rounded-xl text-xs text-white font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm mb-4"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -135,46 +135,46 @@ export default function AuthPage() {
               </button>
 
               {/* Divider */}
-              <div className="relative flex items-center justify-center mb-6">
+              <div className="relative flex items-center justify-center mb-4">
                 <div className="w-full border-t border-dashed border-white/10" />
-                <span className="absolute bg-[#0e0e12] px-3.5 text-[#8c8c96] text-xs font-medium lowercase">
+                <span className="absolute bg-[#0e0e12] px-3 text-[#8c8c96] text-[11px] font-medium lowercase">
                   or
                 </span>
               </div>
 
               {/* Login Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label className="text-xs text-white/90 font-medium mb-2 block">Email</label>
+                  <label className="text-[11px] text-white/90 font-medium mb-1 block">Email</label>
                   <div className="relative flex items-center">
-                    <Mail className="absolute left-4 w-4 h-4 text-[#8c8c96]" />
+                    <Mail className="absolute left-3.5 w-4 h-4 text-[#8c8c96]" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="mail@abc.com"
                       required
-                      className="w-full h-[56px] bg-[#070709] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
+                      className="w-full h-[46px] bg-[#070709] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-white/90 font-medium mb-2 block">Password</label>
+                  <label className="text-[11px] text-white/90 font-medium mb-1 block">Password</label>
                   <div className="relative flex items-center">
-                    <Lock className="absolute left-4 w-4 h-4 text-[#8c8c96]" />
+                    <Lock className="absolute left-3.5 w-4 h-4 text-[#8c8c96]" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter password"
                       required
-                      className="w-full h-[56px] bg-[#070709] border border-white/10 rounded-xl py-3 pl-11 pr-11 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
+                      className="w-full h-[46px] bg-[#070709] border border-white/10 rounded-xl py-2 pl-10 pr-10 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 text-[#8c8c96] hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3.5 text-[#8c8c96] hover:text-white transition-colors cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -182,20 +182,20 @@ export default function AuthPage() {
                 </div>
 
                 {/* Action Row */}
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center justify-between pt-0.5">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-4 h-4 rounded border-white/20 bg-[#070709] accent-[#ff3b30] checked:bg-[#ff3b30] checked:border-[#ff3b30] cursor-pointer"
+                      className="w-3.5 h-3.5 rounded border-white/20 bg-[#070709] accent-[#ff3b30] checked:bg-[#ff3b30] checked:border-[#ff3b30] cursor-pointer"
                     />
-                    <span className="text-xs text-[#8c8c96]">Remember Me</span>
+                    <span className="text-[11px] text-[#8c8c96]">Remember Me</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => alert('Password reset link sent to your email')}
-                    className="text-[#ff3b30] text-xs font-semibold hover:underline cursor-pointer"
+                    className="text-[#ff3b30] text-[11px] font-semibold hover:underline cursor-pointer"
                   >
                     Forgot Password?
                   </button>
@@ -204,7 +204,7 @@ export default function AuthPage() {
                 {/* Primary Submit Button */}
                 <button
                   type="submit"
-                  className="w-full h-[56px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[16px] py-3 text-sm font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-3"
+                  className="w-full h-[48px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[14px] py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-2"
                 >
                   <span>Login</span>
                   <ArrowRight className="w-4 h-4" />
@@ -212,7 +212,7 @@ export default function AuthPage() {
               </form>
 
               {/* Footer */}
-              <div className="mt-7 text-center text-xs text-[#8c8c96]">
+              <div className="mt-5 text-center text-[11px] text-[#8c8c96]">
                 Not Registered Yet?{' '}
                 <button
                   type="button"
@@ -229,8 +229,8 @@ export default function AuthPage() {
             ---------------------------------------------------- */
             <div>
               {/* Header */}
-              <div className="mb-7">
-                <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
+              <div className="mb-5">
+                <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">
                   Create an <span className="text-[#ff3b30]">Account</span>
                 </h1>
                 <p className="text-[#8c8c96] text-xs leading-relaxed font-normal">
@@ -239,53 +239,53 @@ export default function AuthPage() {
               </div>
 
               {/* Signup Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label className="text-xs text-white/90 font-medium mb-2 block">Full Name</label>
+                  <label className="text-[11px] text-white/90 font-medium mb-1 block">Full Name</label>
                   <div className="relative flex items-center">
-                    <User className="absolute left-4 w-4 h-4 text-[#8c8c96]" />
+                    <User className="absolute left-3.5 w-4 h-4 text-[#8c8c96]" />
                     <input
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="John Doe"
                       required
-                      className="w-full h-[56px] bg-[#070709] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
+                      className="w-full h-[46px] bg-[#070709] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-white/90 font-medium mb-2 block">Email</label>
+                  <label className="text-[11px] text-white/90 font-medium mb-1 block">Email</label>
                   <div className="relative flex items-center">
-                    <Mail className="absolute left-4 w-4 h-4 text-[#8c8c96]" />
+                    <Mail className="absolute left-3.5 w-4 h-4 text-[#8c8c96]" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="mail@abc.com"
                       required
-                      className="w-full h-[56px] bg-[#070709] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
+                      className="w-full h-[46px] bg-[#070709] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-white/90 font-medium mb-2 block">Password</label>
+                  <label className="text-[11px] text-white/90 font-medium mb-1 block">Password</label>
                   <div className="relative flex items-center">
-                    <Lock className="absolute left-4 w-4 h-4 text-[#8c8c96]" />
+                    <Lock className="absolute left-3.5 w-4 h-4 text-[#8c8c96]" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter password"
                       required
-                      className="w-full h-[56px] bg-[#070709] border border-white/10 rounded-xl py-3 pl-11 pr-11 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
+                      className="w-full h-[46px] bg-[#070709] border border-white/10 rounded-xl py-2 pl-10 pr-10 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 text-[#8c8c96] hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3.5 text-[#8c8c96] hover:text-white transition-colors cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -293,21 +293,21 @@ export default function AuthPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs text-white/90 font-medium mb-2 block">Confirm Password</label>
+                  <label className="text-[11px] text-white/90 font-medium mb-1 block">Confirm Password</label>
                   <div className="relative flex items-center">
-                    <Lock className="absolute left-4 w-4 h-4 text-[#8c8c96]" />
+                    <Lock className="absolute left-3.5 w-4 h-4 text-[#8c8c96]" />
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm password"
                       required
-                      className="w-full h-[56px] bg-[#070709] border border-white/10 rounded-xl py-3 pl-11 pr-11 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
+                      className="w-full h-[46px] bg-[#070709] border border-white/10 rounded-xl py-2 pl-10 pr-10 text-xs text-white placeholder-[#555560] outline-none focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30]/30 transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-4 text-[#8c8c96] hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3.5 text-[#8c8c96] hover:text-white transition-colors cursor-pointer"
                     >
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -317,7 +317,7 @@ export default function AuthPage() {
                 {/* Primary Submit Button */}
                 <button
                   type="submit"
-                  className="w-full h-[56px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[16px] py-3 text-sm font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-3"
+                  className="w-full h-[48px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[14px] py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-2"
                 >
                   <span>Create Account</span>
                   <ArrowRight className="w-4 h-4" />
@@ -325,11 +325,11 @@ export default function AuthPage() {
               </form>
 
               {/* Footer */}
-              <div className="mt-7 text-center text-xs text-[#8c8c96]">
+              <div className="mt-5 text-center text-[11px] text-[#8c8c96]">
                 Already have an account?{' '}
                 <button
                   type="button"
-                  onClick={() => setMode('signup')}
+                  onClick={() => setMode('login')}
                   className="text-[#ff3b30] font-semibold cursor-pointer hover:underline"
                 >
                   Sign in
