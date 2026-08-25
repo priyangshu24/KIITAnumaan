@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   MapPin,
@@ -172,6 +173,7 @@ const campusPins: PinData[] = [
 ]
 
 export default function CampusWorkspacePage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<CampusTab>('map')
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
   const [selectedPin, setSelectedPin] = useState<PinData>(campusPins[0])
@@ -246,7 +248,13 @@ export default function CampusWorkspacePage() {
             return (
               <button
                 key={nav.id}
-                onClick={() => setActiveTab(nav.id as CampusTab)}
+                onClick={() => {
+                  if (nav.id === 'faculty') {
+                    router.push('/workspace/faculty?tab=directory')
+                  } else {
+                    setActiveTab(nav.id as CampusTab)
+                  }
+                }}
                 onMouseEnter={() => setHoveredTab(nav.id)}
                 className={`relative px-4 py-2 rounded-xl text-xs font-semibold transition-colors duration-200 flex flex-col items-center justify-center whitespace-nowrap cursor-pointer shrink-0 ${
                   isActive

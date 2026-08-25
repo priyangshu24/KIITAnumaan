@@ -63,13 +63,20 @@ export default function WorkspaceSidebar() {
 
   const [isHovered, setIsHovered] = useState(false)
   const [isManuallyCollapsed] = useState(false)
-  const [isAcademicOpen, setIsAcademicOpen] = useState(false)
-  const [isCampusOpen, setIsCampusOpen] = useState(false)
-  const [isCareerOpen, setIsCareerOpen] = useState(false)
+  const [isAcademicOpen, setIsAcademicOpen] = useState(pathname.startsWith('/workspace/academic'))
+  const [isCampusOpen, setIsCampusOpen] = useState(
+    pathname.startsWith('/workspace/campus') ||
+    pathname.startsWith('/workspace/faculty') ||
+    pathname.startsWith('/workspace/section-swap')
+  )
+  const [isCareerOpen, setIsCareerOpen] = useState(pathname.startsWith('/workspace/career'))
 
   const isExpanded = isHovered && !isManuallyCollapsed
   const isAcademicActive = pathname.startsWith('/workspace/academic')
-  const isCampusActive = pathname.startsWith('/workspace/campus')
+  const isCampusActive =
+    pathname.startsWith('/workspace/campus') ||
+    pathname.startsWith('/workspace/faculty') ||
+    pathname.startsWith('/workspace/section-swap')
   const isCareerActive = pathname.startsWith('/workspace/career')
   const currentTab = searchParams.get('tab') || ''
 
