@@ -109,7 +109,7 @@ export default function AcademicPage() {
                     </td>
                     <td className="py-4 px-6 font-mono text-[#A1A1AA]">{row.downloads}</td>
                     <td className="py-4 px-6 text-right">
-                      <Button size="sm" variant="outline" href="/login">
+                      <Button size="sm" variant="outline" href="/workspace/academic/pyq-library">
                         <Download size={13} /> PDF ({row.size})
                       </Button>
                     </td>

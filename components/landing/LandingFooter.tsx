@@ -17,11 +17,8 @@ export default function LandingFooter() {
           >
             GitHub
           </a>
-          <Link href="/login" className="hover:text-white transition-colors">
-            Login
-          </Link>
-          <Link href="/signup" className="hover:text-white transition-colors">
-            Sign Up
+          <Link href="/workspace" className="hover:text-white transition-colors">
+            Workspace
           </Link>
         </div>
 

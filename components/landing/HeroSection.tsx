@@ -54,10 +54,10 @@ export default function HeroSection() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-6">
             {/* Primary Button: Red Gradient (#ff3b30 -> #ff5a4f), Rounded 18px, Soft Glow, Hover Scale 1.03 */}
             <Link
-              href="/signup"
+              href="/workspace"
               className="bg-gradient-to-r from-[#ff3b30] to-[#ff5a4f] text-white text-xs font-bold uppercase tracking-wider px-7 py-4 rounded-[18px] hover:scale-[1.03] transition-all duration-[250ms] active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,59,48,0.3)]"
             >
-              Get Started <ArrowRight size={16} />
+              Open Workspace <ArrowRight size={16} />
             </Link>
 
             {/* Secondary Button: Transparent, White Border, White Text, Hover Border Red */}

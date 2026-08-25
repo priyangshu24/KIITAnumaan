@@ -180,19 +180,13 @@ export default function LandingNavbar() {
           </motion.nav>
         </div>
 
-        {/* RIGHT SIDE: LOGIN & GET STARTED */}
+        {/* RIGHT SIDE: DIRECT WORKSPACE ENTRY */}
         <div className="relative z-10 flex-shrink-0 flex items-center gap-4">
           <Link
-            href="/login"
-            className="text-xs font-semibold uppercase tracking-wider text-[#bdbdbd] hover:text-white transition-colors px-3 py-2"
-          >
-            Login
-          </Link>
-          <Link
-            href="/signup"
+            href="/workspace"
             className="bg-gradient-to-r from-[#ff3b30] to-[#ff5a4f] text-white text-xs font-bold uppercase tracking-wider px-6 py-2.5 rounded-[18px] hover:scale-[1.03] transition-all duration-[250ms] active:scale-95 shadow-[0_0_20px_rgba(255,59,48,0.3)] flex items-center gap-1.5"
           >
-            Get Started <ArrowRight size={14} />
+            Open Workspace <ArrowRight size={14} />
           </Link>
         </div>
 

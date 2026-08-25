@@ -49,8 +49,7 @@ export default function Footer() {
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-widest text-[#A1A1AA]">Platform</h4>
             <ul className="space-y-2 text-xs font-medium text-[#71717A]">
-              <li><Link href="/login" className="hover:text-white transition-colors">Student Login</Link></li>
-              <li><Link href="/signup" className="hover:text-white transition-colors">Register Account</Link></li>
+              <li><Link href="/workspace" className="hover:text-white transition-colors">Open Workspace</Link></li>
               <li><a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">GitHub Repository</a></li>
               <li><span className="text-[#22C55E] font-semibold">● Operational</span></li>
             </ul>
