@@ -106,7 +106,7 @@ export default function WorkspaceSidebar() {
     setIsCareerOpen((prev) => !prev)
   }
 
-  const handleLogout = () => {
+  const handleExit = () => {
     router.push('/')
   }
 
@@ -468,10 +468,10 @@ export default function WorkspaceSidebar() {
         </nav>
       </div>
 
-      {/* Direct Logout Option */}
+      {/* Exit back to the public site (no auth layer yet) */}
       <div className="pt-2 border-t border-white/[0.05] mt-auto shrink-0 z-10">
         <button
-          onClick={handleLogout}
+          onClick={handleExit}
           className="group relative flex items-center justify-between w-full px-3.5 py-2.5 h-[48px] rounded-[16px] text-xs font-semibold text-[#FF453A] hover:bg-[#FF453A]/10 transition-all duration-200 cursor-pointer"
         >
           <div className="flex items-center gap-3.5 min-w-0 pl-1">
@@ -486,7 +486,7 @@ export default function WorkspaceSidebar() {
                   : 'opacity-0 translate-x-3 pointer-events-none'
               }`}
             >
-              Logout
+              Exit Workspace
             </span>
           </div>
         </button>

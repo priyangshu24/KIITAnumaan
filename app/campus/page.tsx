@@ -56,7 +56,7 @@ export default function CampusPage() {
             <h3 className="text-xl font-bold uppercase text-white flex items-center gap-2">
               <ArrowLeftRight size={18} className="text-[#FF3B30]" /> Section Swap Coordination
             </h3>
-            <Button size="sm" variant="primary" href="/login">
+            <Button size="sm" variant="primary" href="/workspace/faculty">
               Post Request
             </Button>
           </div>

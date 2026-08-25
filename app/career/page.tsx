@@ -101,7 +101,7 @@ export default function CareerPage() {
               </div>
             </div>
 
-            <Button href="/login" fullWidth size="lg" variant="primary">
+            <Button href="/workspace/career" fullWidth size="lg" variant="primary">
               Build Resume Now <ArrowRight size={16} />
             </Button>
           </Card>

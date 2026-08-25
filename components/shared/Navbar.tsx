@@ -88,19 +88,12 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Auth Buttons */}
+          {/* Direct Workspace Entry */}
           <Link
-            href="/login"
-            className="text-xs font-bold uppercase tracking-wider text-[#9CA3AF] hover:text-white transition-colors px-2"
-          >
-            Sign In
-          </Link>
-
-          <Link
-            href="/signup"
+            href="/workspace"
             className="bg-[#FF3B30] text-white text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl hover:bg-[#E03126] transition-all active:scale-95 shadow-[0_0_15px_rgba(255,59,48,0.25)]"
           >
-            Get Started
+            Open Workspace
           </Link>
         </div>
 
