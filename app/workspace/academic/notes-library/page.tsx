@@ -23,6 +23,7 @@ const sampleNotes = [
     year: '2025',
     author: 'Prof. S. Mohanty',
     semester: 'Semester 6',
+    branch: 'CSE',
     downloads: 1850,
     rating: 4.9,
     size: '12.4 MB',
@@ -37,6 +38,7 @@ const sampleNotes = [
     year: '2024',
     author: 'Aman Kumar (Topper CSE-04)',
     semester: 'Semester 5',
+    branch: 'CSE',
     downloads: 1420,
     rating: 4.8,
     size: '8.1 MB',
@@ -51,6 +53,7 @@ const sampleNotes = [
     year: '2025',
     author: 'Dr. K. R. Das',
     semester: 'Semester 6',
+    branch: 'IT',
     downloads: 1290,
     rating: 4.7,
     size: '5.6 MB',
@@ -62,6 +65,7 @@ const sampleNotes = [
 export default function NotesLibraryPage() {
   const [selectedCategory, setSelectedCategory] = useState('All Notes')
   const [selectedSemester, setSelectedSemester] = useState('All')
+  const [selectedBranch, setSelectedBranch] = useState('All')
   const [selectedSubject, setSelectedSubject] = useState('All')
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
   const [notesList, setNotesList] = useState(sampleNotes)
@@ -83,8 +87,9 @@ export default function NotesLibraryPage() {
   const filteredNotes = notesList.filter((item) => {
     const matchesCat = selectedCategory === 'All Notes' || item.category === selectedCategory
     const matchesSem = selectedSemester === 'All' || item.semester === selectedSemester
+    const matchesBranch = selectedBranch === 'All' || item.branch === selectedBranch
     const matchesSub = selectedSubject === 'All' || item.subject === selectedSubject
-    return matchesCat && matchesSem && matchesSub
+    return matchesCat && matchesSem && matchesBranch && matchesSub
   })
 
   return (
@@ -194,6 +199,24 @@ export default function NotesLibraryPage() {
             </select>
           </div>
 
+          {/* Branch Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#8A8A8A] font-mono">Branch:</span>
+            <select
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+              className="bg-white/[0.04] backdrop-blur-md border border-white/10 text-xs text-white px-3.5 py-2 rounded-xl outline-none cursor-pointer font-semibold hover:bg-white/[0.08] hover:border-white/20 transition-all focus:border-[#FF453A]/50"
+            >
+              <option value="All" className="bg-[#111214] text-white">All Branches</option>
+              <option value="CSE" className="bg-[#111214] text-white">CSE</option>
+              <option value="IT" className="bg-[#111214] text-white">IT</option>
+              <option value="ECE" className="bg-[#111214] text-white">ECE</option>
+              <option value="EEE" className="bg-[#111214] text-white">EEE</option>
+              <option value="ME" className="bg-[#111214] text-white">Mechanical</option>
+              <option value="CE" className="bg-[#111214] text-white">Civil</option>
+            </select>
+          </div>
+
           {/* Subject Selector */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-[#8A8A8A] font-mono">Subject:</span>
@@ -248,7 +271,7 @@ export default function NotesLibraryPage() {
 
             <div>
               <span className="text-[10px] font-mono text-[#FF453A] uppercase tracking-wider font-bold block">
-                {note.subject} • {note.semester}
+                {note.subject} • {note.semester} • {note.branch}
               </span>
               <h4 className="text-base font-bold text-white leading-snug mt-1 group-hover:text-[#FF453A] transition-colors">
                 {note.title}

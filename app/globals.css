@@ -123,23 +123,6 @@ body {
   color: #FFFFFF;
 }
 
-/* =========================================
-   LIGHT THEME OVERRIDES (Only active when .light class is present)
-   ========================================= */
-html.light,
-html.light body {
-  background-color: #F4F5F7 !important;
-  color: #111827 !important;
-}
-
-html.light main {
-  color: #111827 !important;
-}
-
-html.light input {
-  color: #111827 !important;
-}
-
 /* Ensure all input text & placeholders are crisp and high-contrast in dark mode */
 input, textarea, select {
   color: #FFFFFF;

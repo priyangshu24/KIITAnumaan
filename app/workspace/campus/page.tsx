@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   MapPin,
-  Users,
   Home,
   BookOpen,
   FlaskConical,
@@ -16,12 +15,12 @@ import {
   RotateCcw,
   Clock,
   GraduationCap,
+  Search,
 } from 'lucide-react'
 
 // Navigation tab types
 type CampusTab =
   | 'map'
-  | 'faculty'
   | 'hostels'
   | 'library'
   | 'labs'
@@ -177,6 +176,18 @@ export default function CampusWorkspacePage() {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
   const [selectedPin, setSelectedPin] = useState<PinData>(campusPins[0])
   const [zoomLevel, setZoomLevel] = useState<number>(1)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const visiblePins = campusPins.filter((pin) => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return true
+    return (
+      pin.name.toLowerCase().includes(q) ||
+      pin.code.toLowerCase().includes(q) ||
+      pin.subtitle.toLowerCase().includes(q) ||
+      pin.category.toLowerCase().includes(q)
+    )
+  })
 
   const handleZoomIn = () => setZoomLevel((prev) => Math.min(prev + 0.2, 1.8))
   const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.2, 0.8))
@@ -186,16 +197,42 @@ export default function CampusWorkspacePage() {
     <div className="space-y-6 max-w-[1600px] mx-auto text-white pb-12">
       
       {/* ----------------------------------------------------
-          TOP NAVIGATION CARD (Animated Capsule Bar)
+          TOP BANNER HEADER CARD (With Full Cover Red KIIT Campus Wireframe Background Image)
       ---------------------------------------------------- */}
-      <div className="flex justify-center">
+      <div className="relative overflow-hidden w-full bg-[#0B0B0D] border border-white/[0.08] rounded-[24px] p-6 lg:p-8 shadow-[0_16px_40px_rgba(0,0,0,0.45)] min-h-[160px] flex items-center">
+        {/* Full Cover High-Res KIIT Red Wireframe Image */}
+        <img
+          src="/kiit-campus-dotted.jpg"
+          alt="KIIT Campus Wireframe Background"
+          className="absolute inset-0 w-full h-full object-cover object-[75%_center] opacity-90 pointer-events-none z-0 rounded-[24px]"
+        />
+
+        {/* Left-to-Right Seamless Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0D] via-[#0B0B0D]/75 to-transparent pointer-events-none z-10 rounded-[24px]" />
+
+        <div className="relative z-20 space-y-1.5 max-w-xl">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF453A] font-mono block drop-shadow">
+            CAMPUS NAVIGATOR
+          </span>
+          <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-bold text-white tracking-tight leading-none drop-shadow-md">
+            Campus Map & Facilities
+          </h1>
+          <p className="text-xs text-[#A0A0A0] font-normal mt-2 leading-relaxed drop-shadow">
+            Explore the interactive campus map, hostels, library, labs and every facility you need to find your way around KIIT.
+          </p>
+        </div>
+      </div>
+
+      {/* ----------------------------------------------------
+          UNIFIED LIQUID GLASS TOOLBAR & NAVIGATION
+      ---------------------------------------------------- */}
+      <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] rounded-[24px] p-2 lg:px-4 lg:py-2.5 shadow-[0_16px_40px_rgba(0,0,0,0.45)] flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div
           onMouseLeave={() => setHoveredTab(null)}
-          className="bg-[#111214] border border-white/[0.04] rounded-full p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.18)] inline-flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none max-w-full"
+          className="flex items-center gap-1.5 overflow-x-auto scrollbar-none"
         >
           {[
             { id: 'map', name: 'Interactive Map', icon: MapPin },
-            { id: 'faculty', name: 'Faculty Directory', icon: Users },
             { id: 'hostels', name: 'Hostels', icon: Home },
             { id: 'library', name: 'Library', icon: BookOpen },
             { id: 'labs', name: 'Labs', icon: FlaskConical },
@@ -211,9 +248,9 @@ export default function CampusWorkspacePage() {
                 key={nav.id}
                 onClick={() => setActiveTab(nav.id as CampusTab)}
                 onMouseEnter={() => setHoveredTab(nav.id)}
-                className={`relative px-4 py-2 rounded-full text-xs font-medium transition-colors duration-200 flex flex-col items-center justify-center whitespace-nowrap cursor-pointer shrink-0 ${
+                className={`relative px-4 py-2 rounded-xl text-xs font-semibold transition-colors duration-200 flex flex-col items-center justify-center whitespace-nowrap cursor-pointer shrink-0 ${
                   isActive
-                    ? 'text-white font-semibold'
+                    ? 'text-white font-bold'
                     : 'text-[#8A8A8A] hover:text-white'
                 }`}
               >
@@ -221,7 +258,7 @@ export default function CampusWorkspacePage() {
                 {isHovered && !isActive && (
                   <motion.div
                     layoutId="hoverCampusTabPill"
-                    className="absolute inset-0 bg-white/[0.05] rounded-full z-0 pointer-events-none"
+                    className="absolute inset-0 bg-white/[0.06] backdrop-blur-md rounded-xl z-0 pointer-events-none"
                     transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
@@ -230,7 +267,7 @@ export default function CampusWorkspacePage() {
                 {isActive && (
                   <motion.div
                     layoutId="activeCampusTabPill"
-                    className="absolute inset-0 bg-white/[0.08] border border-white/15 rounded-full shadow-inner z-0 pointer-events-none"
+                    className="absolute inset-0 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-[0_4px_20px_rgba(255,69,58,0.15)] z-0 pointer-events-none"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -238,7 +275,7 @@ export default function CampusWorkspacePage() {
                 <div className="relative z-10 flex items-center gap-2">
                   <NavIcon
                     size={15}
-                    className={isActive ? 'text-[#FF4D4D]' : isHovered ? 'text-white' : 'text-[#8A8A8A]'}
+                    className={isActive ? 'text-[#FF453A]' : isHovered ? 'text-white' : 'text-[#8A8A8A]'}
                   />
                   <span>{nav.name}</span>
                 </div>
@@ -247,13 +284,39 @@ export default function CampusWorkspacePage() {
                 {isActive && (
                   <motion.span
                     layoutId="activeCampusTabRedDash"
-                    className="relative z-10 w-3.5 h-[2.5px] bg-[#FF4D4D] rounded-full mt-1 shadow-sm block"
+                    className="relative z-10 w-3.5 h-[2.5px] bg-[#FF453A] rounded-full mt-1 shadow-[0_0_8px_#FF453A] block"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
               </button>
             )
           })}
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative w-full md:w-64 shrink-0 border-t md:border-t-0 border-white/[0.06] pt-2 md:pt-0">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A8A8A] pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              const query = e.target.value
+              setSearchQuery(query)
+              const q = query.trim().toLowerCase()
+              if (q) {
+                const match = campusPins.find(
+                  (pin) =>
+                    pin.name.toLowerCase().includes(q) ||
+                    pin.code.toLowerCase().includes(q) ||
+                    pin.subtitle.toLowerCase().includes(q) ||
+                    pin.category.toLowerCase().includes(q)
+                )
+                if (match) setSelectedPin(match)
+              }
+            }}
+            placeholder="Search buildings, hostels, labs..."
+            className="w-full bg-white/[0.04] backdrop-blur-md border border-white/10 text-xs text-white pl-9 pr-3 py-2 rounded-xl outline-none font-semibold placeholder:text-[#6B7280] placeholder:font-normal hover:bg-white/[0.08] hover:border-white/20 transition-all focus:border-[#FF453A]/50"
+          />
         </div>
       </div>
 
@@ -319,7 +382,7 @@ export default function CampusWorkspacePage() {
               </svg>
 
               {/* Red Location Pins */}
-              {campusPins.map((pin) => {
+              {visiblePins.map((pin) => {
                 const isSelected = selectedPin.id === pin.id
                 return (
                   <button

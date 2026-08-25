@@ -6,13 +6,10 @@ import {
   Search,
   Bell,
   Moon,
-  Sun,
-  Laptop,
   X,
   CheckCircle2,
   FileText,
   Sparkles,
-  ChevronDown,
 } from 'lucide-react'
 
 const sampleNotifications = [
@@ -42,14 +39,10 @@ const sampleNotifications = [
   },
 ]
 
-type ThemeMode = 'dark' | 'light' | 'system'
-
 export default function WorkspaceNavbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState(sampleNotifications)
-  const [theme, setTheme] = useState<ThemeMode>('dark')
-  const [showThemeMenu, setShowThemeMenu] = useState(false)
 
   const unreadCount = notifications.filter((n) => n.unread).length
 
@@ -57,33 +50,12 @@ export default function WorkspaceNavbar() {
     setNotifications(notifications.map((n) => ({ ...n, unread: false })))
   }
 
-  const handleSelectTheme = (mode: ThemeMode) => {
-    setTheme(mode)
-    setShowThemeMenu(false)
-  }
-
-  // Theme Switching Effect (Defaults to Dark Theme)
+  // This app only has a dark theme implemented — every page uses hardcoded
+  // dark backgrounds, so there is no light-mode styling to switch to.
   useEffect(() => {
-    const root = document.documentElement
-
-    if (theme === 'light') {
-      root.classList.add('light')
-      root.classList.remove('dark')
-    } else if (theme === 'system') {
-      const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      if (isSystemDark) {
-        root.classList.add('dark')
-        root.classList.remove('light')
-      } else {
-        root.classList.add('light')
-        root.classList.remove('dark')
-      }
-    } else {
-      // Dark (Default)
-      root.classList.add('dark')
-      root.classList.remove('light')
-    }
-  }, [theme])
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
+  }, [])
 
   return (
     <header className="h-[56px] py-1 sticky top-0 z-20 flex items-center justify-end gap-4 px-2 sm:px-4 bg-transparent">
@@ -93,10 +65,7 @@ export default function WorkspaceNavbar() {
         {/* Notifications Bell Button */}
         <div className="relative">
           <button
-            onClick={() => {
-              setShowNotifications(!showNotifications)
-              setShowThemeMenu(false)
-            }}
+            onClick={() => setShowNotifications(!showNotifications)}
             className="w-10 h-10 rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white transition-all relative"
             aria-label="Notifications"
           >
@@ -167,63 +136,10 @@ export default function WorkspaceNavbar() {
           )}
         </div>
 
-        {/* Interactive Theme Selector Dropdown (Dark, Light, System Default) */}
-        <div className="relative hidden sm:block">
-          <button
-            onClick={() => {
-              setShowThemeMenu(!showThemeMenu)
-              setShowNotifications(false)
-            }}
-            className="flex items-center gap-2 px-3.5 py-2 h-[44px] rounded-full bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] text-xs text-[#8A8A8A] hover:text-white font-medium transition-all"
-          >
-            {theme === 'dark' && <Moon size={14} className="text-[#FF453A]" />}
-            {theme === 'light' && <Sun size={14} className="text-amber-400" />}
-            {theme === 'system' && <Laptop size={14} className="text-blue-400" />}
-
-            <span className="capitalize">{theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}</span>
-            <ChevronDown size={13} className={`transition-transform duration-200 ${showThemeMenu ? 'rotate-180' : ''}`} />
-          </button>
-
-          {/* Theme Options Dropdown Menu */}
-          {showThemeMenu && (
-            <div className="absolute right-0 mt-2 w-40 bg-[#111214] border border-white/15 rounded-xl shadow-2xl p-1.5 space-y-1 z-50">
-              <button
-                onClick={() => handleSelectTheme('dark')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  theme === 'dark'
-                    ? 'bg-white/[0.08] text-white'
-                    : 'text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                <Moon size={14} className="text-[#FF453A]" />
-                <span>Dark</span>
-              </button>
-
-              <button
-                onClick={() => handleSelectTheme('light')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  theme === 'light'
-                    ? 'bg-white/[0.08] text-white'
-                    : 'text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                <Sun size={14} className="text-amber-400" />
-                <span>Light</span>
-              </button>
-
-              <button
-                onClick={() => handleSelectTheme('system')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  theme === 'system'
-                    ? 'bg-white/[0.08] text-white'
-                    : 'text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                <Laptop size={14} className="text-blue-400" />
-                <span>System</span>
-              </button>
-            </div>
-          )}
+        {/* Dark Theme Indicator (this app has no light-mode styling to switch to) */}
+        <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 h-[44px] rounded-full bg-white/[0.04] border border-white/10 text-xs text-[#8A8A8A] font-medium">
+          <Moon size={14} className="text-[#FF453A]" />
+          <span>Dark</span>
         </div>
 
         {/* User Profile Avatar Pill */}

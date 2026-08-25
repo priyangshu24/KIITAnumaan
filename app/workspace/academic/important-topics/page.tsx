@@ -18,6 +18,7 @@ const sampleTopics = [
     id: 1,
     topic: 'Banker’s Algorithm & Deadlock Avoidance',
     subject: 'Operating Systems',
+    branch: 'CSE',
     unit: 'Unit 3',
     priority: 'High',
     frequency: 'Appeared in 4 of last 5 semester exams',
@@ -27,6 +28,7 @@ const sampleTopics = [
     id: 2,
     topic: 'Virtual Memory & Page Replacement Algorithms (LRU, FIFO, Optimal)',
     subject: 'Operating Systems',
+    branch: 'CSE',
     unit: 'Unit 4',
     priority: 'High',
     frequency: 'Appeared in 5 of last 5 semester exams',
@@ -36,6 +38,7 @@ const sampleTopics = [
     id: 3,
     topic: 'Process Synchronization & Semaphores (Producer-Consumer)',
     subject: 'Operating Systems',
+    branch: 'IT',
     unit: 'Unit 2',
     priority: 'High',
     frequency: 'Appeared in 4 of last 5 semester exams',
@@ -45,6 +48,7 @@ const sampleTopics = [
     id: 4,
     topic: 'CPU Scheduling Algorithms (SRTF, Round Robin, Multi-level Queue)',
     subject: 'Operating Systems',
+    branch: 'CSE',
     unit: 'Unit 1',
     priority: 'Medium',
     frequency: 'Appeared in 3 of last 5 semester exams',
@@ -54,6 +58,7 @@ const sampleTopics = [
     id: 5,
     topic: 'Disk Scheduling Algorithms (SCAN, C-SCAN, FCFS)',
     subject: 'Operating Systems',
+    branch: 'IT',
     unit: 'Unit 5',
     priority: 'Low',
     frequency: 'Appeared in 2 of last 5 semester exams',
@@ -65,6 +70,7 @@ export default function ImportantTopicsPage() {
   const [selectedSubject, setSelectedSubject] = useState('Operating Systems')
   const [selectedYear, setSelectedYear] = useState('2025-2026')
   const [selectedSemester, setSelectedSemester] = useState('Semester 6')
+  const [selectedBranch, setSelectedBranch] = useState('All')
   const [selectedExamType, setSelectedExamType] = useState('Endsem')
   const [selectedPriority, setSelectedPriority] = useState('All')
   const [topics, setTopics] = useState(sampleTopics)
@@ -80,7 +86,8 @@ export default function ImportantTopicsPage() {
 
   const filteredTopics = topics.filter((t) => {
     const matchesPriority = selectedPriority === 'All' || t.priority === selectedPriority
-    return matchesPriority
+    const matchesBranch = selectedBranch === 'All' || t.branch === selectedBranch
+    return matchesPriority && matchesBranch
   })
 
   return (
@@ -159,6 +166,24 @@ export default function ImportantTopicsPage() {
               </select>
             </div>
 
+            {/* Branch */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[#8A8A8A] font-mono">Branch:</span>
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="bg-white/[0.04] backdrop-blur-md border border-white/10 text-xs text-white px-3.5 py-2 rounded-xl outline-none cursor-pointer font-semibold hover:bg-white/[0.08] transition-all focus:border-[#FF453A]/50"
+              >
+                <option value="All" className="bg-[#111214] text-white">All Branches</option>
+                <option value="CSE" className="bg-[#111214] text-white">CSE</option>
+                <option value="IT" className="bg-[#111214] text-white">IT</option>
+                <option value="ECE" className="bg-[#111214] text-white">ECE</option>
+                <option value="EEE" className="bg-[#111214] text-white">EEE</option>
+                <option value="ME" className="bg-[#111214] text-white">Mechanical</option>
+                <option value="CE" className="bg-[#111214] text-white">Civil</option>
+              </select>
+            </div>
+
             {/* Exam Type (Midsem vs Endsem) */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-[#8A8A8A] font-mono">Exam:</span>
@@ -226,6 +251,9 @@ export default function ImportantTopicsPage() {
                     </span>
                     <span className="text-[10px] font-mono text-[#8A8A8A] bg-white/[0.04] px-2 py-0.5 rounded-md">
                       {item.unit}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#8A8A8A] bg-white/[0.04] px-2 py-0.5 rounded-md">
+                      {item.branch}
                     </span>
                   </div>
 

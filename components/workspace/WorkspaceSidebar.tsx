@@ -34,9 +34,9 @@ const academicSubmenu = [
 
 // Campus Submenu items specification
 const campusSubmenu = [
-  { name: 'Campus Navigation', tab: 'navigation', icon: Navigation },
-  { name: 'Faculty Directory', tab: 'faculty', icon: Users },
-  { name: 'Section Swap', tab: 'section-swap', icon: ArrowRightLeft },
+  { name: 'Campus Navigation', href: '/workspace/campus', icon: Navigation },
+  { name: 'Faculty Directory', href: '/workspace/faculty', icon: Users },
+  { name: 'Section Swap', href: '/workspace/section-swap', icon: ArrowRightLeft },
 ]
 
 // Career Submenu items specification
@@ -297,12 +297,12 @@ export default function WorkspaceSidebar() {
               <div className="space-y-1">
                 {campusSubmenu.map((sub, index) => {
                   const SubIcon = sub.icon
-                  const isSubActive = isCampusActive && currentTab === sub.tab
+                  const isSubActive = pathname === sub.href
 
                   return (
                     <Link
                       key={sub.name}
-                      href={`/workspace/campus?tab=${sub.tab}`}
+                      href={sub.href}
                       style={{ transitionDelay: `${index * 30}ms` }}
                       className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[14px] font-medium transition-all duration-200 ${
                         isSubActive
