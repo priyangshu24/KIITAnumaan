@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -20,6 +20,7 @@ import {
   ArrowRightLeft,
   CheckCircle2,
   Compass,
+  Code2,
 } from 'lucide-react'
 
 // Academic Submenu items specification
@@ -48,6 +49,11 @@ const careerSubmenu = [
 ]
 
 const mainNavItems = [
+  {
+    name: 'Play Ground',
+    href: '/workspace/playground',
+    icon: Code2,
+  },
   {
     name: 'Profile & Settings',
     href: '/workspace/profile',

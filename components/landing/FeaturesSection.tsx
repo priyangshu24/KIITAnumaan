@@ -61,10 +61,10 @@ export default function FeaturesSection() {
   return (
     <section
       id="features"
-      className="relative bg-transparent py-[100px] px-6 lg:px-12 text-white selection:bg-[#FF3B30] selection:text-white overflow-hidden"
+      className="relative bg-transparent pt-8 sm:pt-10 pb-20 lg:pb-24 px-6 lg:px-12 text-white selection:bg-[#FF3B30] selection:text-white overflow-hidden"
     >
       {/* Floating subtle ambient red glow particle accents */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#080808] via-[#080808]/60 to-transparent pointer-events-none z-0" />
+      <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#080808] via-[#080808]/40 to-transparent pointer-events-none z-0" />
       <div className="absolute top-1/4 left-10 w-72 h-72 rounded-full bg-[#FF3B30]/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-10 w-96 h-96 rounded-full bg-[#FF3B30]/5 blur-[150px] pointer-events-none" />
 

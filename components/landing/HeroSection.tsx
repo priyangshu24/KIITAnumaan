@@ -8,7 +8,7 @@ export default function HeroSection() {
   const [showDemoModal, setShowDemoModal] = useState(false)
 
   return (
-    <section className="relative min-h-screen pt-[140px] pb-12 px-6 lg:px-12 flex flex-col justify-between max-w-[1440px] mx-auto overflow-hidden bg-[#080808] selection:bg-[#ff453a] selection:text-white z-[1]">
+    <section className="relative pt-[120px] sm:pt-[130px] pb-4 sm:pb-6 px-6 lg:px-12 flex flex-col max-w-[1440px] mx-auto overflow-hidden bg-[#080808] selection:bg-[#ff453a] selection:text-white z-[1]">
       
       {/* BACKGROUND ILLUSTRATION - Screen Blend Mode & Smooth Gradient Overlay */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -26,10 +26,10 @@ export default function HeroSection() {
       </div>
 
       {/* Smooth Bottom Fade to Seamlessly Transition Hero Background into Features Section */}
-      <div className="absolute bottom-0 left-0 right-0 h-56 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent pointer-events-none z-[5]" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#080808] via-[#080808]/80 to-transparent pointer-events-none z-[5]" />
 
       {/* HERO MAIN GRID - 80px Gap between Left and Right */}
-      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-[80px] items-center z-10 relative my-auto">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-[80px] items-center z-10 relative">
         
         {/* LEFT CONTENT CONTAINER */}
         <div className="lg:col-span-7 xl:col-span-7">
@@ -77,16 +77,16 @@ export default function HeroSection() {
       </div>
 
       {/* SCROLL DOWN INDICATOR */}
-      <div className="z-20 relative flex justify-center pt-8 pb-4 pointer-events-auto">
+      <div className="z-20 relative flex justify-center mt-8 sm:mt-10 pointer-events-auto">
         <a
           href="#features"
-          className="group flex flex-col items-center gap-1.5 cursor-pointer text-[#bdbdbd] hover:text-white transition-colors duration-300"
+          className="group flex flex-col items-center gap-1 cursor-pointer text-[#bdbdbd] hover:text-white transition-colors duration-300"
         >
           <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
             Scroll Down
           </span>
           <ChevronDown
-            size={16}
+            size={15}
             className="text-[#ff453a] animate-bounce"
           />
         </a>

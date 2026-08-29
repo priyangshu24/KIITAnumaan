@@ -1,9 +1,10 @@
-'use client'
+﻿'use client'
 
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, Suspense, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
   companyDrives,
   drivePrepPlans,
@@ -458,7 +459,24 @@ const getMentorResponse = (input: string): string => {
 }
 
 export default function CareerWorkspacePage() {
-  const [activeTab, setActiveTab] = useState<CareerTab>('resume')
+  const searchParams = useSearchParams()
+  const tabQuery = searchParams.get('tab')
+
+  const resolveTab = (tab: string | null): CareerTab => {
+    if (tab === 'playground') return 'playground'
+    if (tab === 'ats-checker' || tab === 'ats') return 'ats'
+    if (tab === 'placement-planner' || tab === 'placement') return 'placement'
+    if (tab === 'ai-blueprint' || tab === 'blueprint') return 'blueprint'
+    if (tab === 'mentor') return 'mentor'
+    if (tab === 'resume-builder' || tab === 'resume') return 'resume'
+    return 'resume'
+  }
+
+  const [activeTab, setActiveTab] = useState<CareerTab>(resolveTab(tabQuery))
+
+  useEffect(() => {
+    if (tabQuery) setActiveTab(resolveTab(tabQuery))
+  }, [tabQuery])
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
 
   // ---------------------------------------------------------------------
