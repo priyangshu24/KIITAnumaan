@@ -1,22 +1,73 @@
 ﻿'use client'
 
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Play, RotateCcw, Copy, Check, ChevronRight,
+  Play, RotateCcw, Copy, Check, ChevronRight, ArrowLeft,
   Search, Filter, Sparkles, Terminal, Clock, Cpu,
   BookOpen, CheckCircle2, XCircle, EyeOff,
   Lightbulb, Bug, Zap, Code2, ChevronDown,
   PanelLeftClose, PanelLeftOpen, FlaskConical,
   Bookmark, BookmarkCheck, ArrowRight,
+  Settings2, Maximize2, Minimize2, Download, Keyboard,
+  WrapText, Type, Minus, Plus, Wand2, Map as MapIcon, X,
 } from 'lucide-react'
 import {
-  PROBLEMS, difficultyColors, languageConfig,
+  PROBLEMS, difficultyColors, languageConfig, starterCodeFor,
   type Problem, type Language, type Difficulty, type Company, type Topic,
 } from '@/lib/playground-data'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
+
+// Minimal shape of the Monaco editor instance we actually touch.
+type MonacoEditorInstance = {
+  getAction: (id: string) => { run: () => void } | null
+  getValue: () => string
+  focus: () => void
+}
+
+const LS = {
+  draft: (pid: string, lang: Language) => `kiit:pg:draft:${pid}:${lang}`,
+  solved: 'kiit:pg:solved',
+  bookmarks: 'kiit:pg:bookmarks',
+  settings: 'kiit:pg:editor',
+  split: 'kiit:pg:split',
+}
+
+const SPLIT_MIN = 24
+const SPLIT_MAX = 74
+const SPLIT_DEFAULT = 42
+const clampSplit = (n: number) => Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, n))
+
+const readLS = (key: string): string | null => {
+  try { return typeof window !== 'undefined' ? window.localStorage.getItem(key) : null } catch { return null }
+}
+const writeLS = (key: string, val: string) => {
+  try { window.localStorage.setItem(key, val) } catch { /* quota / private mode */ }
+}
+const removeLS = (key: string) => {
+  try { window.localStorage.removeItem(key) } catch { /* noop */ }
+}
+
+const fileExtension: Record<Language, string> = {
+  python: 'py', javascript: 'js', typescript: 'ts', java: 'java', cpp: 'cpp',
+  c: 'c', csharp: 'cs', go: 'go', rust: 'rs', kotlin: 'kt', swift: 'swift',
+  ruby: 'rb', php: 'php', sql: 'sql',
+}
+
+type EditorSettings = { fontSize: number; tabSize: number; wordWrap: boolean; minimap: boolean }
+const DEFAULT_EDITOR_SETTINGS: EditorSettings = { fontSize: 13, tabSize: 4, wordWrap: true, minimap: false }
+
+const SHORTCUTS: { label: string; keys: string }[] = [
+  { label: 'Run code', keys: 'Ctrl / ⌘  +  ↵' },
+  { label: 'Save draft', keys: 'Ctrl / ⌘  +  S' },
+  { label: 'Format code', keys: 'Ctrl / ⌘  +  ⇧  +  F' },
+  { label: 'Toggle line comment', keys: 'Ctrl / ⌘  +  /' },
+  { label: 'Command palette', keys: 'F1' },
+  { label: 'Add cursor', keys: 'Alt  +  Click' },
+]
 
 function executeJavaScript(code: string, stdin: string): { output: string; error: string | null; time: number } {
   const start = performance.now()
@@ -176,15 +227,35 @@ function QuestionSidebar(props: QSProps) {
     </AnimatePresence>
   )
 }
+function IconBtn({ onClick, title, active, disabled, children }: {
+  onClick: () => void; title: string; active?: boolean; disabled?: boolean; children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      disabled={disabled}
+      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${
+        active
+          ? 'bg-[#FF4D4D]/10 text-[#FF4D4D] border-[#FF4D4D]/30'
+          : 'bg-white/[0.03] text-[#8A8A8A] hover:text-white hover:bg-white/[0.06] border-transparent'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function PlaygroundTab() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [selectedProblem, setSelectedProblem] = useState<Problem>(PROBLEMS[0])
   const [language, setLanguage] = useState<Language>('python')
-  const [code, setCode] = useState(PROBLEMS[0].starterCode.python)
+  const [code, setCode] = useState(starterCodeFor(PROBLEMS[0], 'python'))
   const [customInput, setCustomInput] = useState('')
   const [output, setOutput] = useState('')
   const [isRunning, setIsRunning] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [langMenuOpen, setLangMenuOpen] = useState(false)
   const [activeBottomTab, setActiveBottomTab] = useState<'testcases' | 'input' | 'output' | 'console'>('testcases')
   const [testResults, setTestResults] = useState<{ id: number; passed: boolean | null; yourOutput: string; time: string; memory: string }[]>([])
   const [showAI, setShowAI] = useState(false)
@@ -199,21 +270,105 @@ export default function PlaygroundTab() {
   const [executionTime, setExecutionTime] = useState<string | null>(null)
   const outputRef = useRef<HTMLPreElement>(null)
 
+  // --- Professional editor tooling ------------------------------------------
+  const editorRef = useRef<MonacoEditorInstance | null>(null)
+  const [hydrated, setHydrated] = useState(false)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
+  const [didFormat, setDidFormat] = useState(false)
+  const [editorSettings, setEditorSettings] = useState<EditorSettings>(DEFAULT_EDITOR_SETTINGS)
+
+  // Resizable split between the problem panel and the editor.
+  const splitRef = useRef<HTMLDivElement>(null)
+  const draggingSplit = useRef(false)
+  const [leftPct, setLeftPct] = useState(SPLIT_DEFAULT)
+  const [isDraggingSplit, setIsDraggingSplit] = useState(false)
+
+  // Restore persisted progress + editor preferences once, on mount.
+  useEffect(() => {
+    const solved = readLS(LS.solved)
+    if (solved) { try { setSolvedSet(new Set(JSON.parse(solved))) } catch { /* corrupt */ } }
+    const marks = readLS(LS.bookmarks)
+    if (marks) { try { setBookmarkSet(new Set(JSON.parse(marks))) } catch { /* corrupt */ } }
+    const prefs = readLS(LS.settings)
+    if (prefs) { try { setEditorSettings(s => ({ ...s, ...JSON.parse(prefs) })) } catch { /* corrupt */ } }
+    const split = readLS(LS.split)
+    if (split) { const n = parseFloat(split); if (!Number.isNaN(n)) setLeftPct(clampSplit(n)) }
+    setHydrated(true)
+  }, [])
+
+  useEffect(() => { if (hydrated) writeLS(LS.solved, JSON.stringify([...solvedSet])) }, [solvedSet, hydrated])
+  useEffect(() => { if (hydrated) writeLS(LS.bookmarks, JSON.stringify([...bookmarkSet])) }, [bookmarkSet, hydrated])
+  useEffect(() => { if (hydrated) writeLS(LS.settings, JSON.stringify(editorSettings)) }, [editorSettings, hydrated])
+  useEffect(() => { if (hydrated) writeLS(LS.split, String(Math.round(leftPct))) }, [leftPct, hydrated])
+
+  // Drag-to-resize the problem/editor split.
+  const startSplitDrag = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    draggingSplit.current = true
+    setIsDraggingSplit(true)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }, [])
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!draggingSplit.current || !splitRef.current) return
+      const rect = splitRef.current.getBoundingClientRect()
+      setLeftPct(clampSplit(((e.clientX - rect.left) / rect.width) * 100))
+    }
+    const onUp = () => {
+      if (!draggingSplit.current) return
+      draggingSplit.current = false
+      setIsDraggingSplit(false)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [])
+
+  // Load the saved draft (or fall back to starter code) whenever the
+  // problem or language changes.
+  useEffect(() => {
+    const draft = readLS(LS.draft(selectedProblem.id, language))
+    setCode(draft ?? starterCodeFor(selectedProblem, language))
+    setSaveState(draft ? 'saved' : 'idle')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProblem.id, language])
+
+  // Debounced autosave of the current buffer.
+  useEffect(() => {
+    if (code === starterCodeFor(selectedProblem, language)) { setSaveState('idle'); return }
+    setSaveState('saving')
+    const t = setTimeout(() => {
+      writeLS(LS.draft(selectedProblem.id, language), code)
+      setSaveState('saved')
+    }, 600)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, selectedProblem.id, language])
+
   const handleSelectProblem = useCallback((problem: Problem) => {
     setSelectedProblem(problem)
-    setCode(problem.starterCode[language])
     setOutput('')
     setTestResults([])
     setAiAnalysis(null)
     setActiveBottomTab('testcases')
     setExecutionTime(null)
     setSidebarOpen(false)
-  }, [language])
+  }, [])
 
   const handleLanguageChange = useCallback((lang: Language) => {
     setLanguage(lang)
-    setCode(selectedProblem.starterCode[lang])
-  }, [selectedProblem])
+    setLangMenuOpen(false)
+  }, [])
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(code)
@@ -222,11 +377,40 @@ export default function PlaygroundTab() {
   }, [code])
 
   const handleReset = useCallback(() => {
-    setCode(selectedProblem.starterCode[language])
+    removeLS(LS.draft(selectedProblem.id, language))
+    setCode(starterCodeFor(selectedProblem, language))
+    setSaveState('idle')
     setOutput('')
     setTestResults([])
     setAiAnalysis(null)
   }, [selectedProblem, language])
+
+  const handleSaveNow = useCallback(() => {
+    writeLS(LS.draft(selectedProblem.id, language), code)
+    setSaveState('saved')
+  }, [selectedProblem.id, language, code])
+
+  const handleFormat = useCallback(() => {
+    const action = editorRef.current?.getAction('editor.action.formatDocument')
+    if (action) {
+      action.run()
+      setDidFormat(true)
+      setTimeout(() => setDidFormat(false), 1400)
+    }
+  }, [])
+
+  const handleDownload = useCallback(() => {
+    const safe = selectedProblem.id.replace(/[^a-z0-9_-]/gi, '_')
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${safe}.${fileExtension[language]}`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }, [code, language, selectedProblem.id])
 
   const handleRun = useCallback(() => {
     setIsRunning(true)
@@ -267,15 +451,36 @@ export default function PlaygroundTab() {
   const handleAIAnalyze = useCallback(() => { setShowAI(true); setAiAnalysis(analyzeCode(code, language)) }, [code, language])
   const handleToggleBookmark = useCallback((id: string) => { setBookmarkSet(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next }) }, [])
 
+  // Global keyboard shortcuts for the playground.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey
+      if (mod && e.key === 'Enter') { e.preventDefault(); if (!isRunning) handleRun() }
+      else if (mod && e.shiftKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); handleFormat() }
+      else if (mod && (e.key === 's' || e.key === 'S')) { e.preventDefault(); handleSaveNow() }
+      else if (e.key === 'Escape') { setShowShortcuts(false); setSettingsOpen(false) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [handleRun, handleFormat, handleSaveNow, isRunning])
+
   const dc = difficultyColors[selectedProblem.difficulty]
   return (
-    <div className="flex h-[calc(100vh-80px)] bg-[#0A0A0D] rounded-[16px] border border-white/[0.06] overflow-hidden shadow-2xl">
+    <div className="flex h-full w-full bg-[#0A0A0D] overflow-hidden">
       <QuestionSidebar problems={PROBLEMS} selectedProblem={selectedProblem} onSelect={handleSelectProblem} isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} searchQuery={searchQuery} onSearchChange={setSearchQuery} filterCompany={filterCompany} onFilterCompany={setFilterCompany} filterDifficulty={filterDifficulty} onFilterDifficulty={setFilterDifficulty} filterTopic={filterTopic} onFilterTopic={setFilterTopic} solvedSet={solvedSet} bookmarkSet={bookmarkSet} onToggleBookmark={handleToggleBookmark} />
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#0D0D10]/80 backdrop-blur-sm shrink-0">
           <div className="flex items-center gap-3">
+            <Link
+              href="/workspace/academic"
+              aria-label="Exit Playground"
+              title="Exit Playground"
+              className="group w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white hover:border-white/20 transition-all cursor-pointer shrink-0"
+            >
+              <ArrowLeft size={15} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+            </Link>
             {!sidebarOpen && (
               <button onClick={() => setSidebarOpen(true)} className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white transition-all cursor-pointer"><PanelLeftOpen size={15} /></button>
             )}
@@ -293,9 +498,12 @@ export default function PlaygroundTab() {
           </div>
         </div>
 
-        <div className="flex-1 flex min-h-0">
+        <div ref={splitRef} className="flex-1 flex min-h-0">
           {/* LEFT: Problem Description */}
-          <div className="w-[42%] border-r border-white/[0.06] flex flex-col min-h-0">
+          <div
+            className={`${focusMode ? 'hidden' : 'flex'} shrink-0 min-w-0 flex-col min-h-0`}
+            style={focusMode ? undefined : { width: `${leftPct}%` }}
+          >
             <div className="flex items-center gap-1 px-4 pt-3 pb-2 border-b border-white/[0.04] shrink-0">
               {([{ id: 'description' as const, label: 'Description', icon: BookOpen }, { id: 'examples' as const, label: 'Examples', icon: Code2 }, { id: 'hints' as const, label: 'Hints', icon: Lightbulb }, { id: 'interview' as const, label: 'Interview', icon: Zap }, { id: 'similar' as const, label: 'Similar', icon: ArrowRight }]).map(tab => (
                 <button key={tab.id} onClick={() => setActiveDescTab(tab.id)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${activeDescTab === tab.id ? 'bg-white/[0.08] text-white' : 'text-[#6B7280] hover:text-white'}`}>
@@ -317,24 +525,146 @@ export default function PlaygroundTab() {
               {activeDescTab === 'similar' && selectedProblem.similarProblems && (<div className="space-y-2"><h4 className="text-xs font-bold text-[#8A8A8A] uppercase tracking-wider mb-3">Similar Problems</h4>{selectedProblem.similarProblems.map((sp, i) => (<div key={i} className="bg-[#111214] border border-white/[0.06] rounded-xl p-3 flex items-center justify-between group hover:border-white/[0.12] transition-all cursor-pointer"><span className="text-xs text-[#D1D5DB] group-hover:text-white transition-colors">{sp}</span><ArrowRight size={12} className="text-[#6B7280] group-hover:text-[#FF4D4D] transition-colors" /></div>))}</div>)}
             </div>
           </div>
+
+          {/* Drag handle: shift the split left / right */}
+          {!focusMode && (
+            <div
+              onMouseDown={startSplitDrag}
+              onDoubleClick={() => setLeftPct(SPLIT_DEFAULT)}
+              title="Drag to resize  ·  double-click to reset"
+              className={`group relative w-[5px] shrink-0 cursor-col-resize transition-colors ${isDraggingSplit ? 'bg-[#FF4D4D]/60' : 'bg-white/[0.06] hover:bg-[#FF4D4D]/40'}`}
+            >
+              {/* widened invisible hit area */}
+              <span className="absolute inset-y-0 -left-1.5 -right-1.5" />
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-[3px] opacity-40 group-hover:opacity-100 transition-opacity">
+                <span className="w-[3px] h-[3px] rounded-full bg-white" />
+                <span className="w-[3px] h-[3px] rounded-full bg-white" />
+                <span className="w-[3px] h-[3px] rounded-full bg-white" />
+              </span>
+            </div>
+          )}
+
           {/* RIGHT: Editor + Output */}
           <div className="flex-1 flex flex-col min-w-0 min-h-0">
             <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.04] bg-[#0D0D10]/60 shrink-0">
-              <div className="flex items-center gap-1.5">
-                {(Object.keys(languageConfig) as Language[]).map(lang => (
-                  <button key={lang} onClick={() => handleLanguageChange(lang)} className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${language === lang ? 'bg-[#FF4D4D]/10 text-[#FF4D4D] border border-[#FF4D4D]/30' : 'bg-white/[0.03] text-[#6B7280] hover:text-white border border-transparent'}`}>{languageConfig[lang].label}</button>
-                ))}
+              <div className="relative">
+                <button
+                  onClick={() => setLangMenuOpen(o => !o)}
+                  className="flex items-center justify-between gap-3 min-w-[136px] px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-[#FF4D4D]/10 text-[#FF4D4D] border border-[#FF4D4D]/30 hover:bg-[#FF4D4D]/[0.14] transition-all cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5"><Code2 size={11} /> {languageConfig[language].label}</span>
+                  <ChevronDown size={12} className={`transition-transform duration-200 ${langMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {langMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setLangMenuOpen(false)} />
+                    <div className="absolute left-0 top-full mt-1.5 z-50 w-[168px] max-h-[320px] overflow-y-auto scrollbar-thin bg-[#141418] border border-white/[0.08] rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.5)] p-1">
+                      {(Object.keys(languageConfig) as Language[]).map(lang => (
+                        <button
+                          key={lang}
+                          onClick={() => handleLanguageChange(lang)}
+                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${language === lang ? 'bg-[#FF4D4D]/10 text-[#FF4D4D]' : 'text-[#8A8A8A] hover:text-white hover:bg-white/[0.05]'}`}
+                        >
+                          {languageConfig[lang].label}
+                          {language === lang && <Check size={11} />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={handleCopy} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-mono text-[#8A8A8A] hover:text-white bg-white/[0.03] hover:bg-white/[0.06] transition-all cursor-pointer">{copied ? <Check size={11} className="text-[#10B981]" /> : <Copy size={11} />}{copied ? 'Copied' : 'Copy'}</button>
-                <button onClick={handleReset} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-mono text-[#8A8A8A] hover:text-white bg-white/[0.03] hover:bg-white/[0.06] transition-all cursor-pointer"><RotateCcw size={11} /> Reset</button>
+              <div className="flex items-center gap-1.5">
+                {/* Autosave status */}
+                {saveState !== 'idle' && (
+                  <span className={`hidden md:flex items-center gap-1.5 mr-1 text-[10px] font-mono ${saveState === 'saved' ? 'text-[#10B981]' : 'text-[#F59E0B]'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${saveState === 'saved' ? 'bg-[#10B981]' : 'bg-[#F59E0B] animate-pulse'}`} />
+                    {saveState === 'saved' ? 'Saved' : 'Saving…'}
+                  </span>
+                )}
+
+                <IconBtn onClick={handleFormat} title="Format code  ·  Ctrl/⌘ + ⇧ + F" active={didFormat}><Wand2 size={14} /></IconBtn>
+                <IconBtn onClick={handleCopy} title="Copy code" active={copied}>{copied ? <Check size={14} className="text-[#10B981]" /> : <Copy size={14} />}</IconBtn>
+                <IconBtn onClick={handleDownload} title={`Download .${fileExtension[language]} file`}><Download size={14} /></IconBtn>
+                <IconBtn onClick={handleReset} title="Reset to starter code"><RotateCcw size={14} /></IconBtn>
+
+                <span className="w-px h-5 bg-white/[0.08] mx-0.5" />
+
+                {/* Editor settings */}
+                <div className="relative">
+                  <IconBtn onClick={() => setSettingsOpen(o => !o)} title="Editor settings" active={settingsOpen}><Settings2 size={14} /></IconBtn>
+                  {settingsOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setSettingsOpen(false)} />
+                      <div className="absolute right-0 top-full mt-1.5 z-50 w-[248px] bg-[#141418] border border-white/[0.08] rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.5)] p-3 space-y-3">
+                        <div className="text-[10px] font-mono uppercase tracking-wider text-[#6B7280]">Editor Settings</div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-[#D1D5DB] flex items-center gap-1.5"><Type size={12} /> Font size</span>
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={() => setEditorSettings(s => ({ ...s, fontSize: Math.max(10, s.fontSize - 1) }))} className="w-6 h-6 rounded-md bg-white/[0.05] hover:bg-white/10 text-white flex items-center justify-center cursor-pointer"><Minus size={11} /></button>
+                            <span className="text-[11px] font-mono text-white w-6 text-center">{editorSettings.fontSize}</span>
+                            <button onClick={() => setEditorSettings(s => ({ ...s, fontSize: Math.min(22, s.fontSize + 1) }))} className="w-6 h-6 rounded-md bg-white/[0.05] hover:bg-white/10 text-white flex items-center justify-center cursor-pointer"><Plus size={11} /></button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-[#D1D5DB]">Tab size</span>
+                          <div className="flex gap-1">
+                            {[2, 4].map(n => (
+                              <button key={n} onClick={() => setEditorSettings(s => ({ ...s, tabSize: n }))} className={`px-2 h-6 rounded-md text-[11px] font-mono cursor-pointer transition-colors ${editorSettings.tabSize === n ? 'bg-[#FF4D4D]/15 text-[#FF4D4D]' : 'bg-white/[0.05] text-[#8A8A8A] hover:text-white'}`}>{n}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <button onClick={() => setEditorSettings(s => ({ ...s, wordWrap: !s.wordWrap }))} className="w-full flex items-center justify-between cursor-pointer group">
+                          <span className="text-[11px] text-[#D1D5DB] flex items-center gap-1.5"><WrapText size={12} /> Word wrap</span>
+                          <span className={`w-8 h-[18px] rounded-full p-0.5 transition-colors ${editorSettings.wordWrap ? 'bg-[#FF4D4D]' : 'bg-white/[0.12]'}`}><span className={`block w-[14px] h-[14px] rounded-full bg-white transition-transform ${editorSettings.wordWrap ? 'translate-x-[14px]' : ''}`} /></span>
+                        </button>
+                        <button onClick={() => setEditorSettings(s => ({ ...s, minimap: !s.minimap }))} className="w-full flex items-center justify-between cursor-pointer group">
+                          <span className="text-[11px] text-[#D1D5DB] flex items-center gap-1.5"><MapIcon size={12} /> Minimap</span>
+                          <span className={`w-8 h-[18px] rounded-full p-0.5 transition-colors ${editorSettings.minimap ? 'bg-[#FF4D4D]' : 'bg-white/[0.12]'}`}><span className={`block w-[14px] h-[14px] rounded-full bg-white transition-transform ${editorSettings.minimap ? 'translate-x-[14px]' : ''}`} /></span>
+                        </button>
+                        <button onClick={() => setEditorSettings(DEFAULT_EDITOR_SETTINGS)} className="w-full text-[10px] font-mono text-[#6B7280] hover:text-white transition-colors text-left cursor-pointer pt-1 border-t border-white/[0.06]">Reset to defaults</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <IconBtn onClick={() => setFocusMode(f => !f)} title={focusMode ? 'Exit focus mode' : 'Focus mode (hide problem panel)'} active={focusMode}>
+                  {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                </IconBtn>
+                <IconBtn onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts"><Keyboard size={14} /></IconBtn>
+
+                <span className="w-px h-5 bg-white/[0.08] mx-0.5" />
+
                 <button onClick={handleAIAnalyze} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-mono text-[#FF4D4D] bg-[#FF4D4D]/[0.06] hover:bg-[#FF4D4D]/10 border border-[#FF4D4D]/20 transition-all cursor-pointer"><Sparkles size={11} /> AI Review</button>
-                <button onClick={handleRun} disabled={isRunning} className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[11px] font-bold text-white bg-[#10B981] hover:bg-[#059669] shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer disabled:opacity-50"><Play size={12} fill="currentColor" />{isRunning ? 'Running...' : 'Run'}</button>
+                <button onClick={handleRun} disabled={isRunning} title="Run  ·  Ctrl/⌘ + Enter" className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[11px] font-bold text-white bg-[#10B981] hover:bg-[#059669] shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer disabled:opacity-50"><Play size={12} fill="currentColor" />{isRunning ? 'Running...' : 'Run'}</button>
               </div>
             </div>
 
-            <div className="flex-1 min-h-0">
-              <MonacoEditor height="100%" language={languageConfig[language].monacoId} value={code} onChange={(val) => setCode(val || '')} theme="vs-dark" options={{ fontSize: 13, fontFamily: "'JetBrains Mono', 'Fira Code', monospace", minimap: { enabled: false }, scrollBeyondLastLine: false, padding: { top: 12, bottom: 12 }, lineNumbers: 'on', renderLineHighlight: 'all', bracketPairColorization: { enabled: true }, tabSize: 4, wordWrap: 'on', automaticLayout: true, cursorBlinking: 'smooth', cursorSmoothCaretAnimation: 'on', smoothScrolling: true }} />
+            <div className={`flex-1 min-h-0 ${isDraggingSplit ? 'pointer-events-none' : ''}`}>
+              <MonacoEditor
+                height="100%"
+                language={languageConfig[language].monacoId}
+                value={code}
+                onChange={(val) => setCode(val || '')}
+                onMount={(editor) => { editorRef.current = editor as unknown as MonacoEditorInstance }}
+                theme="vs-dark"
+                options={{
+                  fontSize: editorSettings.fontSize,
+                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                  minimap: { enabled: editorSettings.minimap },
+                  tabSize: editorSettings.tabSize,
+                  wordWrap: editorSettings.wordWrap ? 'on' : 'off',
+                  scrollBeyondLastLine: false,
+                  padding: { top: 12, bottom: 12 },
+                  lineNumbers: 'on',
+                  renderLineHighlight: 'all',
+                  bracketPairColorization: { enabled: true },
+                  automaticLayout: true,
+                  cursorBlinking: 'smooth',
+                  cursorSmoothCaretAnimation: 'on',
+                  smoothScrolling: true,
+                  fixedOverflowWidgets: true,
+                }}
+              />
             </div>
 
             <div className="h-[200px] border-t border-white/[0.06] bg-[#0D0D10] flex flex-col shrink-0">
@@ -384,6 +714,38 @@ export default function PlaygroundTab() {
               {aiAnalysis.suggestions.length > 0 && (<div className="bg-[#111214] border border-[#F59E0B]/20 rounded-xl p-4"><div className="flex items-center gap-2 mb-2"><Lightbulb size={13} className="text-[#F59E0B]" /><span className="text-[11px] font-bold text-[#F59E0B] uppercase tracking-wider">Optimization Tips</span></div><ul className="space-y-2">{aiAnalysis.suggestions.map((s, i) => (<li key={i} className="text-xs text-[#D1D5DB] flex items-start gap-2"><Sparkles size={11} className="text-[#F59E0B] mt-0.5 shrink-0" />{s}</li>))}</ul></div>)}
               {aiAnalysis.bugs.length === 0 && aiAnalysis.suggestions.length === 0 && (<div className="bg-[#111214] border border-[#10B981]/20 rounded-xl p-4 text-center"><CheckCircle2 size={24} className="text-[#10B981] mx-auto mb-2" /><p className="text-xs text-[#D1D5DB]">Code looks good! No obvious issues detected.</p></div>)}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Keyboard shortcuts modal */}
+      <AnimatePresence>
+        {showShortcuts && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowShortcuts(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.94, y: 8 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 8 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-[400px] max-w-[calc(100vw-32px)] bg-[#141418] border border-white/[0.1] rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.6)] p-5"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2"><Keyboard size={15} className="text-[#FF4D4D]" /> Keyboard Shortcuts</h3>
+                <button onClick={() => setShowShortcuts(false)} className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center text-[#8A8A8A] hover:text-white cursor-pointer"><X size={14} /></button>
+              </div>
+              <div className="space-y-1.5">
+                {SHORTCUTS.map(s => (
+                  <div key={s.label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                    <span className="text-xs text-[#D1D5DB]">{s.label}</span>
+                    <kbd className="font-mono text-[10px] text-[#8A8A8A] bg-white/[0.05] border border-white/[0.1] rounded px-2 py-1 whitespace-nowrap">{s.keys}</kbd>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-[10px] font-mono text-[#4B5563] text-center">Drafts autosave locally per problem &amp; language.</p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

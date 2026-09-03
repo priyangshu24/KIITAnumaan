@@ -458,12 +458,11 @@ const getMentorResponse = (input: string): string => {
   return 'Good question! Based on your HighRadius OA in 10 days, I would prioritize SQL joins, B-Tree indexing, and 2 medium array problems daily. Ask me about a specific company, a DSA sheet, resume tips, or HR questions any time.'
 }
 
-export default function CareerWorkspacePage() {
+function CareerWorkspaceContent() {
   const searchParams = useSearchParams()
   const tabQuery = searchParams.get('tab')
 
   const resolveTab = (tab: string | null): CareerTab => {
-    if (tab === 'playground') return 'playground'
     if (tab === 'ats-checker' || tab === 'ats') return 'ats'
     if (tab === 'placement-planner' || tab === 'placement') return 'placement'
     if (tab === 'ai-blueprint' || tab === 'blueprint') return 'blueprint'
@@ -2305,5 +2304,13 @@ export default function CareerWorkspacePage() {
         })}
       </div>
     </div>
+  )
+}
+
+export default function CareerWorkspacePage() {
+  return (
+    <Suspense fallback={null}>
+      <CareerWorkspaceContent />
+    </Suspense>
   )
 }

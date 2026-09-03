@@ -3,7 +3,9 @@
 // ---------------------------------------------------------------------------
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard'
-export type Language = 'python' | 'cpp' | 'java' | 'javascript' | 'sql'
+export type Language =
+  | 'python' | 'javascript' | 'typescript' | 'java' | 'cpp' | 'c'
+  | 'csharp' | 'go' | 'rust' | 'kotlin' | 'swift' | 'ruby' | 'php' | 'sql'
 export type Company = 'All' | 'Amazon' | 'Microsoft' | 'HighRadius' | 'Deloitte' | 'Google' | 'Meta'
 export type Topic = 'All' | 'Arrays' | 'Strings' | 'Sliding Window' | 'Hash Table' | 'Two Pointers' | 'Trees' | 'Graphs' | 'Dynamic Programming' | 'SQL' | 'Stack' | 'Heap' | 'Backtracking' | 'Linked List'
 
@@ -25,7 +27,7 @@ export interface Problem {
   examples: { input: string; output: string; explanation?: string }[]
   constraints: string[]
   testCases: TestCase[]
-  starterCode: Record<Language, string>
+  starterCode: Partial<Record<Language, string>>
   interviewSignal?: string[]
   similarProblems?: string[]
 }
@@ -37,13 +39,45 @@ export const difficultyColors: Record<Difficulty, { bg: string; text: string; bo
   Hard: { bg: 'rgba(239, 68, 68, 0.1)', text: '#EF4444', border: 'rgba(239, 68, 68, 0.3)' },
 }
 
-// Language display config
+// Language display config (dropdown order follows this object's key order)
 export const languageConfig: Record<Language, { label: string; monacoId: string }> = {
   python: { label: 'Python 3', monacoId: 'python' },
-  cpp: { label: 'C++ 20', monacoId: 'cpp' },
-  java: { label: 'Java 21', monacoId: 'java' },
   javascript: { label: 'JavaScript', monacoId: 'javascript' },
+  typescript: { label: 'TypeScript', monacoId: 'typescript' },
+  java: { label: 'Java 21', monacoId: 'java' },
+  cpp: { label: 'C++ 20', monacoId: 'cpp' },
+  c: { label: 'C (GCC)', monacoId: 'c' },
+  csharp: { label: 'C#', monacoId: 'csharp' },
+  go: { label: 'Go', monacoId: 'go' },
+  rust: { label: 'Rust', monacoId: 'rust' },
+  kotlin: { label: 'Kotlin', monacoId: 'kotlin' },
+  swift: { label: 'Swift', monacoId: 'swift' },
+  ruby: { label: 'Ruby', monacoId: 'ruby' },
+  php: { label: 'PHP', monacoId: 'php' },
   sql: { label: 'SQL', monacoId: 'sql' },
+}
+
+// Generic per-language skeleton, used when a problem has no language-specific
+// starter code. Keeps the editor from opening empty for the newer languages.
+export const languageBoilerplate: Record<Language, string> = {
+  python: '# Write your solution here\n\ndef solve():\n    pass\n\nsolve()\n',
+  javascript: '// Write your solution here\n\nfunction solve() {\n}\n\nsolve();\n',
+  typescript: '// Write your solution here\n\nfunction solve(): void {\n}\n\nsolve();\n',
+  java: 'import java.util.*;\n\npublic class Solution {\n    public static void main(String[] args) {\n        // Write your solution here\n    }\n}\n',
+  cpp: '#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your solution here\n    return 0;\n}\n',
+  c: '#include <stdio.h>\n\nint main(void) {\n    /* Write your solution here */\n    return 0;\n}\n',
+  csharp: 'using System;\n\npublic class Solution {\n    public static void Main() {\n        // Write your solution here\n    }\n}\n',
+  go: 'package main\n\nimport "fmt"\n\nfunc main() {\n    // Write your solution here\n    _ = fmt.Sprint\n}\n',
+  rust: 'fn main() {\n    // Write your solution here\n}\n',
+  kotlin: 'fun main() {\n    // Write your solution here\n}\n',
+  swift: 'import Foundation\n\n// Write your solution here\n',
+  ruby: '# Write your solution here\n\ndef solve\nend\n\nsolve\n',
+  php: '<?php\n// Write your solution here\n\nfunction solve() {\n}\n\nsolve();\n',
+  sql: '-- Write your SQL query here\n',
+}
+
+export function starterCodeFor(problem: Problem, lang: Language): string {
+  return problem.starterCode[lang] ?? languageBoilerplate[lang]
 }
 
 export const PROBLEMS: Problem[] = [
