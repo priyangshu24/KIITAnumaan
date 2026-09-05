@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
@@ -13,11 +13,21 @@ import {
   Bookmark, BookmarkCheck, ArrowRight,
   Settings2, Maximize2, Minimize2, Download, Keyboard,
   WrapText, Type, Minus, Plus, Wand2, Map as MapIcon, X,
+  Flame, Target, Building2, ListOrdered, AlertCircle,
 } from 'lucide-react'
 import {
   PROBLEMS, difficultyColors, languageConfig, starterCodeFor,
   type Problem, type Language, type Difficulty, type Company, type Topic,
+  type TargetProfile, DEFAULT_TARGET_PROFILE, calculateJobRelevance,
+  TOP_COMPANIES,
+  type PracticeSession,
+  type PracticeSessionConfig,
+  createPracticeSession,
 } from '@/lib/playground-data'
+import QuestionExplorer from './QuestionExplorer'
+import CompanyIntelligenceWorkspace from './CompanyIntelligenceWorkspace'
+import PlaygroundLanding from './PlaygroundLanding'
+import CompanyLogo from '@/components/shared/CompanyLogo'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
@@ -34,6 +44,7 @@ const LS = {
   bookmarks: 'kiit:pg:bookmarks',
   settings: 'kiit:pg:editor',
   split: 'kiit:pg:split',
+  target: 'kiit:pg:target',
 }
 
 const SPLIT_MIN = 24
@@ -106,127 +117,7 @@ function analyzeCode(code: string, lang: Language): { complexity: string; sugges
   if (!code.includes('return') && lang !== 'sql') bugs.push('Missing return statement.')
   return { complexity, suggestions, bugs }
 }
-interface QSProps {
-  problems: Problem[]
-  selectedProblem: Problem
-  onSelect: (p: Problem) => void
-  isOpen: boolean
-  onToggle: () => void
-  searchQuery: string
-  onSearchChange: (v: string) => void
-  filterCompany: Company
-  onFilterCompany: (v: Company) => void
-  filterDifficulty: Difficulty | 'All'
-  onFilterDifficulty: (v: Difficulty | 'All') => void
-  filterTopic: Topic
-  onFilterTopic: (v: Topic) => void
-  solvedSet: Set<string>
-  bookmarkSet: Set<string>
-  onToggleBookmark: (id: string) => void
-}
 
-function QuestionSidebar(props: QSProps) {
-  const { problems, selectedProblem, onSelect, isOpen, onToggle, searchQuery, onSearchChange, filterCompany, onFilterCompany, filterDifficulty, onFilterDifficulty, filterTopic, onFilterTopic, solvedSet, bookmarkSet, onToggleBookmark } = props
-  const [showFilters, setShowFilters] = useState(false)
-
-  const filtered = useMemo(() => {
-    return problems.filter(p => {
-      if (searchQuery && !p.title.toLowerCase().includes(searchQuery.toLowerCase())) return false
-      if (filterCompany !== 'All' && !p.companies.includes(filterCompany)) return false
-      if (filterDifficulty !== 'All' && p.difficulty !== filterDifficulty) return false
-      if (filterTopic !== 'All' && !p.topics.includes(filterTopic)) return false
-      return true
-    })
-  }, [problems, searchQuery, filterCompany, filterDifficulty, filterTopic])
-
-  const stats = useMemo(() => ({
-    solved: solvedSet.size, total: problems.length,
-    easy: problems.filter(p => p.difficulty === 'Easy').length,
-    medium: problems.filter(p => p.difficulty === 'Medium').length,
-    hard: problems.filter(p => p.difficulty === 'Hard').length,
-  }), [problems, solvedSet])
-
-  return (
-    <AnimatePresence mode="wait">
-      {isOpen && (
-        <motion.div initial={{ width: 0, opacity: 0 }} animate={{ width: 340, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="shrink-0 h-full bg-[#0D0D10] border-r border-white/[0.06] flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-white/[0.06]">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#FF4D4D]/10 border border-[#FF4D4D]/20 flex items-center justify-center"><FlaskConical size={14} className="text-[#FF4D4D]" /></div>
-                <span className="text-sm font-bold text-white">Questions ({filtered.length})</span>
-              </div>
-              <button onClick={onToggle} className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"><PanelLeftClose size={14} /></button>
-            </div>
-            <div className="relative mb-3">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
-              <input type="text" value={searchQuery} onChange={(e) => onSearchChange(e.target.value)} placeholder="Search problems..." className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-[#6B7280] outline-none focus:border-[#FF4D4D]/40 transition-colors" />
-            </div>
-            <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 text-[10px] font-mono text-[#8A8A8A] hover:text-white transition-colors uppercase tracking-wider cursor-pointer">
-              <Filter size={11} /> Filters <ChevronDown size={11} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </button>
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mt-3 space-y-2 overflow-hidden">
-                  <select value={filterCompany} onChange={(e) => onFilterCompany(e.target.value as Company)} className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white outline-none cursor-pointer">
-                    {['All', 'Amazon', 'Microsoft', 'HighRadius', 'Deloitte', 'Google', 'Meta'].map(c => <option key={c} value={c} className="bg-[#1A1A1E]">{c}</option>)}
-                  </select>
-                  <div className="flex gap-1.5">
-                    {(['All', 'Easy', 'Medium', 'Hard'] as const).map(d => (
-                      <button key={d} onClick={() => onFilterDifficulty(d)} className={`flex-1 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${filterDifficulty === d ? (d === 'All' ? 'bg-white/10 text-white' : 'text-white') : 'bg-white/[0.03] text-[#6B7280] hover:text-white'}`}
-                        style={filterDifficulty === d && d !== 'All' ? { backgroundColor: difficultyColors[d].bg, color: difficultyColors[d].text, border: `1px solid ${difficultyColors[d].border}` } : {}}>
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                  <select value={filterTopic} onChange={(e) => onFilterTopic(e.target.value as Topic)} className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white outline-none cursor-pointer">
-                    {['All', 'Arrays', 'Strings', 'Sliding Window', 'Hash Table', 'Two Pointers', 'Trees', 'Graphs', 'Dynamic Programming', 'SQL', 'Stack', 'Heap', 'Linked List'].map(t => <option key={t} value={t} className="bg-[#1A1A1E]">{t}</option>)}
-                  </select>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <div className="flex items-center gap-3 mt-3 text-[10px] font-mono text-[#6B7280]">
-              <span>Solved <span className="text-[#10B981] font-bold">{stats.solved}</span>/{stats.total}</span>
-              <span className="text-[#10B981]">E:{stats.easy}</span>
-              <span className="text-[#F59E0B]">M:{stats.medium}</span>
-              <span className="text-[#EF4444]">H:{stats.hard}</span>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto scrollbar-thin">
-            {filtered.map((problem, idx) => {
-              const isSelected = selectedProblem.id === problem.id
-              const isSolved = solvedSet.has(problem.id)
-              const isBookmarked = bookmarkSet.has(problem.id)
-              const dc = difficultyColors[problem.difficulty]
-              return (
-                <button key={problem.id} onClick={() => onSelect(problem)} className={`w-full text-left px-4 py-3 border-b border-white/[0.03] transition-all cursor-pointer group ${isSelected ? 'bg-[#FF4D4D]/[0.06] border-l-2 border-l-[#FF4D4D]' : 'hover:bg-white/[0.03]'}`}>
-                  <div className="flex items-start gap-2.5">
-                    <span className="text-[10px] font-mono text-[#4B5563] mt-0.5 shrink-0 w-5">{idx + 1}.</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs font-semibold truncate ${isSelected ? 'text-white' : 'text-[#D1D5DB] group-hover:text-white'}`}>{problem.title}</span>
-                        {isSolved && <CheckCircle2 size={12} className="text-[#10B981] shrink-0" />}
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ backgroundColor: dc.bg, color: dc.text, border: `1px solid ${dc.border}` }}>{problem.difficulty}</span>
-                        {problem.companies.slice(0, 2).map(c => (<span key={c} className="text-[9px] font-mono text-[#6B7280] bg-white/[0.03] px-1.5 py-0.5 rounded">{c}</span>))}
-                        <span className="text-[9px] font-mono text-[#6B7280]">Asked {problem.askedCount}x</span>
-                      </div>
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); onToggleBookmark(problem.id) }} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                      {isBookmarked ? <BookmarkCheck size={14} className="text-[#F59E0B]" /> : <Bookmark size={14} className="text-[#6B7280]" />}
-                    </button>
-                  </div>
-                </button>
-              )
-            })}
-            {filtered.length === 0 && (<div className="p-8 text-center text-xs text-[#6B7280]">No problems match your filters.</div>)}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
 function IconBtn({ onClick, title, active, disabled, children }: {
   onClick: () => void; title: string; active?: boolean; disabled?: boolean; children: React.ReactNode
 }) {
@@ -249,6 +140,22 @@ function IconBtn({ onClick, title, active, disabled, children }: {
 export default function PlaygroundTab() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [selectedProblem, setSelectedProblem] = useState<Problem>(PROBLEMS[0])
+  const [recentProblems, setRecentProblems] = useState<Problem[]>([PROBLEMS[0]])
+  const [targetProfile, setTargetProfile] = useState<TargetProfile>(DEFAULT_TARGET_PROFILE)
+
+  // Navigation mode: 'landing' (primary entry landing page) vs 'topics' (standard editor) vs 'companies' (intelligence workspace)
+  const [playgroundNavMode, setPlaygroundNavMode] = useState<'landing' | 'topics' | 'companies'>('landing')
+  const [companyWorkspaceView, setCompanyWorkspaceView] = useState<'intelligence' | 'problem' | 'practice'>('intelligence')
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('Amazon')
+  const [selectedCompanyRole, setSelectedCompanyRole] = useState<string>('SDE-1')
+  const [selectedCompanyExp, setSelectedCompanyExp] = useState<string>('0–2 Years')
+  const [selectedCompanyTopic, setSelectedCompanyTopic] = useState<string>('All Topics')
+
+  // Dedicated Practice Session State
+  const [activePracticeSession, setActivePracticeSession] = useState<PracticeSession | null>(null)
+  const [isPracticeSummaryOpen, setIsPracticeSummaryOpen] = useState<boolean>(false)
+  const [practiceBanner, setPracticeBanner] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
   const [language, setLanguage] = useState<Language>('python')
   const [code, setCode] = useState(starterCodeFor(PROBLEMS[0], 'python'))
   const [customInput, setCustomInput] = useState('')
@@ -262,11 +169,7 @@ export default function PlaygroundTab() {
   const [aiAnalysis, setAiAnalysis] = useState<{ complexity: string; suggestions: string[]; bugs: string[] } | null>(null)
   const [solvedSet, setSolvedSet] = useState<Set<string>>(new Set())
   const [bookmarkSet, setBookmarkSet] = useState<Set<string>>(new Set())
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterCompany, setFilterCompany] = useState<Company>('All')
-  const [filterDifficulty, setFilterDifficulty] = useState<Difficulty | 'All'>('All')
-  const [filterTopic, setFilterTopic] = useState<Topic>('All')
-  const [activeDescTab, setActiveDescTab] = useState<'description' | 'examples' | 'hints' | 'interview' | 'similar'>('description')
+  const [activeDescTab, setActiveDescTab] = useState<'description' | 'examples' | 'constraints' | 'hints' | 'interview' | 'similar' | 'notes'>('description')
   const [executionTime, setExecutionTime] = useState<string | null>(null)
   const outputRef = useRef<HTMLPreElement>(null)
 
@@ -286,6 +189,11 @@ export default function PlaygroundTab() {
   const [leftPct, setLeftPct] = useState(SPLIT_DEFAULT)
   const [isDraggingSplit, setIsDraggingSplit] = useState(false)
 
+  // Current company metadata object
+  const currentCompanyObj = useMemo(() => {
+    return TOP_COMPANIES.find(c => c.id === selectedCompanyId) || TOP_COMPANIES[0]
+  }, [selectedCompanyId])
+
   // Restore persisted progress + editor preferences once, on mount.
   useEffect(() => {
     const solved = readLS(LS.solved)
@@ -294,14 +202,19 @@ export default function PlaygroundTab() {
     if (marks) { try { setBookmarkSet(new Set(JSON.parse(marks))) } catch { /* corrupt */ } }
     const prefs = readLS(LS.settings)
     if (prefs) { try { setEditorSettings(s => ({ ...s, ...JSON.parse(prefs) })) } catch { /* corrupt */ } }
+    const target = readLS(LS.target)
+    if (target) { try { setTargetProfile(JSON.parse(target)) } catch { /* corrupt */ } }
     const split = readLS(LS.split)
     if (split) { const n = parseFloat(split); if (!Number.isNaN(n)) setLeftPct(clampSplit(n)) }
+    const savedSession = readLS('kiit:pg:practice_session')
+    if (savedSession) { try { setActivePracticeSession(JSON.parse(savedSession)) } catch { /* corrupt */ } }
     setHydrated(true)
   }, [])
 
   useEffect(() => { if (hydrated) writeLS(LS.solved, JSON.stringify([...solvedSet])) }, [solvedSet, hydrated])
   useEffect(() => { if (hydrated) writeLS(LS.bookmarks, JSON.stringify([...bookmarkSet])) }, [bookmarkSet, hydrated])
   useEffect(() => { if (hydrated) writeLS(LS.settings, JSON.stringify(editorSettings)) }, [editorSettings, hydrated])
+  useEffect(() => { if (hydrated) writeLS(LS.target, JSON.stringify(targetProfile)) }, [targetProfile, hydrated])
   useEffect(() => { if (hydrated) writeLS(LS.split, String(Math.round(leftPct))) }, [leftPct, hydrated])
 
   // Drag-to-resize the problem/editor split.
@@ -334,8 +247,7 @@ export default function PlaygroundTab() {
     }
   }, [])
 
-  // Load the saved draft (or fall back to starter code) whenever the
-  // problem or language changes.
+  // Load the saved draft (or fall back to starter code) whenever the problem or language changes.
   useEffect(() => {
     const draft = readLS(LS.draft(selectedProblem.id, language))
     setCode(draft ?? starterCodeFor(selectedProblem, language))
@@ -357,12 +269,17 @@ export default function PlaygroundTab() {
 
   const handleSelectProblem = useCallback((problem: Problem) => {
     setSelectedProblem(problem)
+    setRecentProblems(prev => {
+      const filtered = prev.filter(p => p.id !== problem.id)
+      return [problem, ...filtered].slice(0, 8)
+    })
     setOutput('')
     setTestResults([])
     setAiAnalysis(null)
     setActiveBottomTab('testcases')
     setExecutionTime(null)
     setSidebarOpen(false)
+    setPracticeBanner(null)
   }, [])
 
   const handleLanguageChange = useCallback((lang: Language) => {
@@ -383,6 +300,7 @@ export default function PlaygroundTab() {
     setOutput('')
     setTestResults([])
     setAiAnalysis(null)
+    setPracticeBanner(null)
   }, [selectedProblem, language])
 
   const handleSaveNow = useCallback(() => {
@@ -412,11 +330,169 @@ export default function PlaygroundTab() {
     URL.revokeObjectURL(url)
   }, [code, language, selectedProblem.id])
 
+  // --- PRACTICE WORKFLOW ENGINE ----------------------------------------------
+  const handleStartPracticeSession = useCallback((config?: PracticeSessionConfig) => {
+    const finalConfig: PracticeSessionConfig = config || {
+      companyId: selectedCompanyId,
+      companyName: currentCompanyObj.name,
+      role: selectedCompanyRole,
+      experience: selectedCompanyExp,
+      topic: selectedCompanyTopic,
+      difficulty: 'All',
+      source: 'all',
+      questionCount: 10,
+      mode: 'practice',
+    }
+    const session = createPracticeSession(finalConfig, solvedSet, PROBLEMS)
+    setActivePracticeSession(session)
+    writeLS('kiit:pg:practice_session', JSON.stringify(session))
+
+    if (session.questionIds.length > 0) {
+      const firstProb = PROBLEMS.find(p => p.id === session.questionIds[0]) || PROBLEMS[0]
+      setSelectedProblem(firstProb)
+      setOutput('')
+      setTestResults([])
+      setPracticeBanner(null)
+    }
+
+    setCompanyWorkspaceView('practice')
+    setSidebarOpen(false)
+  }, [selectedCompanyId, currentCompanyObj.name, selectedCompanyRole, selectedCompanyExp, selectedCompanyTopic, solvedSet])
+
+  const handleContinuePracticeSession = useCallback(() => {
+    if (!activePracticeSession || activePracticeSession.questionIds.length === 0) return
+    const currentProbId = activePracticeSession.questionIds[activePracticeSession.currentIndex] || activePracticeSession.questionIds[0]
+    const prob = PROBLEMS.find(p => p.id === currentProbId) || PROBLEMS[0]
+    setSelectedProblem(prob)
+    setOutput('')
+    setTestResults([])
+    setPracticeBanner(null)
+    setCompanyWorkspaceView('practice')
+    setSidebarOpen(false)
+  }, [activePracticeSession])
+
+  const handleExitPractice = useCallback(() => {
+    setCompanyWorkspaceView('intelligence')
+    setSidebarOpen(true)
+    setPracticeBanner(null)
+  }, [])
+
+  const handleNextPracticeQuestion = useCallback(() => {
+    if (!activePracticeSession) return
+    const nextIdx = activePracticeSession.currentIndex + 1
+    if (nextIdx < activePracticeSession.questionIds.length) {
+      const nextSession: PracticeSession = { ...activePracticeSession, currentIndex: nextIdx }
+      setActivePracticeSession(nextSession)
+      writeLS('kiit:pg:practice_session', JSON.stringify(nextSession))
+
+      const nextProbId = activePracticeSession.questionIds[nextIdx]
+      const nextProb = PROBLEMS.find(p => p.id === nextProbId) || PROBLEMS[0]
+      setSelectedProblem(nextProb)
+      setOutput('')
+      setTestResults([])
+      setPracticeBanner(null)
+    } else {
+      const completedSession: PracticeSession = { ...activePracticeSession, isComplete: true, completedAt: Date.now() }
+      setActivePracticeSession(completedSession)
+      writeLS('kiit:pg:practice_session', JSON.stringify(completedSession))
+      setIsPracticeSummaryOpen(true)
+    }
+  }, [activePracticeSession])
+
+  const handlePrevPracticeQuestion = useCallback(() => {
+    if (!activePracticeSession || activePracticeSession.currentIndex <= 0) return
+    const prevIdx = activePracticeSession.currentIndex - 1
+    const prevSession: PracticeSession = { ...activePracticeSession, currentIndex: prevIdx }
+    setActivePracticeSession(prevSession)
+    writeLS('kiit:pg:practice_session', JSON.stringify(prevSession))
+
+    const prevProbId = activePracticeSession.questionIds[prevIdx]
+    const prevProb = PROBLEMS.find(p => p.id === prevProbId) || PROBLEMS[0]
+    setSelectedProblem(prevProb)
+    setOutput('')
+    setTestResults([])
+    setPracticeBanner(null)
+  }, [activePracticeSession])
+
+  const handleFinishPracticeSession = useCallback(() => {
+    if (!activePracticeSession) return
+    const completedSession: PracticeSession = { ...activePracticeSession, isComplete: true, completedAt: Date.now() }
+    setActivePracticeSession(completedSession)
+    writeLS('kiit:pg:practice_session', JSON.stringify(completedSession))
+    setIsPracticeSummaryOpen(true)
+  }, [activePracticeSession])
+
+  const handlePracticeAgain = useCallback(() => {
+    if (!activePracticeSession) return
+    setIsPracticeSummaryOpen(false)
+    handleStartPracticeSession({
+      companyId: activePracticeSession.companyId,
+      companyName: activePracticeSession.companyName,
+      role: activePracticeSession.role,
+      experience: activePracticeSession.experience,
+      topic: activePracticeSession.topic,
+      difficulty: activePracticeSession.difficulty,
+      source: activePracticeSession.source,
+      questionCount: activePracticeSession.questionIds.length,
+      mode: activePracticeSession.mode,
+    })
+  }, [activePracticeSession, handleStartPracticeSession])
+
+  const handleReviewMistakes = useCallback(() => {
+    if (!activePracticeSession) return
+    setIsPracticeSummaryOpen(false)
+    const mistakeIds = Object.values(activePracticeSession.results)
+      .filter(r => r.failed || r.hintsUsed || !r.solved)
+      .map(r => r.problemId)
+
+    if (mistakeIds.length > 0) {
+      const reviewSession: PracticeSession = {
+        ...activePracticeSession,
+        id: `review-${Date.now()}`,
+        questionIds: mistakeIds,
+        currentIndex: 0,
+        startedAt: Date.now(),
+        isComplete: false,
+        results: {},
+      }
+      mistakeIds.forEach(id => {
+        const p = PROBLEMS.find(pr => pr.id === id)
+        if (p) {
+          reviewSession.results[id] = {
+            problemId: id,
+            problemTitle: p.title,
+            difficulty: p.difficulty,
+            attempted: false,
+            solved: false,
+            failed: false,
+            timeSpentSeconds: 0,
+            hintsUsed: false,
+            debugUsed: false,
+            aiReviewUsed: false,
+          }
+        }
+      })
+      setActivePracticeSession(reviewSession)
+      writeLS('kiit:pg:practice_session', JSON.stringify(reviewSession))
+      const firstProb = PROBLEMS.find(p => p.id === mistakeIds[0]) || PROBLEMS[0]
+      setSelectedProblem(firstProb)
+      setOutput('')
+      setTestResults([])
+      setPracticeBanner(null)
+      setCompanyWorkspaceView('practice')
+      setSidebarOpen(false)
+    } else {
+      handlePracticeAgain()
+    }
+  }, [activePracticeSession, handlePracticeAgain])
+
+  // Run and Submit evaluation with practice result tracking
   const handleRun = useCallback(() => {
     setIsRunning(true)
     setActiveBottomTab('output')
     setOutput('Compiling and running...')
     setTimeout(() => {
+      let isAllPassed = false
       if (language === 'javascript') {
         const result = executeJavaScript(code, customInput)
         setOutput(result.error ? `${result.output}\n\nRuntime Error:\n${result.error}` : result.output)
@@ -428,7 +504,8 @@ export default function PlaygroundTab() {
           return { id: tc.id, passed, yourOutput, time: `${tcResult.time.toFixed(0)}ms`, memory: `${(Math.random() * 5 + 5).toFixed(1)} MB` }
         })
         setTestResults(results)
-        if (results.every(r => r.passed)) setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
+        isAllPassed = results.every(r => r.passed)
+        if (isAllPassed) setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
       } else {
         const mockTime = Math.floor(Math.random() * 80 + 10)
         const mockMemory = (Math.random() * 10 + 8).toFixed(1)
@@ -437,18 +514,76 @@ export default function PlaygroundTab() {
         if (hasStarter) {
           setOutput(`Execution finished.\n\nWarning: Solution body appears unchanged from starter code.\nPlease implement your solution before running.`)
           setTestResults(selectedProblem.testCases.filter(tc => !tc.isHidden).map(tc => ({ id: tc.id, passed: false, yourOutput: '(no output)', time: `${mockTime}ms`, memory: `${mockMemory} MB` })))
+          isAllPassed = false
         } else {
           setOutput(`Execution successful.\nTime: ${mockTime}ms | Memory: ${mockMemory} MB\n\nNote: Full compilation for ${languageConfig[language].label} requires a backend runtime.\nJavaScript runs natively in-browser with real output.`)
           const results = selectedProblem.testCases.filter(tc => !tc.isHidden).map(tc => ({ id: tc.id, passed: Math.random() > 0.3, yourOutput: tc.expectedOutput, time: `${mockTime}ms`, memory: `${mockMemory} MB` }))
           setTestResults(results)
-          if (results.every(r => r.passed)) setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
+          isAllPassed = results.every(r => r.passed)
+          if (isAllPassed) setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
         }
       }
+
+      // Record result in practice session if active
+      if (companyWorkspaceView === 'practice' && activePracticeSession) {
+        const curResult = activePracticeSession.results[selectedProblem.id] || {
+          problemId: selectedProblem.id,
+          problemTitle: selectedProblem.title,
+          difficulty: selectedProblem.difficulty,
+          attempted: true,
+          solved: false,
+          failed: false,
+          timeSpentSeconds: 0,
+          hintsUsed: false,
+          debugUsed: false,
+          aiReviewUsed: false,
+        }
+        const updatedResult = {
+          ...curResult,
+          attempted: true,
+          solved: isAllPassed ? true : curResult.solved,
+          failed: isAllPassed ? false : true,
+        }
+        const updatedSession = {
+          ...activePracticeSession,
+          results: {
+            ...activePracticeSession.results,
+            [selectedProblem.id]: updatedResult,
+          },
+        }
+        setActivePracticeSession(updatedSession)
+        writeLS('kiit:pg:practice_session', JSON.stringify(updatedSession))
+
+        if (isAllPassed) {
+          setPracticeBanner({ type: 'success', text: '✓ All test cases passed! Ready for next question.' })
+        } else {
+          setPracticeBanner({ type: 'error', text: '✕ Needs Improvement: Review failed cases or request AI hint.' })
+        }
+      }
+
       setIsRunning(false)
     }, 600)
-  }, [code, language, customInput, selectedProblem])
+  }, [code, language, customInput, selectedProblem, companyWorkspaceView, activePracticeSession])
 
-  const handleAIAnalyze = useCallback(() => { setShowAI(true); setAiAnalysis(analyzeCode(code, language)) }, [code, language])
+  const handleAIAnalyze = useCallback(() => {
+    setShowAI(true)
+    setAiAnalysis(analyzeCode(code, language))
+    if (companyWorkspaceView === 'practice' && activePracticeSession) {
+      const curResult = activePracticeSession.results[selectedProblem.id]
+      if (curResult) {
+        const updatedSession = {
+          ...activePracticeSession,
+          results: {
+            ...activePracticeSession.results,
+            [selectedProblem.id]: { ...curResult, aiReviewUsed: true },
+          },
+        }
+        setActivePracticeSession(updatedSession)
+        writeLS('kiit:pg:practice_session', JSON.stringify(updatedSession))
+      }
+    }
+  }, [code, language, companyWorkspaceView, activePracticeSession, selectedProblem.id])
+
   const handleToggleBookmark = useCallback((id: string) => { setBookmarkSet(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next }) }, [])
 
   // Global keyboard shortcuts for the playground.
@@ -465,64 +600,609 @@ export default function PlaygroundTab() {
   }, [handleRun, handleFormat, handleSaveNow, isRunning])
 
   const dc = difficultyColors[selectedProblem.difficulty]
+  const targetRelevance = calculateJobRelevance(selectedProblem, targetProfile, solvedSet, new Set())
+
+  // Session Statistics Calculation for Summary View
+  const sessionStats = useMemo(() => {
+    if (!activePracticeSession) {
+      return { attempted: 0, solved: 0, failed: 0, accuracy: 0, avgTime: '12', prepScore: 75, strongTopics: [], weakTopics: [] }
+    }
+    const results = Object.values(activePracticeSession.results)
+    const attempted = results.filter(r => r.attempted).length
+    const solved = results.filter(r => r.solved).length
+    const failed = results.filter(r => r.failed).length
+    const accuracy = attempted > 0 ? Math.round((solved / attempted) * 100) : (solved > 0 ? 100 : 0)
+
+    const strongTopics = new Set<string>()
+    const weakTopics = new Set<string>()
+    results.forEach(r => {
+      const prob = PROBLEMS.find(p => p.id === r.problemId)
+      if (prob) {
+        if (r.solved && !r.hintsUsed) {
+          prob.topics.forEach(t => strongTopics.add(t))
+        } else if (r.failed || r.hintsUsed) {
+          prob.topics.forEach(t => weakTopics.add(t))
+        }
+      }
+    })
+
+    const prepScore = Math.min(96, Math.max(35, Math.round(accuracy * 0.7 + (solved / Math.max(1, activePracticeSession.questionIds.length)) * 25 + 10)))
+
+    return {
+      total: activePracticeSession.questionIds.length,
+      attempted,
+      solved,
+      failed,
+      accuracy,
+      avgTime: '14',
+      prepScore,
+      strongTopics: Array.from(strongTopics).slice(0, 4),
+      weakTopics: Array.from(weakTopics).slice(0, 4),
+    }
+  }, [activePracticeSession])
+
+  // 1. Landing Mode (Clean, premium home screen)
+  if (playgroundNavMode === 'landing') {
+    return (
+      <PlaygroundLanding
+        solvedCount={solvedSet.size}
+        activePracticeSession={activePracticeSession}
+        onStartTopicPractice={() => {
+          setPlaygroundNavMode('topics')
+          setSidebarOpen(true)
+        }}
+        onStartCompanyInterviews={() => {
+          setPlaygroundNavMode('companies')
+          setCompanyWorkspaceView('intelligence')
+          setSidebarOpen(true)
+        }}
+        onStartCustomPractice={(config) => {
+          handleStartPracticeSession(config)
+        }}
+        onContinuePractice={handleContinuePracticeSession}
+        problems={PROBLEMS}
+      />
+    )
+  }
+
+  // 2. If in Company Interviews intelligence mode (overview), render the 3-column architecture
+  if (playgroundNavMode === 'companies' && companyWorkspaceView === 'intelligence') {
+    return (
+      <div className="flex h-full w-full bg-[#0A0A0D] overflow-hidden">
+        {/* Left Column: Company Explorer */}
+        <QuestionExplorer
+          problems={PROBLEMS}
+          selectedProblem={selectedProblem}
+          onSelect={(problem) => {
+            handleSelectProblem(problem)
+            setCompanyWorkspaceView('problem')
+            setSidebarOpen(false)
+          }}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          solvedSet={solvedSet}
+          bookmarkSet={bookmarkSet}
+          onToggleBookmark={handleToggleBookmark}
+          recentProblems={recentProblems}
+          targetProfile={targetProfile}
+          onUpdateTargetProfile={setTargetProfile}
+          activeView="companies"
+          onViewChange={(view) => {
+            if (view === 'topics') {
+              setPlaygroundNavMode('topics')
+            }
+          }}
+          selectedCompanyId={selectedCompanyId}
+          onSelectCompanyId={(id) => setSelectedCompanyId(id)}
+        />
+
+        {/* Center & Right Columns: Company Intelligence Workspace */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top Bar with Breadcrumbs */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06] bg-[#0D0D10] shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Link
+                href="/workspace/academic"
+                aria-label="Exit Playground"
+                title="Exit Playground"
+                className="group w-7 h-7 rounded bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white hover:border-white/20 transition-all cursor-pointer shrink-0"
+              >
+                <ArrowLeft size={14} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+              </Link>
+
+              <div className="flex items-center gap-2 text-xs font-mono text-[#8A8A8A]">
+                <button
+                  onClick={() => setPlaygroundNavMode('landing')}
+                  className="text-white font-bold hover:text-[#FF4D4D] transition-colors cursor-pointer"
+                >
+                  KIIT ANUMAAN
+                </button>
+                <span>/</span>
+                <button
+                  onClick={() => setPlaygroundNavMode('landing')}
+                  className="text-[#8A8A8A] hover:text-white transition-colors cursor-pointer"
+                >
+                  Playground
+                </button>
+                <span>/</span>
+                <span className="text-[#FF4D4D] font-bold">Company Interviews</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => setPlaygroundNavMode('landing')}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-xs font-semibold text-[#8A8A8A] hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+              >
+                <span>← Playground Home</span>
+              </button>
+              <button
+                onClick={() => setPlaygroundNavMode('topics')}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-xs font-semibold text-[#8A8A8A] hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+              >
+                <span>← Back to Topics</span>
+              </button>
+            </div>
+          </div>
+
+          <CompanyIntelligenceWorkspace
+            company={currentCompanyObj}
+            onSelectProblem={(problem) => {
+              handleSelectProblem(problem)
+              setCompanyWorkspaceView('problem')
+              setSidebarOpen(false)
+            }}
+            solvedSet={solvedSet}
+            bookmarkSet={bookmarkSet}
+            onToggleBookmark={handleToggleBookmark}
+            curatedProblems={PROBLEMS}
+            selectedRole={selectedCompanyRole}
+            onChangeRole={setSelectedCompanyRole}
+            selectedExp={selectedCompanyExp}
+            onChangeExp={setSelectedCompanyExp}
+            selectedTopic={selectedCompanyTopic}
+            onChangeTopic={setSelectedCompanyTopic}
+            onStartPracticeSession={handleStartPracticeSession}
+            onContinuePracticeSession={handleContinuePracticeSession}
+            activePracticeSession={activePracticeSession}
+            onOpenQuestionLibrary={() => {
+              setCompanyWorkspaceView('problem')
+              setSidebarOpen(true)
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex h-full w-full bg-[#0A0A0D] overflow-hidden">
-      <QuestionSidebar problems={PROBLEMS} selectedProblem={selectedProblem} onSelect={handleSelectProblem} isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} searchQuery={searchQuery} onSearchChange={setSearchQuery} filterCompany={filterCompany} onFilterCompany={setFilterCompany} filterDifficulty={filterDifficulty} onFilterDifficulty={setFilterDifficulty} filterTopic={filterTopic} onFilterTopic={setFilterTopic} solvedSet={solvedSet} bookmarkSet={bookmarkSet} onToggleBookmark={handleToggleBookmark} />
+    <div className="flex h-full w-full bg-[#0A0A0D] overflow-hidden relative">
+      <QuestionExplorer
+        problems={PROBLEMS}
+        selectedProblem={selectedProblem}
+        onSelect={handleSelectProblem}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        solvedSet={solvedSet}
+        bookmarkSet={bookmarkSet}
+        onToggleBookmark={handleToggleBookmark}
+        recentProblems={recentProblems}
+        targetProfile={targetProfile}
+        onUpdateTargetProfile={setTargetProfile}
+        activeView={playgroundNavMode}
+        onViewChange={(view) => {
+          if (view === 'companies') {
+            setPlaygroundNavMode('companies')
+            setCompanyWorkspaceView('intelligence')
+          } else {
+            setPlaygroundNavMode('topics')
+          }
+        }}
+        selectedCompanyId={selectedCompanyId}
+        onSelectCompanyId={(id) => setSelectedCompanyId(id)}
+      />
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#0D0D10]/80 backdrop-blur-sm shrink-0">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/workspace/academic"
-              aria-label="Exit Playground"
-              title="Exit Playground"
-              className="group w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white hover:border-white/20 transition-all cursor-pointer shrink-0"
-            >
-              <ArrowLeft size={15} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
-            </Link>
-            {!sidebarOpen && (
-              <button onClick={() => setSidebarOpen(true)} className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white transition-all cursor-pointer"><PanelLeftOpen size={15} /></button>
+        {/* Top Bar: Dynamically switches between Standard and Practice Session Mode */}
+        {companyWorkspaceView === 'practice' && activePracticeSession ? (
+          <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06] bg-[#0E0E12] shrink-0 flex-wrap gap-2">
+            <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
+              <button
+                onClick={handleExitPractice}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#FF4D4D]/10 border border-[#FF4D4D]/30 text-xs font-semibold text-[#FF4D4D] hover:bg-[#FF4D4D]/20 transition-all cursor-pointer shrink-0 font-mono"
+              >
+                <span>← Exit Practice</span>
+              </button>
+
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-white/[0.03] border border-white/[0.08] text-xs font-mono">
+                <CompanyLogo company={activePracticeSession.companyName} size={16} />
+                <span className="font-bold text-white">{activePracticeSession.companyName}</span>
+                <span className="text-[#8A8A8A]">· {activePracticeSession.role} · {activePracticeSession.experience}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white font-mono">
+                  Question {activePracticeSession.currentIndex + 1} of {activePracticeSession.questionIds.length}
+                </span>
+                <div className="w-20 sm:w-28 h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#FF4D4D] to-emerald-400 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.round(((activePracticeSession.currentIndex + 1) / activePracticeSession.questionIds.length) * 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Practice Session Navigation */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handlePrevPracticeQuestion}
+                disabled={activePracticeSession.currentIndex === 0}
+                className="px-2.5 py-1 rounded bg-white/[0.04] hover:bg-white/[0.08] text-xs font-mono text-[#D1D5DB] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                ← Previous
+              </button>
+
+              {activePracticeSession.currentIndex < activePracticeSession.questionIds.length - 1 ? (
+                <button
+                  onClick={handleNextPracticeQuestion}
+                  className="px-3 py-1 rounded bg-[#FF4D4D] hover:bg-[#FF3333] text-white text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_15px_rgba(255,77,77,0.3)]"
+                >
+                  <span>Next Question →</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleNextPracticeQuestion}
+                  className="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                >
+                  <span>Finish Session 🎉</span>
+                </button>
+              )}
+
+              <button
+                onClick={handleFinishPracticeSession}
+                className="px-2 py-1 rounded bg-white/[0.03] hover:bg-white/[0.08] text-[#8A8A8A] hover:text-white text-[11px] font-mono transition-colors cursor-pointer"
+                title="Finish session and view results"
+              >
+                Finish
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06] bg-[#0D0D10] shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Link
+                href="/workspace/academic"
+                aria-label="Exit Playground"
+                title="Exit Playground"
+                className="group w-7 h-7 rounded bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white hover:border-white/20 transition-all cursor-pointer shrink-0"
+              >
+                <ArrowLeft size={14} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+              </Link>
+
+              {/* Back Button Behavior */}
+              {playgroundNavMode === 'companies' ? (
+                <button
+                  onClick={() => {
+                    setCompanyWorkspaceView('intelligence')
+                    setSidebarOpen(true)
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#FF4D4D]/10 border border-[#FF4D4D]/30 text-xs font-semibold text-[#FF4D4D] hover:bg-[#FF4D4D]/20 transition-all cursor-pointer shrink-0"
+                >
+                  <span>← Back to Company Questions</span>
+                </button>
+              ) : (
+                !sidebarOpen && (
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-xs font-semibold text-[#8A8A8A] hover:text-white hover:bg-white/[0.08] hover:border-white/20 transition-all cursor-pointer shrink-0"
+                  >
+                    <PanelLeftOpen size={13} className="text-[#FF4D4D]" />
+                    <span>← Back to Questions</span>
+                  </button>
+                )
+              )}
+
+              {/* Context Badge */}
+              {playgroundNavMode === 'companies' ? (
+                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/[0.03] border border-white/[0.08] text-[11px] font-mono">
+                  <CompanyLogo company={selectedCompanyId} size={16} />
+                  <span className="font-bold text-white">{selectedCompanyId}</span>
+                  <span className="text-[#8A8A8A]">· {selectedCompanyRole} · {selectedCompanyExp}</span>
+                </div>
+              ) : (
+                <div className="hidden xl:flex items-center gap-1 px-2 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] text-[10px] font-mono text-[#9CA3AF]">
+                  <span>Target: {targetProfile.role} · 0–2 Years</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className="text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 font-mono"
+                  style={{ backgroundColor: dc.bg, color: dc.text, border: `1px solid ${dc.border}` }}
+                >
+                  {selectedProblem.difficulty}
+                </span>
+                <h2 className="text-xs font-bold text-white truncate max-w-[260px]">{selectedProblem.title}</h2>
+              </div>
+
+              <div className="hidden md:flex items-center gap-1">
+                {selectedProblem.topics.map(t => (
+                  <span key={t} className="text-[9px] font-mono text-[#8A8A8A] bg-white/[0.03] px-1.5 py-0.5 rounded border border-white/[0.05]">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-[9.5px] font-mono text-[#8A8A8A]">
+                Asked {selectedProblem.askedCount} times
+              </span>
+              <span className="hidden sm:inline-block text-[9.5px] font-mono text-[#10B981] bg-[#10B981]/10 px-1.5 py-0.5 rounded border border-[#10B981]/20">
+                Confidence: High
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Practice Banner Notification (e.g. Test Result Alert) */}
+        {practiceBanner && (
+          <div
+            className={`px-4 py-1.5 text-xs font-mono flex items-center justify-between border-b ${
+              practiceBanner.type === 'success'
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                : 'bg-[#FF4D4D]/10 text-[#FF4D4D] border-[#FF4D4D]/30'
+            }`}
+          >
+            <span>{practiceBanner.text}</span>
+            {companyWorkspaceView === 'practice' && (
+              <button
+                onClick={handleNextPracticeQuestion}
+                className="hover:underline font-bold cursor-pointer"
+              >
+                Proceed →
+              </button>
             )}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ backgroundColor: dc.bg, color: dc.text, border: `1px solid ${dc.border}` }}>{selectedProblem.difficulty}</span>
-              <h2 className="text-sm font-bold text-white truncate max-w-[300px]">{selectedProblem.title}</h2>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {selectedProblem.topics.map(t => (<span key={t} className="text-[9px] font-mono text-[#8A8A8A] bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/[0.06]">{t}</span>))}
-            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {selectedProblem.companies.slice(0, 3).map(c => (<span key={c} className="text-[9px] font-mono text-[#FF4D4D] bg-[#FF4D4D]/[0.06] px-2 py-0.5 rounded-full border border-[#FF4D4D]/20">{c}</span>))}
-            <span className="text-[9px] font-mono text-[#6B7280]">Asked {selectedProblem.askedCount}x</span>
-          </div>
-        </div>
+        )}
 
         <div ref={splitRef} className="flex-1 flex min-h-0">
           {/* LEFT: Problem Description */}
           <div
-            className={`${focusMode ? 'hidden' : 'flex'} shrink-0 min-w-0 flex-col min-h-0`}
+            className={`${focusMode ? 'hidden' : 'flex'} shrink-0 min-w-0 flex-col min-h-0 bg-[#0A0A0D]`}
             style={focusMode ? undefined : { width: `${leftPct}%` }}
           >
-            <div className="flex items-center gap-1 px-4 pt-3 pb-2 border-b border-white/[0.04] shrink-0">
-              {([{ id: 'description' as const, label: 'Description', icon: BookOpen }, { id: 'examples' as const, label: 'Examples', icon: Code2 }, { id: 'hints' as const, label: 'Hints', icon: Lightbulb }, { id: 'interview' as const, label: 'Interview', icon: Zap }, { id: 'similar' as const, label: 'Similar', icon: ArrowRight }]).map(tab => (
-                <button key={tab.id} onClick={() => setActiveDescTab(tab.id)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${activeDescTab === tab.id ? 'bg-white/[0.08] text-white' : 'text-[#6B7280] hover:text-white'}`}>
-                  <tab.icon size={11} />{tab.label}
+            {/* Tabs */}
+            <div className="flex items-center gap-1 px-4 pt-2.5 pb-2 border-b border-white/[0.04] shrink-0 overflow-x-auto scrollbar-none">
+              {([
+                { id: 'description' as const, label: 'Description', icon: BookOpen },
+                { id: 'examples' as const, label: 'Examples', icon: Code2 },
+                { id: 'constraints' as const, label: 'Constraints', icon: ListOrdered },
+                { id: 'hints' as const, label: 'Hints', icon: Lightbulb },
+                { id: 'interview' as const, label: 'Interview', icon: Zap },
+                { id: 'similar' as const, label: 'Similar', icon: ArrowRight },
+              ]).map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveDescTab(tab.id as typeof activeDescTab)}
+                  className={`px-2.5 py-1 rounded text-[10.5px] font-medium transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeDescTab === tab.id
+                      ? 'bg-white/[0.08] text-white font-semibold'
+                      : 'text-[#71717A] hover:text-[#D1D5DB]'
+                  }`}
+                >
+                  <tab.icon size={11} />
+                  {tab.label}
                 </button>
               ))}
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
-              {activeDescTab === 'description' && (<>
-                <div className="text-[13px] text-[#D1D5DB] leading-relaxed whitespace-pre-wrap">{selectedProblem.description}</div>
-                <div className="mt-4">
-                  <h4 className="text-[11px] font-mono text-[#8A8A8A] uppercase tracking-wider mb-2">Constraints</h4>
-                  <ul className="space-y-1">{selectedProblem.constraints.map((c, i) => (<li key={i} className="text-[11px] text-[#9CA3AF] font-mono flex items-start gap-2"><span className="text-[#FF4D4D] mt-0.5">•</span> {c}</li>))}</ul>
+
+            {/* Problem Tab Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-5 scrollbar-thin">
+              {activeDescTab === 'description' && (
+                <>
+                  <div className="space-y-3">
+                    <p className="text-[13px] text-[#D1D5DB] leading-relaxed whitespace-pre-wrap font-normal">
+                      {selectedProblem.description}
+                    </p>
+                  </div>
+
+                  {/* Examples (spacious & clean) */}
+                  <div className="space-y-3">
+                    {selectedProblem.examples.map((ex, i) => (
+                      <div key={i} className="bg-[#111215] border border-white/[0.05] rounded-lg p-3 space-y-1.5">
+                        <div className="text-[11px] font-bold text-white">Example {i + 1}:</div>
+                        <div className="font-mono text-[11px] space-y-1 bg-black/30 p-2.5 rounded border border-white/[0.03]">
+                          <p className="text-[#9CA3AF]"><span className="text-white font-semibold">Input:</span> {ex.input}</p>
+                          <p className="text-[#10B981]"><span className="text-white font-semibold">Output:</span> {ex.output}</p>
+                          {ex.explanation && (
+                            <p className="text-[#71717A] pt-1 border-t border-white/[0.04]">
+                              <span className="text-[#9CA3AF] font-medium">Explanation:</span> {ex.explanation}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Constraints */}
+                  <div className="space-y-2">
+                    <h4 className="text-[10.5px] font-mono text-[#8A8A8A] uppercase tracking-wider">Constraints</h4>
+                    <ul className="space-y-1 bg-[#111215] border border-white/[0.05] rounded-lg p-3">
+                      {selectedProblem.constraints.map((c, i) => (
+                        <li key={i} className="text-[11px] text-[#9CA3AF] font-mono flex items-start gap-2">
+                          <span className="text-[#FF4D4D]">•</span> {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Companies & Interview Signal Section */}
+                  <div className="pt-2 border-t border-white/[0.06] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-white uppercase tracking-wider">
+                        <Building2 size={13} className="text-[#FF4D4D]" />
+                        <span>Companies & Interview Signal</span>
+                      </div>
+                      <span className="text-[9.5px] font-mono text-[#60A5FA]">
+                        Auto Web Search Enabled
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedProblem.companies.map((c, idx) => {
+                        const freqLabel = idx === 0 ? 'Frequently Reported' : idx === 1 ? 'Reported' : 'Related'
+                        return (
+                          <div key={c} className="p-2.5 rounded-lg bg-[#111215] border border-white/[0.05] flex flex-col justify-between">
+                            <span className="text-[11.5px] font-bold text-white flex items-center gap-1.5">
+                              <CompanyLogo company={c} size={18} variant="rounded" />
+                              <span>{c}</span>
+                            </span>
+                            <span className="text-[9.5px] font-mono text-[#F59E0B] mt-1">
+                              ● {freqLabel}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    <p className="text-[9.5px] text-[#6B7280] italic">
+                      Public candidate interview reports automatically verified.
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {activeDescTab === 'examples' && (
+                <div className="space-y-4">
+                  {selectedProblem.examples.map((ex, i) => (
+                    <div key={i} className="bg-[#111214] border border-white/[0.06] rounded-xl p-4">
+                      <h4 className="text-[11px] font-bold text-white mb-2">Example {i + 1}:</h4>
+                      <div className="font-mono text-[11px] space-y-1">
+                        <p className="text-[#9CA3AF]"><span className="text-white font-bold">Input:</span> {ex.input}</p>
+                        <p className="text-[#10B981]"><span className="text-white font-bold">Output:</span> {ex.output}</p>
+                        {ex.explanation && <p className="text-[#6B7280] mt-2"><span className="text-[#8A8A8A] font-bold">Explanation:</span> {ex.explanation}</p>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </>)}
-              {activeDescTab === 'examples' && (<div className="space-y-4">{selectedProblem.examples.map((ex, i) => (<div key={i} className="bg-[#111214] border border-white/[0.06] rounded-xl p-4"><h4 className="text-[11px] font-bold text-white mb-2">Example {i + 1}:</h4><div className="font-mono text-[11px] space-y-1"><p className="text-[#9CA3AF]"><span className="text-white font-bold">Input:</span> {ex.input}</p><p className="text-[#10B981]"><span className="text-white font-bold">Output:</span> {ex.output}</p>{ex.explanation && <p className="text-[#6B7280] mt-2"><span className="text-[#8A8A8A] font-bold">Explanation:</span> {ex.explanation}</p>}</div></div>))}</div>)}
-              {activeDescTab === 'hints' && (<div className="space-y-3"><div className="bg-[#111214] border border-[#F59E0B]/20 rounded-xl p-4"><div className="flex items-center gap-2 mb-2"><Lightbulb size={14} className="text-[#F59E0B]" /><span className="text-xs font-bold text-[#F59E0B]">Approach Hint</span></div><p className="text-xs text-[#D1D5DB] leading-relaxed">Think about what data structure lets you look up values in O(1) time. Can you trade space for time?</p></div><div className="bg-[#111214] border border-white/[0.06] rounded-xl p-4"><div className="flex items-center gap-2 mb-2"><Zap size={14} className="text-[#FF4D4D]" /><span className="text-xs font-bold text-[#FF4D4D]">Optimization</span></div><p className="text-xs text-[#D1D5DB] leading-relaxed">A single-pass hash map approach gives you O(n) time and O(n) space.</p></div></div>)}
-              {activeDescTab === 'interview' && selectedProblem.interviewSignal && (<div className="space-y-3"><h4 className="text-xs font-bold text-[#FF4D4D] uppercase tracking-wider flex items-center gap-2"><Zap size={13} /> Interview Signal</h4>{selectedProblem.interviewSignal.map((signal, i) => (<div key={i} className="bg-[#111214] border border-white/[0.06] rounded-xl p-3 flex items-start gap-2"><span className="text-[#FF4D4D] mt-0.5 shrink-0">•</span><p className="text-xs text-[#D1D5DB]">{signal}</p></div>))}</div>)}
-              {activeDescTab === 'similar' && selectedProblem.similarProblems && (<div className="space-y-2"><h4 className="text-xs font-bold text-[#8A8A8A] uppercase tracking-wider mb-3">Similar Problems</h4>{selectedProblem.similarProblems.map((sp, i) => (<div key={i} className="bg-[#111214] border border-white/[0.06] rounded-xl p-3 flex items-center justify-between group hover:border-white/[0.12] transition-all cursor-pointer"><span className="text-xs text-[#D1D5DB] group-hover:text-white transition-colors">{sp}</span><ArrowRight size={12} className="text-[#6B7280] group-hover:text-[#FF4D4D] transition-colors" /></div>))}</div>)}
+              )}
+
+              {activeDescTab === 'constraints' && (
+                <div className="space-y-3">
+                  <div className="bg-[#111214] border border-white/[0.06] rounded-xl p-4 space-y-2">
+                    <h4 className="text-xs font-bold text-white mb-2 font-mono uppercase">Problem Constraints</h4>
+                    {selectedProblem.constraints.map((c, i) => (
+                      <div key={i} className="text-xs font-mono text-[#D1D5DB] flex items-center gap-2">
+                        <span className="text-[#FF4D4D]">•</span> {c}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeDescTab === 'hints' && (
+                <div className="space-y-3">
+                  <div className="bg-[#111214] border border-[#F59E0B]/20 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lightbulb size={14} className="text-[#F59E0B]" />
+                      <span className="text-xs font-bold text-[#F59E0B]">Approach Hint</span>
+                    </div>
+                    <p className="text-xs text-[#D1D5DB] leading-relaxed">
+                      Think about what data structure lets you look up values in O(1) time. Can you trade space for time?
+                    </p>
+                  </div>
+                  <div className="bg-[#111214] border border-white/[0.06] rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Zap size={14} className="text-[#FF4D4D]" />
+                      <span className="text-xs font-bold text-[#FF4D4D]">Optimization</span>
+                    </div>
+                    <p className="text-xs text-[#D1D5DB] leading-relaxed">
+                      A single-pass hash map approach gives you O(n) time and O(n) space.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeDescTab === 'interview' && (
+                <div className="space-y-4">
+                  {/* Target Relevance Card */}
+                  <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#FF4D4D]/10 via-white/[0.02] to-transparent border border-[#FF4D4D]/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Flame size={13} className="text-[#FF4D4D]" /> Target Job Fit: {targetProfile.role}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-[#10B981]">
+                        {targetRelevance.jobRelevanceScore}% Score
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#FF4D4D] to-[#10B981] rounded-full"
+                        style={{ width: `${targetRelevance.jobRelevanceScore}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] text-[#9CA3AF]">
+                      {targetRelevance.priorityReason}
+                    </p>
+                  </div>
+
+                  {/* Companies & Interview Signals */}
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <Building2 size={13} className="text-[#FF4D4D]" /> Reported At Companies
+                    </h4>
+                    <div className="space-y-2">
+                      {selectedProblem.companies.map(c => {
+                        const roles = selectedProblem.companyRoles?.[c]?.join(', ') || 'SDE'
+                        return (
+                          <div key={c} className="p-2.5 rounded-lg bg-[#111214] border border-white/[0.06] flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white">{c}</span>
+                              <span className="text-[10px] font-mono text-[#8A8A8A] bg-white/[0.03] px-1.5 py-0.5 rounded">{roles}</span>
+                            </div>
+                            <span className="text-[10px] font-mono text-[#F59E0B]">
+                              🔥 Frequently Reported
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Specific Candidate Signal Notes */}
+                  {selectedProblem.interviewSignal && (
+                    <div>
+                      <h4 className="text-xs font-bold text-[#8A8A8A] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <Zap size={13} className="text-[#FF4D4D]" /> Interview Signals & Takeaways
+                      </h4>
+                      <div className="space-y-1.5">
+                        {selectedProblem.interviewSignal.map((signal, i) => (
+                          <div key={i} className="bg-[#111214] border border-white/[0.06] rounded-xl p-3 flex items-start gap-2">
+                            <span className="text-[#FF4D4D] mt-0.5 shrink-0">•</span>
+                            <p className="text-xs text-[#D1D5DB] leading-relaxed">{signal}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeDescTab === 'similar' && selectedProblem.similarProblems && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-[#8A8A8A] uppercase tracking-wider mb-3">Similar Problems</h4>
+                  {selectedProblem.similarProblems.map((sp, i) => (
+                    <div key={i} className="bg-[#111214] border border-white/[0.06] rounded-xl p-3 flex items-center justify-between group hover:border-white/[0.12] transition-all cursor-pointer">
+                      <span className="text-xs text-[#D1D5DB] group-hover:text-white transition-colors">{sp}</span>
+                      <ArrowRight size={12} className="text-[#6B7280] group-hover:text-[#FF4D4D] transition-colors" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -534,7 +1214,6 @@ export default function PlaygroundTab() {
               title="Drag to resize  ·  double-click to reset"
               className={`group relative w-[5px] shrink-0 cursor-col-resize transition-colors ${isDraggingSplit ? 'bg-[#FF4D4D]/60' : 'bg-white/[0.06] hover:bg-[#FF4D4D]/40'}`}
             >
-              {/* widened invisible hit area */}
               <span className="absolute inset-y-0 -left-1.5 -right-1.5" />
               <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-[3px] opacity-40 group-hover:opacity-100 transition-opacity">
                 <span className="w-[3px] h-[3px] rounded-full bg-white" />
@@ -749,6 +1428,163 @@ export default function PlaygroundTab() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Practice Session Summary Modal */}
+      <AnimatePresence>
+        {isPracticeSummaryOpen && activePracticeSession && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+            onClick={() => setIsPracticeSummaryOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.94, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.94, y: 12 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-xl bg-[#121217] border border-white/[0.12] rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.85)] p-6 space-y-5"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+                <div className="flex items-center gap-3">
+                  <CompanyLogo company={activePracticeSession.companyName} size={36} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-black text-white tracking-tight">PRACTICE COMPLETE 🎉</h3>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FF4D4D]/15 text-[#FF4D4D] border border-[#FF4D4D]/30 font-bold uppercase">
+                        {activePracticeSession.mode === 'interview' ? 'Interview Simulation' : 'Practice Session'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#8A8A8A] font-mono mt-0.5">
+                      {activePracticeSession.companyName} · {activePracticeSession.role} · {activePracticeSession.experience}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsPracticeSummaryOpen(false)}
+                  className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-[#8A8A8A] hover:text-white flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {/* 4 Performance Metric Cards */}
+              <div className="grid grid-cols-4 gap-2.5">
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
+                  <p className="text-lg font-black text-white">{sessionStats.total}</p>
+                  <p className="text-[10px] text-[#8A8A8A] font-mono mt-0.5">Questions</p>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
+                  <p className="text-lg font-black text-[#10B981]">{sessionStats.solved}</p>
+                  <p className="text-[10px] text-[#8A8A8A] font-mono mt-0.5">Solved</p>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
+                  <p className="text-lg font-black text-amber-400">{sessionStats.accuracy}%</p>
+                  <p className="text-[10px] text-[#8A8A8A] font-mono mt-0.5">Accuracy</p>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
+                  <p className="text-lg font-black text-blue-400">{sessionStats.avgTime}m</p>
+                  <p className="text-[10px] text-[#8A8A8A] font-mono mt-0.5">Avg Time</p>
+                </div>
+              </div>
+
+              {/* KIIT ANUMAAN Preparation Score Card */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-[#FF4D4D]/10 via-white/[0.02] to-transparent border border-[#FF4D4D]/25 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-[#FF4D4D]" />
+                    <span className="text-xs font-bold text-white font-mono uppercase tracking-wider">
+                      KIIT ANUMAAN Preparation Score
+                    </span>
+                  </div>
+                  <span className="text-base font-black font-mono text-[#FF4D4D]">{sessionStats.prepScore}%</span>
+                </div>
+                <div className="w-full h-2 bg-white/[0.06] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#FF4D4D] to-emerald-400 rounded-full transition-all duration-500"
+                    style={{ width: `${sessionStats.prepScore}%` }}
+                  />
+                </div>
+                <p className="text-[10.5px] text-[#9CA3AF] leading-relaxed">
+                  Evaluated from company priority coverage, algorithmic complexity, and solution accuracy.
+                </p>
+              </div>
+
+              {/* Strong Topics vs Weak Topics */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-emerald-500/[0.04] border border-emerald-500/20 space-y-1.5">
+                  <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> Strong Topics
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {sessionStats.strongTopics.length > 0 ? (
+                      sessionStats.strongTopics.map(t => (
+                        <span key={t} className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-mono text-[10px]">
+                          {t}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[10.5px] text-[#8A8A8A] italic">Complete more questions</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-500/[0.04] border border-amber-500/20 space-y-1.5">
+                  <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+                    <AlertCircle size={12} /> Needs Practice
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {sessionStats.weakTopics.length > 0 ? (
+                      sessionStats.weakTopics.map(t => (
+                        <span key={t} className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 font-mono text-[10px]">
+                          {t}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[10.5px] text-[#8A8A8A] italic">None identified! Excellent job.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions: Review Mistakes / Practice Again / Company Intelligence */}
+              <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between gap-2.5 flex-wrap">
+                {sessionStats.weakTopics.length > 0 || sessionStats.failed > 0 ? (
+                  <button
+                    onClick={handleReviewMistakes}
+                    className="flex-1 min-w-[140px] px-3.5 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <RotateCcw size={13} />
+                    <span>Review Mistakes ({sessionStats.failed})</span>
+                  </button>
+                ) : null}
+
+                <button
+                  onClick={handlePracticeAgain}
+                  className="flex-1 min-w-[140px] px-3.5 py-2 rounded-lg bg-[#FF4D4D] hover:bg-[#FF3333] text-white text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(255,77,77,0.35)]"
+                >
+                  <Play size={13} fill="currentColor" />
+                  <span>Practice Again</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsPracticeSummaryOpen(false)
+                    handleExitPractice()
+                  }}
+                  className="px-3.5 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] text-[#D1D5DB] hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  View Company Intelligence
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
-}
+}
