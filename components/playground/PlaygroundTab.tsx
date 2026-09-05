@@ -24,6 +24,7 @@ import {
   type PracticeSessionConfig,
   createPracticeSession,
 } from '@/lib/playground-data'
+import { recordSolve } from '@/lib/playground-stats'
 import QuestionExplorer from './QuestionExplorer'
 import CompanyIntelligenceWorkspace from './CompanyIntelligenceWorkspace'
 import PlaygroundLanding from './PlaygroundLanding'
@@ -505,7 +506,10 @@ export default function PlaygroundTab() {
         })
         setTestResults(results)
         isAllPassed = results.every(r => r.passed)
-        if (isAllPassed) setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
+        if (isAllPassed) {
+          setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
+          recordSolve(selectedProblem.id, language)
+        }
       } else {
         const mockTime = Math.floor(Math.random() * 80 + 10)
         const mockMemory = (Math.random() * 10 + 8).toFixed(1)
@@ -520,7 +524,10 @@ export default function PlaygroundTab() {
           const results = selectedProblem.testCases.filter(tc => !tc.isHidden).map(tc => ({ id: tc.id, passed: Math.random() > 0.3, yourOutput: tc.expectedOutput, time: `${mockTime}ms`, memory: `${mockMemory} MB` }))
           setTestResults(results)
           isAllPassed = results.every(r => r.passed)
-          if (isAllPassed) setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
+          if (isAllPassed) {
+            setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
+            recordSolve(selectedProblem.id, language)
+          }
         }
       }
 
@@ -702,7 +709,7 @@ export default function PlaygroundTab() {
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06] bg-[#0D0D10] shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <Link
-                href="/workspace/academic"
+                href="/workspace/playground"
                 aria-label="Exit Playground"
                 title="Exit Playground"
                 className="group w-7 h-7 rounded bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white hover:border-white/20 transition-all cursor-pointer shrink-0"
@@ -874,7 +881,7 @@ export default function PlaygroundTab() {
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06] bg-[#0D0D10] shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <Link
-                href="/workspace/academic"
+                href="/workspace/playground"
                 aria-label="Exit Playground"
                 title="Exit Playground"
                 className="group w-7 h-7 rounded bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#8A8A8A] hover:text-white hover:border-white/20 transition-all cursor-pointer shrink-0"

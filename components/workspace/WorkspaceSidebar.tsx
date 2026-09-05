@@ -21,6 +21,8 @@ import {
   CheckCircle2,
   Compass,
   Code2,
+  LayoutDashboard,
+  Terminal,
 } from 'lucide-react'
 
 // Academic Submenu items specification
@@ -48,12 +50,13 @@ const careerSubmenu = [
   { name: 'AI Blueprint', tab: 'ai-blueprint', icon: Compass },
 ]
 
+// Playground Submenu items specification
+const playgroundSubmenu = [
+  { name: 'Dashboard', href: '/workspace/playground', icon: LayoutDashboard },
+  { name: 'Code Editor', href: '/workspace/playground/solve', icon: Terminal },
+]
+
 const mainNavItems = [
-  {
-    name: 'Play Ground',
-    href: '/workspace/playground',
-    icon: Code2,
-  },
   {
     name: 'Profile & Settings',
     href: '/workspace/profile',
@@ -76,6 +79,7 @@ export default function WorkspaceSidebar() {
     pathname.startsWith('/workspace/section-swap')
   )
   const [isCareerOpen, setIsCareerOpen] = useState(pathname.startsWith('/workspace/career'))
+  const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(pathname.startsWith('/workspace/playground'))
 
   const isExpanded = isHovered && !isManuallyCollapsed
   const isAcademicActive = pathname.startsWith('/workspace/academic')
@@ -84,6 +88,7 @@ export default function WorkspaceSidebar() {
     pathname.startsWith('/workspace/faculty') ||
     pathname.startsWith('/workspace/section-swap')
   const isCareerActive = pathname.startsWith('/workspace/career')
+  const isPlaygroundActive = pathname.startsWith('/workspace/playground')
   const currentTab = searchParams.get('tab') || ''
 
   const handleAcademicClick = () => {
@@ -117,6 +122,17 @@ export default function WorkspaceSidebar() {
   const handleCareerChevronClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsCareerOpen((prev) => !prev)
+  }
+
+  const handlePlaygroundClick = () => {
+    if (pathname !== '/workspace/playground') {
+      router.push('/workspace/playground')
+    }
+  }
+
+  const handlePlaygroundChevronClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsPlaygroundOpen((prev) => !prev)
   }
 
   const handleExit = () => {
@@ -410,6 +426,103 @@ export default function WorkspaceSidebar() {
                     <Link
                       key={sub.name}
                       href={`/workspace/career?tab=${sub.tab}`}
+                      style={{ transitionDelay: `${index * 30}ms` }}
+                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[14px] font-medium transition-all duration-200 ${
+                        isSubActive
+                          ? 'bg-[#141418] text-[#FF453A] font-semibold'
+                          : 'bg-transparent text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <span className="absolute -left-[12px] top-1/2 -translate-y-1/2 w-[9px] h-[1px] bg-white/15" />
+                      {isSubActive && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-[#FF453A]" />
+                      )}
+                      <SubIcon
+                        size={16}
+                        className={`shrink-0 transition-colors duration-200 ${
+                          isSubActive ? 'text-[#FF453A]' : 'text-[#71717A] group-hover:text-white'
+                        }`}
+                      />
+                      <span className="whitespace-nowrap truncate">{sub.name}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* ----------------------------------------------------
+              PLAY GROUND EXPANDABLE ACCORDION GROUP
+          ---------------------------------------------------- */}
+          <div className="space-y-1">
+            <div
+              onClick={handlePlaygroundClick}
+              className={`group relative flex items-center justify-between px-3.5 py-2.5 h-[48px] rounded-[16px] text-xs font-semibold cursor-pointer transition-all duration-200 ${
+                isPlaygroundActive
+                  ? 'bg-[#141418] border border-white/[0.06] text-white'
+                  : 'bg-transparent text-[#8A8A8A] hover:text-white hover:bg-white/[0.03]'
+              }`}
+            >
+              {isPlaygroundActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-[#FF453A]" />
+              )}
+
+              <div className="flex items-center gap-3.5 min-w-0 pl-1">
+                <Code2
+                  size={20}
+                  className={`shrink-0 transition-transform duration-200 group-hover:scale-[1.05] ${
+                    isPlaygroundActive ? 'text-[#FF453A]' : 'text-[#71717A] group-hover:text-white'
+                  }`}
+                />
+                <span
+                  className={`whitespace-nowrap truncate transition-all duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)] ${
+                    isExpanded
+                      ? 'opacity-100 translate-x-0 delay-[80ms]'
+                      : 'opacity-0 translate-x-3 pointer-events-none'
+                  }`}
+                >
+                  Play Ground
+                </span>
+              </div>
+
+              {isExpanded && (
+                <button
+                  type="button"
+                  onClick={handlePlaygroundChevronClick}
+                  className="p-1 hover:bg-white/10 rounded-md transition-colors shrink-0"
+                  aria-label="Toggle Playground Submenu"
+                >
+                  <ChevronRight
+                    size={16}
+                    className={`text-[#71717A] group-hover:text-white transition-transform duration-250 ease-in-out ${
+                      isPlaygroundOpen ? 'rotate-90' : 'rotate-0'
+                    }`}
+                  />
+                </button>
+              )}
+            </div>
+
+            {/* Playground Submenu Container with Tree Lines */}
+            <div
+              className={`relative overflow-hidden transition-all duration-250 ease-in-out pl-[24px] ${
+                isPlaygroundOpen && isExpanded
+                  ? 'max-h-[160px] opacity-100 translate-y-0 py-1'
+                  : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none py-0'
+              }`}
+            >
+              <div className="absolute left-[12px] top-1 bottom-4 w-[1px] bg-white/15" />
+              <div className="space-y-1">
+                {playgroundSubmenu.map((sub, index) => {
+                  const SubIcon = sub.icon
+                  const isSubActive =
+                    sub.href === '/workspace/playground'
+                      ? pathname === '/workspace/playground'
+                      : pathname.startsWith(sub.href)
+
+                  return (
+                    <Link
+                      key={sub.name}
+                      href={sub.href}
                       style={{ transitionDelay: `${index * 30}ms` }}
                       className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[14px] font-medium transition-all duration-200 ${
                         isSubActive
