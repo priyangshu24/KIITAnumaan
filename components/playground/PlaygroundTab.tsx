@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Play, RotateCcw, Copy, Check, ChevronRight, ArrowLeft,
@@ -139,13 +140,21 @@ function IconBtn({ onClick, title, active, disabled, children }: {
 }
 
 export default function PlaygroundTab() {
+  const searchParams = useSearchParams()
+  const problemParam = searchParams.get('problem')
+  const modeParam = searchParams.get('mode')
+
+  // Deep-link may skip the landing screen entirely.
+  const initialNavMode: 'landing' | 'topics' | 'companies' =
+    problemParam || modeParam === 'topics' ? 'topics' : modeParam === 'companies' ? 'companies' : 'landing'
+
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [selectedProblem, setSelectedProblem] = useState<Problem>(PROBLEMS[0])
   const [recentProblems, setRecentProblems] = useState<Problem[]>([PROBLEMS[0]])
   const [targetProfile, setTargetProfile] = useState<TargetProfile>(DEFAULT_TARGET_PROFILE)
 
   // Navigation mode: 'landing' (primary entry landing page) vs 'topics' (standard editor) vs 'companies' (intelligence workspace)
-  const [playgroundNavMode, setPlaygroundNavMode] = useState<'landing' | 'topics' | 'companies'>('landing')
+  const [playgroundNavMode, setPlaygroundNavMode] = useState<'landing' | 'topics' | 'companies'>(initialNavMode)
   const [companyWorkspaceView, setCompanyWorkspaceView] = useState<'intelligence' | 'problem' | 'practice'>('intelligence')
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('Amazon')
   const [selectedCompanyRole, setSelectedCompanyRole] = useState<string>('SDE-1')
@@ -287,6 +296,29 @@ export default function PlaygroundTab() {
     setLanguage(lang)
     setLangMenuOpen(false)
   }, [])
+
+  // Deep-link: /workspace/playground/solve?problem=<id> jumps straight into
+  // that problem in the standard editor.
+  useEffect(() => {
+    if (!problemParam) return
+    const problem = PROBLEMS.find((p) => p.id === problemParam)
+    if (problem) {
+      handleSelectProblem(problem)
+      setPlaygroundNavMode('topics')
+    }
+  }, [problemParam, handleSelectProblem])
+
+  // Deep-link: /workspace/playground/solve?mode=topics|companies opens that mode.
+  useEffect(() => {
+    if (modeParam === 'topics') {
+      setPlaygroundNavMode('topics')
+      setSidebarOpen(true)
+    } else if (modeParam === 'companies') {
+      setPlaygroundNavMode('companies')
+      setCompanyWorkspaceView('intelligence')
+      setSidebarOpen(true)
+    }
+  }, [modeParam])
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(code)

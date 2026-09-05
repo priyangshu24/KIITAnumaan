@@ -40,6 +40,7 @@ export interface HeatCell {
   date: string // YYYY-MM-DD
   count: number
   intensity: 0 | 1 | 2 | 3 | 4
+  inYear: boolean // false for the leading/trailing padding days from adjacent years
 }
 
 const XP_PER_DIFFICULTY: Record<Difficulty, number> = { Easy: 10, Medium: 25, Hard: 50 }
@@ -230,13 +231,17 @@ export function computeStats(): ProgressStats {
  * Saturday of the current week. Returns cells in column-major order plus the
  * month label for each column (empty string when it repeats).
  */
-export function buildHeatmap(weeks = 26): { cells: HeatCell[][]; monthLabels: string[]; total: number } {
+export function buildHeatmap(
+  year: number = new Date().getFullYear(),
+): { cells: HeatCell[][]; monthLabels: string[]; total: number; year: number } {
   const activity = readActivity()
 
-  const today = new Date()
-  // end on Saturday of this week
-  const end = addDays(today, 6 - today.getDay())
-  const start = addDays(end, -(weeks * 7 - 1))
+  // Full calendar year: Sunday on/before Jan 1 → Saturday on/after Dec 31.
+  const jan1 = new Date(year, 0, 1)
+  const dec31 = new Date(year, 11, 31)
+  const start = addDays(jan1, -jan1.getDay())
+  const end = addDays(dec31, 6 - dec31.getDay())
+  const weeks = Math.round((end.getTime() - start.getTime()) / (7 * 86400000)) + 1
 
   const counts = Object.values(activity)
   const max = counts.length ? Math.max(...counts) : 0
@@ -261,13 +266,16 @@ export function buildHeatmap(weeks = 26): { cells: HeatCell[][]; monthLabels: st
       const date = addDays(start, w * 7 + d)
       const key = dayKey(date)
       const count = activity[key] ?? 0
-      total += count
-      col.push({ date: key, count, intensity: intensityFor(count) })
+      const inYear = date.getFullYear() === year
+      if (inYear) total += count
+      col.push({ date: key, count, intensity: intensityFor(count), inYear })
     }
-    const firstOfCol = parseKey(col[0].date)
-    const m = firstOfCol.getMonth()
-    if (m !== lastMonth) {
-      monthLabels.push(firstOfCol.toLocaleString('en-US', { month: 'short' }))
+    // Label a column only when it opens a new month that belongs to the
+    // target year — this drops the leading "Dec" and trailing "Jan" padding.
+    const monthOwner = col.find((c) => parseKey(c.date).getFullYear() === year)
+    const m = monthOwner ? parseKey(monthOwner.date).getMonth() : -1
+    if (m !== -1 && m !== lastMonth) {
+      monthLabels.push(parseKey(monthOwner!.date).toLocaleString('en-US', { month: 'short' }))
       lastMonth = m
     } else {
       monthLabels.push('')
@@ -275,7 +283,7 @@ export function buildHeatmap(weeks = 26): { cells: HeatCell[][]; monthLabels: st
     cells.push(col)
   }
 
-  return { cells, monthLabels, total }
+  return { cells, monthLabels, total, year }
 }
 
 /** "Sep 5, 2026" */

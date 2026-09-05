@@ -23,6 +23,7 @@ import {
   Code2,
   LayoutDashboard,
   Terminal,
+  FolderTree,
 } from 'lucide-react'
 
 // Academic Submenu items specification
@@ -53,7 +54,8 @@ const careerSubmenu = [
 // Playground Submenu items specification
 const playgroundSubmenu = [
   { name: 'Dashboard', href: '/workspace/playground', icon: LayoutDashboard },
-  { name: 'Code Editor', href: '/workspace/playground/solve', icon: Terminal },
+  { name: 'FORCE', href: '/workspace/playground/solve?mode=topics', icon: Terminal },
+  { name: 'Directory', href: '/workspace/playground/solve', icon: FolderTree },
 ]
 
 const mainNavItems = [
@@ -514,10 +516,11 @@ export default function WorkspaceSidebar() {
               <div className="space-y-1">
                 {playgroundSubmenu.map((sub, index) => {
                   const SubIcon = sub.icon
+                  const subPath = sub.href.split('?')[0]
                   const isSubActive =
-                    sub.href === '/workspace/playground'
+                    subPath === '/workspace/playground'
                       ? pathname === '/workspace/playground'
-                      : pathname.startsWith(sub.href)
+                      : pathname.startsWith(subPath)
 
                   return (
                     <Link
