@@ -56,6 +56,16 @@ function readPracticeSession(): PracticeSession | null {
   }
 }
 
+function readBookmarkIds(): string[] {
+  try {
+    const raw = typeof window !== 'undefined' ? window.localStorage.getItem('kiit:pg:bookmarks') : null
+    const ids = raw ? JSON.parse(raw) : []
+    return Array.isArray(ids) ? ids : []
+  } catch {
+    return []
+  }
+}
+
 // ---- small pieces -------------------------------------------------------
 
 function Panel({ title, action, children }: { title: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) {
@@ -133,22 +143,40 @@ export default function PlaygroundDashboard() {
   const [log, setLog] = useState<SolvedEntry[]>([])
   const [session, setSession] = useState<PracticeSession | null>(null)
   const [topics, setTopics] = useState<TopicMastery[]>([])
+  const [solvedIdList, setSolvedIdList] = useState<string[]>([])
+  const [bookmarkIds, setBookmarkIds] = useState<string[]>([])
   const [year, setYear] = useState(CURRENT_YEAR)
   const [heatmap, setHeatmap] = useState<{ cells: HeatCell[][]; monthLabels: string[]; total: number; year: number }>({
     cells: [], monthLabels: [], total: 0, year: CURRENT_YEAR,
   })
+  // Bumped on mount + whenever the tab regains focus/visibility, so the
+  // dashboard re-reads everything the editor may have written in the meantime.
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    const bump = () => setTick((t) => t + 1)
+    const onVisible = () => { if (document.visibilityState === 'visible') bump() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', bump)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', bump)
+    }
+  }, [])
 
   useEffect(() => {
     setStats(computeStats())
     setLog(readSolvedLog())
     setSession(readPracticeSession())
     setTopics(analyzeProfile().topics)
+    setSolvedIdList(readSolvedIds())
+    setBookmarkIds(readBookmarkIds())
     setMounted(true)
-  }, [])
+  }, [tick])
 
   useEffect(() => {
     setHeatmap(buildHeatmap(year))
-  }, [year])
+  }, [year, tick])
 
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   const totalProblems = PROBLEMS.length
@@ -158,7 +186,7 @@ export default function PlaygroundDashboard() {
     return log.filter((e) => e.at >= cut).length
   }, [log])
 
-  const solvedIds = useMemo(() => new Set(mounted ? readSolvedIds() : []), [mounted])
+  const solvedIds = useMemo(() => new Set(solvedIdList), [solvedIdList])
 
   // Deterministic "problem of the day"
   const daily = useMemo(() => {
@@ -169,16 +197,10 @@ export default function PlaygroundDashboard() {
   const dailyDone = solvedIds.has(daily.id)
 
   // Pinned / bookmarked problems
-  const bookmarks = useMemo(() => {
-    if (!mounted) return [] as typeof PROBLEMS
-    try {
-      const raw = window.localStorage.getItem('kiit:pg:bookmarks')
-      const ids: string[] = raw ? JSON.parse(raw) : []
-      return ids.map((id) => PROBLEMS.find((p) => p.id === id)).filter(Boolean) as typeof PROBLEMS
-    } catch {
-      return [] as typeof PROBLEMS
-    }
-  }, [mounted])
+  const bookmarks = useMemo(
+    () => bookmarkIds.map((id) => PROBLEMS.find((p) => p.id === id)).filter(Boolean) as typeof PROBLEMS,
+    [bookmarkIds],
+  )
 
   // This-week rollup
   const week = useMemo(() => {
@@ -190,6 +212,16 @@ export default function PlaygroundDashboard() {
     }
     return { solves, activeDays: days.size }
   }, [log])
+
+  // Adaptive goal targets — advance to the next tier once cleared.
+  const goals = useMemo(() => {
+    const nextTier = (v: number, steps: number[]) => steps.find((s) => v < s) ?? steps[steps.length - 1]
+    return {
+      solve: nextTier(stats.totalSolved, [10, 25, 50, 100, 250]),
+      streak: nextTier(Math.max(stats.currentStreak, stats.longestStreak), [3, 7, 14, 30, 60]),
+      level: nextTier(stats.level, [3, 5, 10, 20, 40]),
+    }
+  }, [stats.totalSolved, stats.currentStreak, stats.longestStreak, stats.level])
 
   // "Continue practising" target
   const resume = useMemo(() => {
@@ -476,7 +508,7 @@ export default function PlaygroundDashboard() {
           </div>
 
           {/* deep analysis */}
-          <TechnicalProfile />
+          <TechnicalProfile key={tick} />
         </div>
 
         {/* ============ RIGHT RAIL ============ */}
@@ -577,9 +609,9 @@ export default function PlaygroundDashboard() {
 
           <Panel title={<span className="flex items-center gap-1.5"><Target size={13} className="text-[#FF4D4D]" /> Goals</span>}>
             <div className="space-y-3">
-              <GoalRow icon={<CheckCircle2 size={11} className="text-[#10B981]" />} label="Solve 25 problems" cur={stats.totalSolved} target={25} />
-              <GoalRow icon={<Flame size={11} className="text-[#F59E0B]" />} label="14-day streak" cur={stats.currentStreak} target={14} />
-              <GoalRow icon={<Zap size={11} className="text-[#FF4D4D]" />} label="Reach Level 5" cur={stats.level} target={5} />
+              <GoalRow icon={<CheckCircle2 size={11} className="text-[#10B981]" />} label={`Solve ${goals.solve} problems`} cur={stats.totalSolved} target={goals.solve} />
+              <GoalRow icon={<Flame size={11} className="text-[#F59E0B]" />} label={`${goals.streak}-day streak`} cur={stats.currentStreak} target={goals.streak} />
+              <GoalRow icon={<Zap size={11} className="text-[#FF4D4D]" />} label={`Reach Level ${goals.level}`} cur={stats.level} target={goals.level} />
             </div>
           </Panel>
 
