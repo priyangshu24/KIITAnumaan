@@ -605,6 +605,8 @@ export interface AlgoLabMeta {
   blurb: string
   category: 'Unsupervised' | 'Optimization' | 'LLM Internals' | 'Supervised' | 'Evaluation'
   concepts: string[]
+  /** the algorithm as a numbered walkthrough, shown in the sim panel */
+  steps: string[]
   reading: AimlReading[]
 }
 
@@ -616,6 +618,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Step through Lloyd’s algorithm — alternate assign-to-nearest-centroid and move-centroid-to-mean until nothing moves. Re-seed to watch it land in a different local minimum.',
     concepts: ['centroids', 'inertia', 'local minima', 'choosing k'],
+    steps: [
+      'Drop k marker points on the plot — these are the guessed cluster centres.',
+      'Colour every data point by whichever marker is nearest to it.',
+      'Slide each marker to the middle of the points that now share its colour.',
+      'Repeat the last two steps. When no point changes colour, it is done.',
+      'Different starting markers can give a different answer — run it a few times and keep the tightest clusters.',
+    ],
     reading: [{ label: 'k-means clustering (Wikipedia)', url: 'https://en.wikipedia.org/wiki/K-means_clustering' }],
   },
   {
@@ -625,6 +634,12 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Roll downhill on a non-convex 1-D loss. Nudge the learning rate up and watch the iterate overshoot, oscillate, then diverge — the single most common training failure.',
     concepts: ['learning rate', 'convergence', 'divergence', 'local minima'],
+    steps: [
+      'Place a ball somewhere on the curve.',
+      'Check which way is downhill right there (that is the gradient).',
+      'Roll the ball one small step downhill. The step size is the learning rate.',
+      'Repeat. It settles at the bottom of a valley — unless the steps are too big, then it flies out and blows up.',
+    ],
     reading: [{ label: 'Gradient descent (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Gradient_descent' }],
   },
   {
@@ -634,6 +649,12 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Reshape a fixed logit vector. Temperature flattens or sharpens; top-k and top-p truncate the tail. The entropy readout shows how much randomness is left.',
     concepts: ['softmax', 'temperature', 'nucleus sampling', 'entropy'],
+    steps: [
+      'Start with a raw score for each possible next word.',
+      'Temperature: divide every score by it. A low temperature makes the top word dominate; a high one evens the words out.',
+      'Turn the scores into percentages that add up to 100% (this is softmax).',
+      'Optionally throw away the unlikely words (top-k / top-p), then pick one word at random from what is left.',
+    ],
     reading: [{ label: 'The Curious Case of Neural Text Degeneration', url: 'https://arxiv.org/abs/1904.09751' }],
   },
   {
@@ -643,6 +664,12 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Raise k and watch the boundary go from a jagged shape that memorises noise (low bias, high variance) to a smooth one that misses structure (high bias).',
     concepts: ['bias–variance', 'k', 'distance metric', 'overfitting'],
+    steps: [
+      'Just remember every training point and its colour — there is no real "training".',
+      'To label a new spot, find its k closest training points.',
+      'Whichever colour is most common among those k wins.',
+      'Small k copies every point (bumpy, over-fit). Large k averages everything (too smooth).',
+    ],
     reading: [{ label: 'k-nearest neighbors (Wikipedia)', url: 'https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm' }],
   },
   {
@@ -652,6 +679,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Two overlapping score distributions and a movable decision threshold. Watch precision trade against recall and the operating point slide along the ROC curve.',
     concepts: ['precision', 'recall', 'F1', 'ROC / AUC', 'threshold'],
+    steps: [
+      'The model gives every item a score from 0 to 1.',
+      'Pick a cut-off. Anything scoring above it, you predict "yes".',
+      'Compare your predictions to the truth: count the hits and misses to get precision, recall and F1.',
+      'Slide the cut-off across every value to draw the ROC and PR curves.',
+      'The area under those curves (AUC / AP) rates the model without you picking one cut-off.',
+    ],
     reading: [{ label: 'Precision and recall (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Precision_and_recall' }],
   },
   {
@@ -661,6 +695,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Rotate and scale two vectors. Cosine ignores magnitude, the dot product does not, and Euclidean distance disagrees with both — which is why embeddings are normalised.',
     concepts: ['embeddings', 'cosine vs dot', 'normalisation', 'angle'],
+    steps: [
+      'Take two arrows (vectors).',
+      'Dot product: multiply the matching parts and add them up — it grows with both length and alignment.',
+      'Cosine: the dot product divided by both arrows’ lengths — this leaves only the angle, ignoring length.',
+      'Make both arrows length 1 first, and the cosine equals the dot product.',
+      'Straight-line (L2) distance still cares about length — that is why search compares length-1 embeddings by cosine.',
+    ],
     reading: [{ label: 'Cosine similarity (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Cosine_similarity' }],
   },
   {
@@ -670,6 +711,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Watch a linear classifier train: each epoch takes a gradient step on binary cross-entropy and the decision line rotates toward separating the two classes. The live trace reports loss and accuracy per epoch.',
     concepts: ['sigmoid', 'cross-entropy', 'gradient descent', 'decision boundary'],
+    steps: [
+      'Start with a flat line and no knowledge (weights = 0).',
+      'For each point the line gives a number; squash it to a 0–1 probability with an S-shaped curve.',
+      'Measure how wrong those probabilities are versus the real yes/no labels.',
+      'Nudge the line a little to make that error smaller.',
+      'Repeat until the line separates the two colours.',
+    ],
     reading: [{ label: 'Logistic regression (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Logistic_regression' }],
   },
   {
@@ -679,6 +727,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'A reinforcement-learning agent learns to reach a goal while avoiding pits. Run episodes and watch the Q-value map and greedy-policy arrows fill in as ε decays from explore to exploit.',
     concepts: ['reward', 'Q-values', 'ε-greedy', 'discount factor', 'exploration'],
+    steps: [
+      'Make a scoreboard: for every cell, how good is each of the 4 moves? Start every score at 0.',
+      'From where you stand, usually take the best-scoring move — but now and then (chance = ε) move at random to explore.',
+      'Make the move, see the reward, and note the new cell.',
+      'Update that move’s score toward: reward now + (discount × the best score from the new cell).',
+      'Reaching the goal or a pit ends the round. Lower ε over time so it explores less and exploits what it learned.',
+    ],
     reading: [{ label: 'Q-learning (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Q-learning' }],
   },
   {
@@ -688,6 +743,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Reshape a 2-D cloud and see its principal axes update live. PC1 tracks the direction of greatest variance; the explained-variance bar shows how much a 1-D projection would keep.',
     concepts: ['covariance', 'eigenvectors', 'explained variance', 'dimensionality reduction'],
+    steps: [
+      'Shift the whole cloud so its centre sits at the origin.',
+      'Measure how the points spread out and how the two axes move together.',
+      'Find the one direction the cloud is longest along — that is PC1. PC2 is at a right angle to it.',
+      'PC1’s length tells you how much of the total spread it captures.',
+      'Keep only PC1 (or the top few directions) to squash the data into fewer numbers per point.',
+    ],
     reading: [{ label: 'Principal component analysis (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Principal_component_analysis' }],
   },
   {
@@ -697,6 +759,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Fit a line to noisy points. The closed form (normal equations) solves it in one step; gradient descent walks there — watch the residuals and the loss curve shrink.',
     concepts: ['least squares', 'residuals', 'gradient descent', 'R²'],
+    steps: [
+      'You want the best straight line through the dots: y = slope·x + intercept.',
+      '"Best" means the smallest total up-and-down gap between the line and the dots (the residuals).',
+      'One formula gives the exact answer in a single shot — that is the green line.',
+      'Or start with a bad line and keep tilting it downhill on the error — that is gradient descent, the red line.',
+      'Watch the red line settle right on top of the green one.',
+    ],
     reading: [{ label: 'Linear regression (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Linear_regression' }],
   },
   {
@@ -706,6 +775,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Build a tree one split at a time. Each step finds the axis-aligned threshold with the biggest Gini gain and partitions the worst leaf — watch the regions carve up and the impurity fall.',
     concepts: ['Gini impurity', 'information gain', 'axis-aligned splits', 'overfitting / depth'],
+    steps: [
+      'Put all the points in one box.',
+      'Try every horizontal and vertical cut. For each, check how mixed the two halves are (that is Gini).',
+      'Keep the cut that makes the two halves the purest.',
+      'Split that box into two smaller boxes.',
+      'Repeat on the most mixed-up box until boxes are pure or you hit the depth limit.',
+    ],
     reading: [{ label: 'Decision tree learning (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Decision_tree_learning' }],
   },
   {
@@ -715,6 +791,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'The 1958 update rule: for every point it gets wrong, nudge the weight vector toward it. On linearly separable data it stops in finite time; on non-separable data it oscillates forever.',
     concepts: ['online learning', 'weight update', 'linear separability', 'convergence'],
+    steps: [
+      'Start with any dividing line.',
+      'Look at one point. Is it on the correct side?',
+      'If yes, leave the line alone.',
+      'If no, tilt the line a little toward that point.',
+      'Go through all the points again and again. When a whole pass has zero mistakes, stop.',
+    ],
     reading: [{ label: 'Perceptron (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Perceptron' }],
   },
   {
@@ -724,6 +807,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'A 2-layer MLP with a tanh hidden layer, trained by gradient descent on two interleaved classes. Early on the boundary is nearly linear; as training proceeds the hidden units carve the non-linear shape.',
     concepts: ['hidden layer', 'tanh', 'backpropagation', 'non-linear boundary'],
+    steps: [
+      'Feed a point in: a hidden layer draws several lines, then bends and blends them; the output turns that into a 0–1 answer.',
+      'Check how wrong the answer is.',
+      'Send that error backwards through the network to see how much each weight was to blame (backpropagation).',
+      'Nudge every weight to make the error smaller.',
+      'Repeat. One straight line cannot split this shape, but the bent, blended lines can.',
+    ],
     reading: [{ label: 'Multilayer perceptron (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Multilayer_perceptron' }],
   },
   {
@@ -733,6 +823,13 @@ export const ALGO_LABS: AlgoLabMeta[] = [
     blurb:
       'Three update rules descend the same elongated loss valley from the same start. SGD zig-zags across the valley, momentum builds speed along it, Adam adapts per-coordinate and usually arrives first.',
     concepts: ['momentum', 'adaptive learning rate', 'ill-conditioning', 'convergence speed'],
+    steps: [
+      'All three start at the same spot and see the same downhill direction.',
+      'SGD: just step downhill. On a stretched valley it bounces from side to side.',
+      'Momentum: like a heavy ball — it keeps rolling the way it was already going, so it speeds down the valley.',
+      'Adam: gives each direction its own step size based on how bumpy that direction has been.',
+      'Watch which one reaches the centre first — usually Adam.',
+    ],
     reading: [{ label: 'An overview of gradient descent optimization algorithms', url: 'https://www.ruder.io/optimizing-gradient-descent/' }],
   },
 ]

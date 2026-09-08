@@ -288,7 +288,7 @@ function Narration({ running, log, idle }: { running: boolean; log: string[]; id
 
 function PanelInfo({ meta }: { meta: AlgoLabMeta }) {
   return (
-    <div className="pt-3 mt-3 border-t border-white/[0.06] space-y-2.5">
+    <div className="pt-3 mt-3 border-t border-white/[0.06] space-y-3">
       <p className="text-[11.5px] text-[#6B7280] leading-relaxed">{meta.blurb}</p>
       <div className="flex flex-wrap gap-1">
         {meta.concepts.map((c) => (
@@ -378,18 +378,30 @@ function Frame({
             ))}
           </div>
         )}
-        {caption && (
-          <div className="absolute inset-x-0 bottom-0 px-4 pt-6 pb-2 bg-gradient-to-t from-black/85 via-black/55 to-transparent pointer-events-none">
-            <p className="text-[11.5px] leading-snug text-[#DDDFE4]">
-              <span className="text-[#FF4D4D] font-mono">▸ </span>{caption}
-            </p>
-          </div>
-        )}
       </div>
       <div
-        className="shrink-0 border-l border-white/[0.07] bg-[#0D0D10] overflow-y-auto scrollbar-thin p-4 space-y-5"
-        style={{ width: 'clamp(250px, 20%, 380px)' }}
+        className="shrink-0 border-l border-white/[0.07] bg-[#0D0D10] overflow-y-auto scrollbar-thin p-4 space-y-4"
+        style={{ width: 'clamp(280px, 24%, 420px)' }}
       >
+        {caption && (
+          <div className="rounded-xl border border-[#FF4D4D]/25 bg-[#FF4D4D]/[0.05] p-3">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#FF4D4D] mb-1.5">What’s happening now</div>
+            <p className="text-[12.5px] text-[#DDDFE4] leading-relaxed">{caption}</p>
+          </div>
+        )}
+        {meta.steps.length > 0 && (
+          <div className="rounded-xl border border-white/[0.08] bg-[#111114] p-3">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#8B5CF6] mb-2">The steps</div>
+            <ol className="space-y-2">
+              {meta.steps.map((s, i) => (
+                <li key={i} className="flex gap-2.5 text-[12px] leading-relaxed text-[#C4C7CE]">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/35 text-[#C4B5FD] text-[10px] font-bold flex items-center justify-center mt-px">{i + 1}</span>
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
         {controls}
         <PanelInfo meta={meta} />
       </div>
@@ -834,12 +846,12 @@ function GradientDescent({ meta }: { meta: AlgoLabMeta }) {
       ]}
       caption={
         diverged
-          ? `Diverged — the step overshot the valley and |x| blew up. Lower the learning rate.`
+          ? `The steps got too big — the ball overshot the valley and flew off. Lower the learning rate and reset.`
           : settled
-            ? `Converged at x ≈ ${x.toFixed(2)}, where the gradient ≈ 0.`
+            ? `Reached the bottom (x ≈ ${x.toFixed(2)}) — the ground is flat here, so it stops.`
             : running
-              ? `Step ${steps}: x ← x − lr·∇f(x). ∇ = ${L.g(x).toFixed(2)}, so x moves ${L.g(x) > 0 ? 'left' : 'right'} by ${Math.abs(vel).toFixed(3)}.`
-              : 'Press Run — each step moves x opposite the gradient. Push the learning rate past ~0.9 to make it overshoot and diverge.'
+              ? `Step ${steps}: downhill is to the ${L.g(x) > 0 ? 'left' : 'right'} here, so the ball moves that way by ${Math.abs(vel).toFixed(2)}.`
+              : 'Press Run — the ball rolls downhill one small step at a time. Turn the learning rate past ~0.9 to make it overshoot and fly out.'
       }
       overlay={
         <>
@@ -1342,8 +1354,8 @@ function MetricsLab({ meta }: { meta: AlgoLabMeta }) {
         { c: '#FF4D4D', label: 'ROC & PR curves (inset)' },
       ]}
       caption={
-        `Threshold ${thr.toFixed(2)}: everything right of the amber line is predicted positive. Precision ${m.precision.toFixed(2)}, recall ${m.recall.toFixed(2)}, F1 ${m.f1.toFixed(2)}. ` +
-        `Slide it right → precision ↑, recall ↓. ROC-AUC ${m.auc.toFixed(2)} · PR-AUC ${m.ap.toFixed(2)} (threshold-free).`
+        `Cut-off ${thr.toFixed(2)}: everything to the right of the amber line is predicted "yes". Of those, ${(m.precision * 100).toFixed(0)}% are actually yes (precision); you caught ${(m.recall * 100).toFixed(0)}% of all the real yeses (recall). ` +
+        `Slide the cut-off right and precision goes up while recall goes down. The curve area scores (AUC ${m.auc.toFixed(2)}, AP ${m.ap.toFixed(2)}) don't depend on the cut-off.`
       }
       overlay={
         <>
@@ -1469,8 +1481,8 @@ function CosineLab({ meta }: { meta: AlgoLabMeta }) {
         { c: '#FBBF24', label: 'wedge = angle between them' },
       ]}
       caption={
-        `Angle ${Math.abs(aAng - bAng).toFixed(0)}° → cosine ${cos.toFixed(3)}. ` +
-        `Change only a magnitude: cosine and the angle stay put, but the dot product (${dot.toFixed(2)}) and L2 distance (${l2.toFixed(2)}) move — which is why embeddings are normalised before comparison.`
+        `The arrows are ${Math.abs(aAng - bAng).toFixed(0)}° apart → cosine ${cos.toFixed(2)} (1 = same direction, 0 = right angle, −1 = opposite). ` +
+        `Now change only an arrow's length: the cosine and the angle don't move, but the dot product (${dot.toFixed(2)}) and the straight-line distance (${l2.toFixed(2)}) do.`
       }
       overlay={
         <>
@@ -1633,10 +1645,10 @@ function LogisticTrain({ meta }: { meta: AlgoLabMeta }) {
       ]}
       caption={
         converged
-          ? `Converged at ${Math.round(acc * 100)}% training accuracy — the amber line separates the classes.`
+          ? `Done — the amber line now splits the two colours (${Math.round(acc * 100)}% right on the training points).`
           : running
-            ? `Epoch ${epoch}: each step nudges the weights down the cross-entropy gradient, rotating the p = 0.5 line toward separation. BCE ${lossHist.length ? lossHist[lossHist.length - 1].toFixed(3) : '—'}.`
-            : 'Press Run — gradient descent on binary cross-entropy will rotate the amber line to split the two classes.'
+            ? `Pass ${epoch}: each pass measures how wrong the line is and tilts it a little to reduce that error. It's rotating toward the gap between the colours.`
+            : 'Press Run — the line starts flat, then keeps tilting to separate the two colours. The shading is how sure the model is.'
       }
       overlay={<>
         <Chip color={table ? '#34D399' : '#6B7280'}>{table ? `${table.name} · ${data.length} rows` : 'synthetic data'}</Chip>
@@ -1945,7 +1957,7 @@ function PCALab({ meta }: { meta: AlgoLabMeta }) {
         { c: '#FBBF24', label: 'projection onto PC1 (toggle)' },
       ]}
       caption={
-        `PCA takes the eigenvectors of the covariance matrix. PC1 (red) points along the cloud’s longest spread — it explains ${(pca.explained * 100).toFixed(0)}% of the variance; PC2 (green) the rest. Each axis length is √eigenvalue. Projecting onto PC1 alone keeps ${(pca.explained * 100).toFixed(0)}%.`
+        `The red arrow (PC1) points along the direction the cloud is most spread out — it captures ${(pca.explained * 100).toFixed(0)}% of the spread. The green arrow (PC2) is at a right angle and captures the rest. Keeping only PC1 would squash each point to one number and still hold ${(pca.explained * 100).toFixed(0)}% of the shape.`
       }
       overlay={<>
         <Chip color={table ? '#34D399' : '#6B7280'}>{table ? `${table.name} · ${pts.length} rows` : 'synthetic cloud'}</Chip>
@@ -2085,10 +2097,10 @@ function LinReg({ meta }: { meta: AlgoLabMeta }) {
       ]}
       caption={
         settled
-          ? `Converged — the red GD line now sits on top of the green closed-form fit. slope ${w.toFixed(2)}, intercept ${b.toFixed(2)}, R² ${r2.toFixed(2)}.`
+          ? `Done — the red line has landed on the green one. Best fit: y = ${w.toFixed(2)}·x + ${b.toFixed(2)}. R² ${r2.toFixed(2)} means it explains ${(r2 * 100).toFixed(0)}% of the pattern.`
           : running
-            ? `Epoch ${epoch}: each step subtracts lr·(gradient of the mean squared residual), sliding the red line toward the green optimum. MSE ${mse.toFixed(4)}.`
-            : 'Press Run — gradient descent will walk the red line onto the green closed-form solution as the amber residuals shrink.'
+            ? `Pass ${epoch}: the red line keeps tilting to make the amber gaps (its errors) smaller. Average squared error ${mse.toFixed(4)}, still shrinking.`
+            : 'Press Run — the red line starts flat and tilts step by step until it matches the exact green answer.'
       }
       overlay={<>
         <Chip color={table ? '#34D399' : '#6B7280'}>{table ? `${table.name} · ${pts.length}` : 'synthetic'}</Chip>
@@ -2601,10 +2613,10 @@ function MLP({ meta }: { meta: AlgoLabMeta }) {
       ]}
       caption={
         done
-          ? `Converged at ${Math.round(acc * 100)}% — ${H} tanh units combined into a curved boundary that isolates each cluster.`
+          ? `Done — the ${H} hidden units bent and combined their lines into a curved shape that wraps each group (${Math.round(acc * 100)}% right).`
           : running
-            ? `Epoch ${epoch}: full-batch backprop updates W₁ (${H} hidden units) and W₂. Early the boundary is nearly straight; as loss (${lossHist.length ? lossHist[lossHist.length - 1].toFixed(3) : '—'}) drops it bends around the classes.`
-            : `Press Run — a single linear layer can’t separate this XOR shape, but 2 layers with a tanh in between can. Watch the boundary curve.`
+            ? `Pass ${epoch}: the boundary starts nearly straight and bends more each pass as the error drops. The hidden units are learning where to curve.`
+            : `Press Run — one straight line can't split this pattern, but a small network with a hidden layer can. Watch the boundary curve into shape.`
       }
       overlay={<>
         <Chip color={table ? '#34D399' : '#6B7280'}>{table ? `${table.name} · ${data.length}` : 'synthetic XOR'}</Chip>
@@ -2706,30 +2718,35 @@ function Optimizers({ meta }: { meta: AlgoLabMeta }) {
     const c = canvas.current; if (!c) return
     const ctx = c.getContext('2d'); if (!ctx) return
     const { w: W, h: Hh } = size
+    ctx.clearRect(0, 0, W, Hh)
+    ctx.fillStyle = '#0B0B0E'; ctx.fillRect(0, 0, W, Hh)
     const sx = (x: number) => ((x + 1) / 2) * W
     const sy = (y: number) => ((1 - (y + 1) / 2)) * Hh
-    // heatmap
-    const cell = 10
-    let fmax = f(1, 1)
+    const fmax = f(1, 1)
+    // faint fill so the valley shape reads, but never a wash
+    const cell = 12
     for (let gx = 0; gx < W; gx += cell) for (let gy = 0; gy < Hh; gy += cell) {
       const x = (gx / W) * 2 - 1, y = (1 - gy / Hh) * 2 - 1
       const v = f(x, y) / fmax
-      ctx.fillStyle = `rgba(139,92,246,${0.05 + 0.35 * v})`
+      ctx.fillStyle = `rgba(139,92,246,${0.02 + 0.10 * v})`
       ctx.fillRect(gx, gy, cell + 1, cell + 1)
     }
-    // contour rings
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1
-    ;[0.05, 0.15, 0.35, 0.6].forEach((lv) => {
+    // crisp elliptical contour lines — the classic optimisation-surface look
+    ctx.lineWidth = 1
+    ;[0.03, 0.08, 0.16, 0.28, 0.44, 0.64, 0.88].forEach((lv, i) => {
+      ctx.strokeStyle = `rgba(196,181,253,${0.10 + 0.05 * (6 - i)})`
       ctx.beginPath()
-      for (let a = 0; a <= 64; a++) {
-        const th = (a / 64) * Math.PI * 2
+      for (let a = 0; a <= 72; a++) {
+        const th = (a / 72) * Math.PI * 2
         const rx = Math.sqrt((lv * fmax) / 3) * Math.cos(th)
         const ry = Math.sqrt((lv * fmax) / 0.35) * Math.sin(th)
         a ? ctx.lineTo(sx(rx), sy(ry)) : ctx.moveTo(sx(rx), sy(ry))
       }
       ctx.closePath(); ctx.stroke()
     })
-    ctx.beginPath(); ctx.arc(sx(0), sy(0), 5, 0, 7); ctx.fillStyle = '#fff'; ctx.fill()
+    ctx.beginPath(); ctx.arc(sx(0), sy(0), 4, 0, 7); ctx.fillStyle = '#fff'; ctx.fill()
+    ctx.font = '10px ui-monospace, monospace'; ctx.fillStyle = '#8A8A8A'
+    ctx.fillText('minimum', sx(0) + 8, sy(0) - 6)
     const draw = (s: St, col: string) => {
       ctx.strokeStyle = col + '99'; ctx.lineWidth = 1.6; ctx.beginPath()
       s.trail.forEach((p, i) => (i ? ctx.lineTo(sx(p[0]), sy(p[1])) : ctx.moveTo(sx(p[0]), sy(p[1]))))
@@ -2749,8 +2766,8 @@ function Optimizers({ meta }: { meta: AlgoLabMeta }) {
       ]}
       caption={
         step === 0
-          ? 'All three start at the same point on an elongated bowl (x is ~9× steeper than y). Press Run and watch the paths diverge.'
-          : `Step ${step}: same gradient, three rules. SGD (red) zig-zags across the steep x-axis; Momentum (blue) builds speed along the shallow y-axis; Adam (green) rescales each coordinate by its gradient history. f-values → SGD ${f(sgd.p[0], sgd.p[1]).toFixed(3)}, Mom ${f(mom.p[0], mom.p[1]).toFixed(3)}, Adam ${f(adam.p[0], adam.p[1]).toFixed(3)}.`
+          ? 'The bowl is stretched — steep left-to-right, gentle up-and-down. All three markers start at the same corner. Press Run.'
+          : `Step ${step}. Red takes plain steps and bounces side to side. Blue behaves like a heavy ball and rolls straight down the middle. Green adjusts its own step size and is usually nearest the centre. Lower height is better — red ${f(sgd.p[0], sgd.p[1]).toFixed(2)}, blue ${f(mom.p[0], mom.p[1]).toFixed(2)}, green ${f(adam.p[0], adam.p[1]).toFixed(2)}.`
       }
       overlay={<>
         <Chip color="#FF4D4D">SGD f {f(sgd.p[0], sgd.p[1]).toFixed(3)}</Chip>
