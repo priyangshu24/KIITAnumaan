@@ -7,7 +7,12 @@ import { usePathname } from 'next/navigation'
 // assistant) is hidden so the page can use the entire screen.
 // NOTE: the Playground *dashboard* at /workspace/playground keeps the normal
 // chrome — only the editor at /workspace/playground/solve is full-bleed.
-export const FULL_BLEED_ROUTES = ['/workspace/playground/solve']
+export const FULL_BLEED_ROUTES = [
+  '/workspace/playground/solve',
+  '/workspace/playground/sql',
+  '/workspace/playground/design',
+  '/workspace/playground/aiml',
+]
 
 export function useFullBleedRoute(): boolean {
   const pathname = usePathname()

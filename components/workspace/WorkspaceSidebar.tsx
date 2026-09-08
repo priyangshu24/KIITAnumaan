@@ -240,7 +240,7 @@ export default function WorkspaceSidebar() {
                       key={sub.name}
                       href={sub.href}
                       style={{ transitionDelay: `${index * 30}ms` }}
-                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[14px] font-medium transition-all duration-200 ${
+                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[13px] font-medium transition-all duration-200 ${
                         isSubActive
                           ? 'bg-[#141418] text-white font-semibold'
                           : 'bg-transparent text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
@@ -256,7 +256,7 @@ export default function WorkspaceSidebar() {
                           isSubActive ? 'text-[#FF453A]' : 'text-[#71717A] group-hover:text-white'
                         }`}
                       />
-                      <span className="whitespace-nowrap truncate">{sub.name}</span>
+                      <span className="flex-1 min-w-0 whitespace-nowrap truncate">{sub.name}</span>
                     </Link>
                   )
                 })}
@@ -335,7 +335,7 @@ export default function WorkspaceSidebar() {
                       key={sub.name}
                       href={sub.href}
                       style={{ transitionDelay: `${index * 30}ms` }}
-                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[14px] font-medium transition-all duration-200 ${
+                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[13px] font-medium transition-all duration-200 ${
                         isSubActive
                           ? 'bg-[#141418] text-white font-semibold'
                           : 'bg-transparent text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
@@ -351,7 +351,7 @@ export default function WorkspaceSidebar() {
                           isSubActive ? 'text-[#FF453A]' : 'text-[#71717A] group-hover:text-white'
                         }`}
                       />
-                      <span className="whitespace-nowrap truncate">{sub.name}</span>
+                      <span className="flex-1 min-w-0 whitespace-nowrap truncate">{sub.name}</span>
                     </Link>
                   )
                 })}
@@ -429,7 +429,7 @@ export default function WorkspaceSidebar() {
                       key={sub.name}
                       href={`/workspace/career?tab=${sub.tab}`}
                       style={{ transitionDelay: `${index * 30}ms` }}
-                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[14px] font-medium transition-all duration-200 ${
+                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[13px] font-medium transition-all duration-200 ${
                         isSubActive
                           ? 'bg-[#141418] text-[#FF453A] font-semibold'
                           : 'bg-transparent text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
@@ -445,7 +445,7 @@ export default function WorkspaceSidebar() {
                           isSubActive ? 'text-[#FF453A]' : 'text-[#71717A] group-hover:text-white'
                         }`}
                       />
-                      <span className="whitespace-nowrap truncate">{sub.name}</span>
+                      <span className="flex-1 min-w-0 whitespace-nowrap truncate">{sub.name}</span>
                     </Link>
                   )
                 })}
@@ -527,7 +527,7 @@ export default function WorkspaceSidebar() {
                       key={sub.name}
                       href={sub.href}
                       style={{ transitionDelay: `${index * 30}ms` }}
-                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[14px] font-medium transition-all duration-200 ${
+                      className={`group relative flex items-center gap-3 h-[40px] px-3 rounded-[10px] text-[13px] font-medium transition-all duration-200 ${
                         isSubActive
                           ? 'bg-[#141418] text-[#FF453A] font-semibold'
                           : 'bg-transparent text-[#8A8A8A] hover:text-white hover:bg-white/[0.04]'
@@ -543,7 +543,7 @@ export default function WorkspaceSidebar() {
                           isSubActive ? 'text-[#FF453A]' : 'text-[#71717A] group-hover:text-white'
                         }`}
                       />
-                      <span className="whitespace-nowrap truncate">{sub.name}</span>
+                      <span className="flex-1 min-w-0 whitespace-nowrap truncate">{sub.name}</span>
                     </Link>
                   )
                 })}

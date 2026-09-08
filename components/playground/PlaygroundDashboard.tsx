@@ -6,6 +6,7 @@ import {
   ArrowRight, Flame, Zap, CheckCircle2,
   CalendarDays, BookOpen, Building2, SlidersHorizontal, Trophy, Sparkles,
   ChevronRight, ChevronLeft, Target, Terminal, ListChecks, Briefcase, TrendingUp,
+  Database, Network, FlaskConical,
   Swords, Bookmark,
 } from 'lucide-react'
 import { PROBLEMS, difficultyColors, type Difficulty, type PracticeSession } from '@/lib/playground-data'
@@ -438,10 +439,13 @@ export default function PlaygroundDashboard() {
                 Browse All <ArrowRight size={12} />
               </Link>
             </div>
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <ModeCard icon={<BookOpen size={18} className="text-[#FF4D4D]" />} title="Practice by Topic" desc="Solve questions topic-wise and strengthen your fundamentals." href={`${SOLVE}?mode=topics`} />
               <ModeCard icon={<Building2 size={18} className="text-[#FF4D4D]" />} title="Company Interviews" desc="Practice real interview questions from top tech companies." href={`${SOLVE}?mode=companies`} />
               <ModeCard icon={<SlidersHorizontal size={18} className="text-[#FF4D4D]" />} title="Custom Practice" desc="Build a session with your preferred topics, difficulty and count." href={SOLVE} />
+              <ModeCard icon={<Database size={18} className="text-[#FF4D4D]" />} title="SQL Playground" desc="Run real SQLite queries against a seeded schema, graded live." href="/workspace/playground/sql" />
+              <ModeCard icon={<Network size={18} className="text-[#FF4D4D]" />} title="System Design" desc="Draw architecture diagrams on a canvas with requirements and estimates." href="/workspace/playground/design" />
+              <ModeCard icon={<FlaskConical size={18} className="text-[#FF4D4D]" />} title="AI / ML Lab" desc="Drill LLM interview questions, run sizing calculators and algorithm sims." href="/workspace/playground/aiml" />
               <ModeCard icon={<Trophy size={18} className="text-[#FF4D4D]" />} title="Contests" desc="Compete in timed challenges against other learners." soon />
             </div>
           </div>
