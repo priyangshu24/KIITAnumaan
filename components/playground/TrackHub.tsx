@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ArrowRight, ChevronDown, Search, Sparkles, BookOpen, Target, ExternalLink,
+  ArrowRight, Search, Sparkles, BookOpen, Target, ExternalLink,
   Check, Cpu, SlidersHorizontal, ClipboardCheck, ShieldCheck, Database, Bot,
   Workflow, Boxes, Trophy, ScanLine, GitBranch, Network, Circle, Terminal,
   Grid3x3, Hash, ArrowUpDown, Ruler, Gauge, BarChart2, Users, Briefcase,
@@ -44,8 +44,6 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
 
   const [level, setLevel] = useState<'All' | AimlLevel>('All')
   const [query, setQuery] = useState('')
-  const [openTopics, setOpenTopics] = useState<Set<string>>(new Set([track.subtopics[0].id]))
-  const [openQs, setOpenQs] = useState<Set<string>>(new Set())
   const [done, setDone] = useState<Set<string>>(new Set())
   const [mounted, setMounted] = useState(false)
 
@@ -53,8 +51,6 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
 
   useEffect(() => {
     setDone(new Set())
-    setOpenTopics(new Set([track.subtopics[0].id]))
-    setOpenQs(new Set())
     try {
       const raw = window.localStorage.getItem(storageKey)
       if (raw) setDone(new Set(JSON.parse(raw)))
@@ -226,9 +222,6 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
                   className="pl-8 pr-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.08] text-[11px] text-white placeholder:text-[#6B7280] outline-none focus:border-white/25 w-44"
                 />
               </div>
-              <button onClick={() => setOpenTopics(new Set(sections.map((s) => s.id)))} className="text-[10px] font-mono text-[#8A8A8A] hover:text-white transition-colors">Expand all</button>
-              <span className="text-[#3F3F46]">·</span>
-              <button onClick={() => { setOpenTopics(new Set()); setOpenQs(new Set()) }} className="text-[10px] font-mono text-[#8A8A8A] hover:text-white transition-colors">Collapse</button>
             </div>
           </div>
 
@@ -239,13 +232,14 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
           <div className="space-y-3">
             {sections.map((s) => {
               const Icon = iconFor(s.icon)
-              const open = openTopics.has(s.id)
+              const levelCounts = AIML_LEVELS.map((l) => ({ l, n: s.questions.filter((q) => q.level === l).length })).filter((x) => x.n > 0)
               return (
-                <div key={s.id} className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] overflow-hidden">
-                  <button
-                    onClick={() => toggleSet(openTopics, s.id, setOpenTopics)}
-                    className="w-full flex items-center gap-3 p-4 text-left hover:bg-white/[0.02] transition-colors cursor-pointer"
-                  >
+                <Link
+                  key={s.id}
+                  href={`/workspace/playground/track/${track.slug}/topic/${s.id}`}
+                  className="group block rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 hover:bg-white/[0.025] hover:border-white/[0.14] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
                     <span
                       className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                       style={{ color: accent, backgroundColor: `${accent}1A`, border: `1px solid ${accent}33` }}
@@ -258,82 +252,21 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
                         <span className="text-[9px] font-mono text-[#6B7280] bg-white/[0.04] border border-white/[0.06] px-1.5 py-0.5 rounded">
                           {s.questions.length} Q
                         </span>
+                        {levelCounts.map(({ l, n }) => (
+                          <span key={l} className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ color: LEVEL_COLOR[l].text, backgroundColor: LEVEL_COLOR[l].bg, border: `1px solid ${LEVEL_COLOR[l].border}` }}>
+                            {n} {l}
+                          </span>
+                        ))}
                       </div>
                       <p className="text-[11px] text-[#8A8A8A] mt-0.5 truncate">{s.tagline}</p>
                     </div>
-                    <ChevronDown size={16} className={`text-[#6B7280] shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {open && (
-                    <div className="px-4 pb-4 space-y-3 border-t border-white/[0.05] pt-3">
-                      <p className="text-[12px] text-[#9CA3AF] leading-relaxed">{s.definition}</p>
-
-                      <div className="space-y-2">
-                        {s.questions.map((item, i) => {
-                          const qOpen = openQs.has(item.id)
-                          return (
-                            <div key={item.id} className="rounded-xl border border-white/[0.06] bg-[#111214] overflow-hidden">
-                              <button
-                                onClick={() => toggleSet(openQs, item.id, setOpenQs)}
-                                className="w-full flex items-start gap-2.5 p-3 text-left hover:bg-white/[0.02] transition-colors cursor-pointer"
-                              >
-                                <span className="text-[10px] font-mono text-[#4B5563] mt-0.5 shrink-0 w-4">{i + 1}.</span>
-                                <span className="flex-1 text-[12.5px] text-[#D1D5DB] leading-snug">{item.q}</span>
-                                <LevelPill level={item.level} />
-                                <ChevronDown size={13} className={`text-[#4B5563] shrink-0 mt-0.5 transition-transform ${qOpen ? 'rotate-180' : ''}`} />
-                              </button>
-                              {qOpen && (
-                                <div className="px-3 pb-3 pl-9 space-y-2 border-t border-white/[0.05] pt-2.5">
-                                  <div className="text-[9px] font-mono uppercase tracking-wider text-[#6B7280]">Answer outline</div>
-                                  <ul className="space-y-1.5">
-                                    {item.outline.map((o, oi) => (
-                                      <li key={oi} className="flex gap-2 text-[12px] text-[#9CA3AF] leading-relaxed">
-                                        <span className="shrink-0" style={{ color: accent }}>›</span>
-                                        <span>{o}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                  {item.followUp && (
-                                    <p className="text-[11px] text-[#6B7280] italic pt-1">Likely follow-up: {item.followUp}</p>
-                                  )}
-                                  {(item.source ?? s.reading[0]) && (
-                                    <a
-                                      href={(item.source ?? s.reading[0]).url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1.5 text-[10px] font-mono text-[#6B7280] hover:text-white transition-colors pt-1"
-                                    >
-                                      Reference: {(item.source ?? s.reading[0]).label} <ExternalLink size={9} />
-                                    </a>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-
-                      <div className="pt-1">
-                        <div className="text-[9px] font-mono uppercase tracking-wider text-[#6B7280] mb-1.5 flex items-center gap-1.5">
-                          <BookOpen size={10} /> Recommended reading
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {s.reading.map((r) => (
-                            <a
-                              key={r.url}
-                              href={r.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-[10px] font-mono text-[#8A8A8A] hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] hover:border-white/[0.15] px-2 py-1 rounded-lg transition-colors"
-                            >
-                              {r.label} <ExternalLink size={9} />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    <ArrowRight size={16} className="text-[#4B5563] shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-[#9CA3AF]" />
+                  </div>
+                  <p className="text-[12px] text-[#9CA3AF] leading-relaxed mt-3 line-clamp-2">{s.definition}</p>
+                  <div className="flex items-center gap-1.5 mt-2.5 text-[9px] font-mono uppercase tracking-wider" style={{ color: accent }}>
+                    <BookOpen size={10} /> Open documentation · diagram · animation · every question answered
+                  </div>
+                </Link>
               )
             })}
 
