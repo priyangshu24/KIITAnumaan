@@ -6,10 +6,18 @@
 //  • DSA → the FORCE editor, deep-linked (?problem=<id>) to the closest
 //    coding problem for that subtopic, or a specific problem for a specific
 //    interview question.
-//  • Behavioural / HR / anything without matching problems → the topic landing.
+//  • Behavioural / HR / CS Fundamentals / Aptitude — no code to run — → the
+//    generic Q&A Drill playground, scoped to the topic / question.
 // ---------------------------------------------------------------------------
 
 import type { InterviewTrack } from '@/lib/interview-tracks'
+
+/** The playground a track's "Start practising" button opens (no topic scope). */
+export function trackWorkspaceHref(track: InterviewTrack): string {
+  if (track.practiceHref) return track.practiceHref
+  if (track.slug === 'dsa') return '/workspace/playground/solve?mode=topics'
+  return `/workspace/playground/drill/${track.slug}`
+}
 
 /** subtopic id → best-fit FORCE problem id */
 const TOPIC_PROBLEM: Record<string, string> = {
@@ -55,7 +63,10 @@ export function practiceLinkFor(track: InterviewTrack, topicId: string, question
   // DSA: jump straight into the closest coding problem.
   const problemId = (questionId && QUESTION_PROBLEM[questionId]) || TOPIC_PROBLEM[topicId]
   if (problemId) return `/workspace/playground/solve?problem=${problemId}`
+  if (track.slug === 'dsa') return '/workspace/playground/solve?mode=topics'
 
-  // No coding problems for this track (behavioural, HR): open topic mode.
-  return '/workspace/playground/solve?mode=topics'
+  // Non-coding tracks (behavioural, HR, CS fundamentals, aptitude):
+  // the Q&A Drill trainer, scoped to this topic / question.
+  const qp = questionId ? `&q=${questionId}` : ''
+  return `/workspace/playground/drill/${track.slug}?topic=${topicId}${qp}`
 }

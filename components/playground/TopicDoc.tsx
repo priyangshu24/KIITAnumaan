@@ -85,7 +85,9 @@ export default function TopicDoc({ trackSlug, topicId }: { trackSlug: string; to
     ? 'Open the AI/ML Lab'
     : track.practiceHref
       ? 'Open this track’s workspace'
-      : 'Practise in the FORCE editor'
+      : track.slug === 'dsa'
+        ? 'Practise in the FORCE editor'
+        : 'Open the Q&A drill'
 
   return (
     <div className="topic-doc-shell bg-[#0A0A0D] text-white -my-4">
@@ -163,7 +165,9 @@ export default function TopicDoc({ trackSlug, topicId }: { trackSlug: string; to
                   ? 'Drill these questions interactively and run this topic in a real in-browser Python console.'
                   : track.practiceHref
                     ? `Jump straight into ${sub.title} practice in this track’s workspace.`
-                    : `Jump straight into a hands-on ${sub.title} problem in the code editor.`}
+                    : track.slug === 'dsa'
+                      ? `Jump straight into a hands-on ${sub.title} problem in the code editor.`
+                      : `Drill every ${sub.title} question as flashcards — reveal the answer, self-rate, track what you know.`}
               </p>
               <Link
                 href={practiceHref}

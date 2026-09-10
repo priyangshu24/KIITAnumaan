@@ -15,6 +15,7 @@ import {
   type InterviewTrack, type AimlLevel,
 } from '@/lib/interview-tracks'
 import { LEVEL_COLOR } from '@/lib/aiml-interview-data'
+import { trackWorkspaceHref } from '@/lib/topic-practice-link'
 
 const ICONS: Record<string, LucideIcon> = {
   cpu: Cpu, sliders: SlidersHorizontal, clipboard: ClipboardCheck, shield: ShieldCheck,
@@ -145,7 +146,7 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
             </p>
             <div className="flex flex-wrap items-center gap-2 mt-4">
               <Link
-                href={track.practiceHref ?? '/workspace/playground/solve?mode=topics'}
+                href={trackWorkspaceHref(track)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-semibold transition-opacity hover:opacity-90"
                 style={{ backgroundColor: accent, boxShadow: `0 8px 24px -6px ${accent}8C` }}
               >
@@ -328,7 +329,7 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
             </p>
             <div className="mt-3 space-y-1.5">
               {[
-                { icon: <Terminal size={13} />, label: track.practiceHref ? 'Open this track’s workspace' : 'Open FORCE editor', href: track.practiceHref ?? '/workspace/playground/solve?mode=topics' },
+                { icon: <Terminal size={13} />, label: track.practiceHref ? 'Open this track’s workspace' : track.slug === 'dsa' ? 'Open FORCE editor' : 'Open the Q&A drill', href: trackWorkspaceHref(track) },
                 { icon: <Boxes size={13} />, label: 'Browse the Directory', href: '/workspace/playground/solve' },
                 { icon: <Trophy size={13} />, label: 'Company interview sets', href: '/workspace/playground/solve?mode=companies' },
               ].map((l) => (
