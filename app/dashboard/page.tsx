@@ -42,7 +42,7 @@ export default function DashboardPage() {
 
             <Link
               href="/workspace/academic/predicted-questions"
-              className="mt-2 bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm"
+              className="mt-2 glass-raised glass-accent [--acc:#FF453A] text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm"
             >
               Go to Predicted Questions <ArrowRight size={14} />
             </Link>

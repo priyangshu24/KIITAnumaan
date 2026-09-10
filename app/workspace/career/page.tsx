@@ -1839,7 +1839,7 @@ function CareerWorkspaceContent() {
                                 <Link
                                   href={`/workspace/career/mock-interview?company=${c.id}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center gap-1.5 bg-[#FF4D4D] hover:brightness-110 text-white text-[11px] font-bold uppercase tracking-wider px-3.5 py-2 rounded-[10px] transition-all"
+                                  className="flex items-center gap-1.5 glass-raised glass-accent [--acc:#FF4D4D] text-white text-[11px] font-bold uppercase tracking-wider px-3.5 py-2 rounded-[10px] transition-all"
                                 >
                                   <Zap size={12} /> Start Mock Interview
                                 </Link>
@@ -1989,7 +1989,7 @@ function CareerWorkspaceContent() {
                   </div>
                   <Link
                     href={`/workspace/career/mock-interview?company=${selectedBlueprintId}`}
-                    className="bg-[#FF4D4D] hover:brightness-110 text-white text-xs font-bold uppercase tracking-wider rounded-[14px] h-[40px] px-5 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold uppercase tracking-wider rounded-[14px] h-[40px] px-5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Zap size={14} /> Launch Mock Interview
                   </Link>
@@ -2174,7 +2174,7 @@ function CareerWorkspaceContent() {
               />
               <button
                 onClick={handleSendChat}
-                className="bg-[#FF4D4D] hover:brightness-110 text-white p-2 rounded-[12px] transition-all cursor-pointer"
+                className="glass-raised glass-accent [--acc:#FF4D4D] text-white p-2 rounded-[12px] transition-all cursor-pointer"
               >
                 <Send size={15} />
               </button>

@@ -209,7 +209,7 @@ export default function SectionSwapPage() {
 
           <button
             onClick={handleVerify}
-            className="w-full bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-sm font-bold rounded-[14px] h-[48px] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF453A]/20 cursor-pointer"
+            className="w-full glass-raised glass-accent [--acc:#FF453A] text-white text-sm font-bold rounded-[14px] h-[48px] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF453A]/20 cursor-pointer"
           >
             <ShieldCheck size={16} /> Verify & Complete Exchange
           </button>

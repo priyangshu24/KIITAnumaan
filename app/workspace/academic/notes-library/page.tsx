@@ -296,7 +296,7 @@ export default function NotesLibraryPage() {
 
                 <button
                   onClick={() => alert(`Downloading ${note.title}...`)}
-                  className="bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#FF453A]/20"
+                  className="glass-raised glass-accent [--acc:#FF453A] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#FF453A]/20"
                 >
                   <Download size={14} /> Download
                 </button>

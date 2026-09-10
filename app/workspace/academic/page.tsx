@@ -205,7 +205,7 @@ export default function AcademicWorkspacePage() {
         <button
           onClick={handleGeneratePrediction}
           disabled={isGenerating}
-          className="bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50 shrink-0"
+          className="glass-raised glass-accent [--acc:#FF453A] text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50 shrink-0"
         >
           {isGenerating ? (
             <>
@@ -560,7 +560,7 @@ export default function AcademicWorkspacePage() {
             </button>
             <button
               onClick={handleGeneratePrediction}
-              className="flex-1 bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-[11px] font-semibold py-2 rounded-xl text-center transition-all"
+              className="flex-1 glass-raised glass-accent [--acc:#FF453A] text-white text-[11px] font-semibold py-2 rounded-xl text-center transition-all"
             >
               Predict Now
             </button>

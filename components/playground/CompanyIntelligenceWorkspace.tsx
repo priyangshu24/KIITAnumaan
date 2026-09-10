@@ -275,7 +275,7 @@ export default function CompanyIntelligenceWorkspace({
                 {isOngoingSessionForThisCompany ? (
                   <button
                     onClick={() => onContinuePracticeSession?.()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#FF4D4D] hover:bg-[#FF3333] text-white text-xs font-bold shadow-[0_0_20px_rgba(255,77,77,0.35)] transition-all cursor-pointer group"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold shadow-[0_0_20px_rgba(255,77,77,0.35)] transition-all cursor-pointer group"
                   >
                     <Play size={13} fill="currentColor" />
                     <div className="text-left">
@@ -288,7 +288,7 @@ export default function CompanyIntelligenceWorkspace({
                 ) : (
                   <button
                     onClick={handleStartStandardSession}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#FF4D4D] hover:bg-[#FF3333] text-white text-xs font-bold shadow-[0_0_20px_rgba(255,77,77,0.35)] transition-all cursor-pointer group"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold shadow-[0_0_20px_rgba(255,77,77,0.35)] transition-all cursor-pointer group"
                   >
                     <Play size={13} fill="currentColor" />
                     <span>▶ Start Practice</span>
@@ -350,7 +350,7 @@ export default function CompanyIntelligenceWorkspace({
                 {isOngoingSessionForThisCompany ? (
                   <button
                     onClick={() => onContinuePracticeSession?.()}
-                    className="flex-1 md:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#FF4D4D] hover:bg-[#FF3333] text-white text-xs font-bold shadow-[0_0_25px_rgba(255,77,77,0.4)] transition-all cursor-pointer"
+                    className="flex-1 md:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold shadow-[0_0_25px_rgba(255,77,77,0.4)] transition-all cursor-pointer"
                   >
                     <Play size={14} fill="currentColor" />
                     <span>▶ Continue Practice ({activePracticeSession!.currentIndex + 1}/{activePracticeSession!.questionIds.length})</span>
@@ -358,7 +358,7 @@ export default function CompanyIntelligenceWorkspace({
                 ) : (
                   <button
                     onClick={handleStartStandardSession}
-                    className="flex-1 md:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#FF4D4D] hover:bg-[#FF3333] text-white text-xs font-bold shadow-[0_0_25px_rgba(255,77,77,0.4)] transition-all cursor-pointer"
+                    className="flex-1 md:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold shadow-[0_0_25px_rgba(255,77,77,0.4)] transition-all cursor-pointer"
                   >
                     <Play size={14} fill="currentColor" />
                     <span>▶ Start Practice</span>
@@ -669,7 +669,7 @@ export default function CompanyIntelligenceWorkspace({
                     </button>
                     <button
                       onClick={handleStartStandardSession}
-                      className="px-3 py-1.5 rounded-lg bg-[#FF4D4D] hover:bg-[#FF3333] text-xs font-bold text-white cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-xs font-bold text-white cursor-pointer"
                     >
                       ▶ Practice Available Questions
                     </button>
@@ -1072,7 +1072,7 @@ export default function CompanyIntelligenceWorkspace({
                 <button
                   type="button"
                   onClick={handleStartCustomSession}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-[#FF4D4D] hover:bg-[#FF3333] text-white font-bold text-xs shadow-[0_0_20px_rgba(255,77,77,0.4)] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 px-4 py-2.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white font-bold text-xs shadow-[0_0_20px_rgba(255,77,77,0.4)] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Play size={13} fill="currentColor" />
                   <span>▶ Start Practice Session</span>

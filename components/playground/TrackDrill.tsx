@@ -7,7 +7,7 @@
 // tracks "got it" per question in localStorage. Optional ?topic= / ?q= scope.
 // ---------------------------------------------------------------------------
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
@@ -240,14 +240,14 @@ export default function TrackDrill({ trackSlug }: { trackSlug: string }) {
         <div className="drill-scroll scrollbar-thin px-5 sm:px-8 py-8">
           <div className="max-w-[720px] mx-auto">
             {!cur ? (
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0D0D10] p-10 text-center">
+              <div className="glass rounded-2xl p-10 text-center">
                 <p className="text-[13px] text-[#9CA3AF]">No questions match this filter.</p>
                 <button onClick={() => { setLevel('All'); setTopic(null) }} className="mt-3 text-[12px] font-mono" style={{ color: accent }}>
                   Clear filters
                 </button>
               </div>
             ) : (
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0D0D10] overflow-hidden">
+              <div className="glass rounded-2xl overflow-hidden">
                 <div className="px-6 pt-5 pb-4 flex items-center gap-2 border-b border-white/[0.05]">
                   <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ color: accent, backgroundColor: `${accent}1A`, border: `1px solid ${accent}33` }}>
                     <CurIcon size={14} />
@@ -306,7 +306,7 @@ export default function TrackDrill({ trackSlug }: { trackSlug: string }) {
                         <button onClick={markReview} className="px-3 py-2 rounded-lg text-[12px] font-semibold text-[#FCA5A5] bg-[#FB7185]/10 border border-[#FB7185]/25 hover:bg-[#FB7185]/20 transition-colors flex items-center gap-1.5">
                           <RotateCcw size={12} /> Review <span className="text-[#6B7280] font-mono">1</span>
                         </button>
-                        <button onClick={markKnown} className="px-3.5 py-2 rounded-lg text-[12px] font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-1.5" style={{ backgroundColor: accent }}>
+                        <button onClick={markKnown} className="glass-raised glass-accent px-3.5 py-2 rounded-lg text-[12px] font-semibold text-white flex items-center gap-1.5" style={{ '--acc': accent } as CSSProperties}>
                           <Check size={12} /> Got it <span className="opacity-60 font-mono">2</span>
                         </button>
                       </>

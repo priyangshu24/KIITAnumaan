@@ -23,11 +23,11 @@ const sizeClasses = {
 }
 
 const variantClasses = {
-  primary: 'gradient-primary text-white shadow-[var(--shadow-primary)] hover:shadow-[0_6px_20px_0_rgb(108_99_255_/_0.35)] hover:brightness-105',
-  secondary: 'bg-[var(--secondary)] text-white hover:bg-[var(--secondary-hover)]',
-  outline: 'border border-[var(--border)] bg-[var(--card)] text-[var(--text)] hover:bg-[var(--hover)] hover:border-[var(--primary)] hover:text-[var(--primary)]',
-  ghost: 'text-[var(--text-muted)] hover:bg-[var(--hover)] hover:text-[var(--text)]',
-  danger: 'bg-[var(--danger)] text-white hover:bg-red-600',
+  primary: 'gradient-primary text-white shadow-[var(--shadow-primary)] hover:shadow-[0_10px_28px_-6px_rgb(108_99_255_/_0.4)] hover:brightness-105',
+  secondary: 'glass-face text-white hover:brightness-110',
+  outline: 'glass-face text-[var(--text)] hover:border-[var(--primary)] hover:text-[var(--primary)]',
+  ghost: 'text-[var(--text-muted)] hover:bg-white/[0.06] hover:text-[var(--text)]',
+  danger: 'bg-[var(--danger)] text-white hover:bg-red-600 shadow-[0_8px_18px_-6px_rgba(239,68,68,0.45)]',
 }
 
 export default function GradientButton({

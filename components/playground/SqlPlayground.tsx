@@ -360,15 +360,15 @@ export default function SqlPlayground() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] px-4 py-3">
+            <div className="glass rounded-2xl px-4 py-3">
               <div className="text-lg font-bold text-white leading-none">{stats.solved}<span className="text-[#6B7280] text-sm">/{stats.total}</span></div>
               <div className="text-[10px] font-mono text-[#6B7280] mt-1">solved</div>
             </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] px-4 py-3">
+            <div className="glass rounded-2xl px-4 py-3">
               <div className="text-lg font-bold text-white leading-none">{SQL_TABLES.length}</div>
               <div className="text-[10px] font-mono text-[#6B7280] mt-1">tables</div>
             </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] px-4 py-3">
+            <div className="glass rounded-2xl px-4 py-3">
               <div className="text-lg font-bold text-white leading-none">SQLite</div>
               <div className="text-[10px] font-mono text-[#6B7280] mt-1">full SQL · CTEs · windows</div>
             </div>
@@ -391,7 +391,7 @@ export default function SqlPlayground() {
                       const c = SQL_DIFFICULTY_COLOR[ex.difficulty]
                       const isDone = solved.has(ex.id)
                       return (
-                        <div key={ex.id} className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 flex flex-wrap items-center gap-4 hover:border-white/[0.12] transition-colors">
+                        <div key={ex.id} className="glass rounded-2xl p-4 flex flex-wrap items-center gap-4 hover:border-white/[0.12] transition-colors">
                           {isDone
                             ? <CheckCircle2 size={15} className="text-[#10B981] shrink-0" />
                             : <span className="w-[15px] h-[15px] rounded-full border border-white/15 shrink-0" />}
@@ -508,7 +508,7 @@ export default function SqlPlayground() {
                 const open = openTopic === topic.name
                 const done = items.filter((i) => solved.has(i.id)).length
                 return (
-                  <div key={topic.name} className="rounded-xl border border-white/[0.06] bg-[#111214] overflow-hidden">
+                  <div key={topic.name} className="glass rounded-xl overflow-hidden">
                     <button
                       onClick={() => setOpenTopic(open ? null : topic.name)}
                       className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-white/[0.02] transition-colors text-left"
@@ -594,7 +594,7 @@ export default function SqlPlayground() {
                 {SQL_TABLES.map((t) => {
                   const open = openTable === t.name
                   return (
-                    <div key={t.name} className="rounded-xl border border-white/[0.06] bg-[#111214] overflow-hidden">
+                    <div key={t.name} className="glass rounded-xl overflow-hidden">
                       <div className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-white/[0.02] transition-colors group">
                         <button onClick={() => setOpenTable(open ? null : t.name)} className="flex items-center gap-2 flex-1 min-w-0">
                           {open ? <ChevronDown size={12} className="text-[#6B7280] shrink-0" /> : <ChevronRight size={12} className="text-[#6B7280] shrink-0" />}

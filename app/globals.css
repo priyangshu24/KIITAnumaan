@@ -68,18 +68,186 @@ body {
   transform-origin: center center;
 }
 
-/* Card hover animation - subtle lift */
+/* =========================================
+   LIQUID GLASS  ·  Apple-style material
+   A single translucent material used for the controls/surface layer
+   that floats above content. Clean: one hairline rim, one soft shadow,
+   a whisper of edge lensing, spring motion. Set --acc on an element
+   (Tailwind [--acc:#8B5CF6]) to retint the accent variant.
+   ========================================= */
+:root {
+  --acc: var(--primary-accent);
+  --ease-glass: cubic-bezier(0.32, 0.72, 0, 1); /* Apple spring */
+  --glass-blur: 24px;
+  --glass-tint: rgba(30, 30, 34, 0.55);
+  --glass-brd: rgba(255, 255, 255, 0.12);
+  --glass-radius: 18px;
+}
+
+/* The material. Radius is left to the element (Tailwind rounded-*);
+   --glass-radius is the recommended default (18px) to reach for. */
+.glass {
+  position: relative;
+  isolation: isolate;
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%);
+  border: 1px solid var(--glass-brd);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 4px 12px -4px rgba(0, 0, 0, 0.3),
+    0 12px 40px -12px rgba(0, 0, 0, 0.4);
+  transition: background 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass),
+    box-shadow 0.35s var(--ease-glass), transform 0.35s var(--ease-glass);
+}
+/* edge lensing — the light bends brighter along the top of the pane */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 38%);
+}
+
+/* Interactive surface — springy lift, material comes alive */
+.glass-card {
+  transition: transform 0.35s var(--ease-glass), box-shadow 0.35s var(--ease-glass),
+    border-color 0.35s var(--ease-glass), background 0.35s var(--ease-glass);
+}
+.glass-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(38, 38, 43, 0.58);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 6px 16px -4px rgba(0, 0, 0, 0.32),
+    0 24px 60px -16px rgba(0, 0, 0, 0.5);
+}
+.glass-card:active {
+  transform: translateY(-1px) scale(0.99);
+  transition-duration: 0.12s;
+}
+
+/* Control — the material shaped for buttons / pills. Prefer a fully
+   rounded (capsule) radius on the element itself, Apple-style. */
+.glass-raised {
+  position: relative;
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(190%);
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 2px 10px -2px rgba(0, 0, 0, 0.28);
+  transition: transform 0.3s var(--ease-glass), background 0.3s var(--ease-glass),
+    border-color 0.3s var(--ease-glass), filter 0.15s ease;
+}
+.glass-raised:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+.glass-raised:active {
+  transform: scale(0.97);
+  filter: brightness(0.92);
+  transition-duration: 0.1s;
+}
+
+/* Accent-tinted glass — the colour shows through the frost, bright rim */
+.glass-accent {
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 100%),
+    var(--acc);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 16px -4px rgba(0, 0, 0, 0.35);
+}
+.glass-accent:hover {
+  filter: brightness(1.06) saturate(1.04);
+  border-color: rgba(255, 255, 255, 0.44);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%),
+    var(--acc);
+}
+
+/* Static material — same look, no transitions/transforms
+   (for elements whose motion is driven elsewhere, e.g. framer-motion) */
+.glass-face {
+  position: relative;
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(190%);
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 2px 10px -2px rgba(0, 0, 0, 0.28);
+}
+
+/* Frosted field — the material as an input well */
+.glass-well {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.14);
+  transition: border-color 0.25s var(--ease-glass), box-shadow 0.25s var(--ease-glass),
+    background 0.25s var(--ease-glass);
+}
+.glass-well:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.glass-well:focus,
+.glass-well:focus-within {
+  border-color: var(--primary-accent);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.2),
+    0 0 0 3px rgba(255, 59, 48, 0.18);
+}
+
+/* Card — the glass material with a marketing-friendly lift */
 .saas-card {
-  background-color: #141414;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  position: relative;
+  background: rgba(28, 28, 32, 0.6);
+  backdrop-filter: blur(20px) saturate(185%);
+  -webkit-backdrop-filter: blur(20px) saturate(185%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 4px 12px -4px rgba(0, 0, 0, 0.28),
+    0 14px 44px -14px rgba(0, 0, 0, 0.42);
+  transition: transform 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass),
+    box-shadow 0.35s var(--ease-glass), background 0.35s var(--ease-glass);
 }
 
 .saas-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(255, 59, 48, 0.4);
-  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(36, 36, 41, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 6px 16px -4px rgba(0, 0, 0, 0.3),
+    0 26px 64px -18px rgba(0, 0, 0, 0.5);
+}
+
+/* Referenced by <Card hoverLift> — was previously undefined */
+.card-hover-lift {
+  transition: transform 0.2s var(--ease-glass), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.6);
+}
+.card-hover-lift:active {
+  transform: translateY(-1px) scale(0.995);
 }
 
 /* Simple Underline Hover */
@@ -141,6 +309,73 @@ body {
 ::selection {
   background: #FF3B30;
   color: #FFFFFF;
+}
+
+/* =========================================
+   WEB BEHAVIOUR / INTERACTION POLISH
+   ========================================= */
+html {
+  scroll-behavior: smooth;
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  overscroll-behavior-y: none;
+  text-rendering: optimizeLegibility;
+}
+
+/* One consistent, visible keyboard-focus ring everywhere; never on mouse */
+:where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+:where(button, [role="button"], a):focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Interactive elements feel like controls */
+:where(button, [role="button"], a[href], summary, label[for]) {
+  cursor: pointer;
+}
+:where(button, [role="button"]):disabled,
+:where(button, [role="button"])[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Respect reduced-motion: kill transforms & long transitions */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .glass-card:hover,
+  .glass-card:active,
+  .glass-raised:hover,
+  .glass-raised:active,
+  .card-hover-lift:hover,
+  .card-hover-lift:active,
+  .saas-card:hover {
+    transform: none !important;
+  }
+}
+
+/* Graceful fallback where backdrop-filter is unsupported */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-raised,
+  .glass-face,
+  .saas-card {
+    background: rgba(20, 20, 24, 0.94);
+  }
 }
 
 /* Ensure all input text & placeholders are crisp and high-contrast in dark mode */

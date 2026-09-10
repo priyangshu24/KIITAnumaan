@@ -96,7 +96,7 @@ const GOAL_OPTIONS = [3, 5, 10, 15, 20]
 
 function StatTile({ icon, value, label }: { icon: React.ReactNode; value: React.ReactNode; label: string }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 flex items-center gap-3">
+    <div className="glass rounded-2xl p-4 flex items-center gap-3">
       <span className="w-10 h-10 rounded-xl bg-[#FF4D4D]/10 border border-[#FF4D4D]/20 flex items-center justify-center text-[#FF4D4D] shrink-0">{icon}</span>
       <div className="min-w-0">
         <div className="text-lg font-bold text-white leading-none">{value}</div>
@@ -361,7 +361,7 @@ export default function PlaygroundLanding({
                     {activePracticeSession.companyName} · Question {activePracticeSession.currentIndex + 1} of {activePracticeSession.questionIds.length}
                   </p>
                 </div>
-                <button onClick={onContinuePractice} className="px-4 py-2 rounded-xl bg-[#FF4D4D] hover:bg-[#E03A3A] text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shrink-0">
+                <button onClick={onContinuePractice} className="px-4 py-2 rounded-xl glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shrink-0">
                   Continue <ArrowRight size={13} />
                 </button>
               </motion.div>
@@ -458,7 +458,7 @@ export default function PlaygroundLanding({
                     const Icon = iconFor(t.topic)
                     return (
                       <button key={t.topic} onClick={() => openTopic(t.topic)}
-                        className="group flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-3.5 hover:border-[#FF4D4D]/30 hover:bg-[#FF4D4D]/[0.03] transition-all text-left cursor-pointer">
+                        className="group flex items-start gap-3 glass rounded-2xl p-3.5 hover:border-[#FF4D4D]/30 hover:bg-[#FF4D4D]/[0.03] transition-all text-left cursor-pointer">
                         <span className="w-9 h-9 rounded-lg bg-[#FF4D4D]/10 border border-[#FF4D4D]/20 flex items-center justify-center text-[#FF4D4D] shrink-0">
                           <Icon size={16} />
                         </span>
@@ -496,7 +496,7 @@ export default function PlaygroundLanding({
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                   {companyRows.slice(0, 10).map((co) => (
                     <button key={co.name} onClick={() => openCompany(co.name)}
-                      className="group flex items-center gap-2.5 rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-3 hover:border-[#FF4D4D]/30 hover:bg-[#FF4D4D]/[0.03] transition-all text-left cursor-pointer">
+                      className="group flex items-center gap-2.5 glass rounded-2xl p-3 hover:border-[#FF4D4D]/30 hover:bg-[#FF4D4D]/[0.03] transition-all text-left cursor-pointer">
                       <CompanyLogo company={co.name} size={30} className="shrink-0" />
                       <div className="min-w-0 flex-1">
                         <div className="text-[11px] font-semibold text-white truncate">{co.name}</div>
@@ -508,17 +508,17 @@ export default function PlaygroundLanding({
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-3 pt-2">
-                  <button onClick={onStartTopicPractice} className="group rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 text-left hover:border-[#FF4D4D]/30 transition-all cursor-pointer">
+                  <button onClick={onStartTopicPractice} className="group glass rounded-2xl p-4 text-left hover:border-[#FF4D4D]/30 transition-all cursor-pointer">
                     <span className="w-9 h-9 rounded-lg bg-[#FF4D4D]/10 border border-[#FF4D4D]/20 flex items-center justify-center text-[#FF4D4D]"><Boxes size={16} /></span>
                     <h3 className="text-[12px] font-bold text-white mt-2.5">Practice by Topic</h3>
                     <p className="text-[10px] text-[#8A8A8A] mt-1">Topic-wise questions to build fundamentals.</p>
                   </button>
-                  <button onClick={onStartCompanyInterviews} className="group rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 text-left hover:border-white/20 transition-all cursor-pointer">
+                  <button onClick={onStartCompanyInterviews} className="group glass rounded-2xl p-4 text-left hover:border-white/20 transition-all cursor-pointer">
                     <span className="w-9 h-9 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white"><Building2 size={16} /></span>
                     <h3 className="text-[12px] font-bold text-white mt-2.5">Company Interviews</h3>
                     <p className="text-[10px] text-[#8A8A8A] mt-1">Real interview sets from top companies.</p>
                   </button>
-                  <button onClick={() => setIsCustomModalOpen(true)} className="group rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 text-left hover:border-white/20 transition-all cursor-pointer">
+                  <button onClick={() => setIsCustomModalOpen(true)} className="group glass rounded-2xl p-4 text-left hover:border-white/20 transition-all cursor-pointer">
                     <span className="w-9 h-9 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white"><SlidersHorizontal size={16} /></span>
                     <h3 className="text-[12px] font-bold text-white mt-2.5">Custom Practice</h3>
                     <p className="text-[10px] text-[#8A8A8A] mt-1">Pick topic, difficulty, count and mode.</p>
@@ -533,7 +533,7 @@ export default function PlaygroundLanding({
                 <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
                   {companyRows.map((co) => (
                     <button key={co.name} onClick={() => openCompany(co.name)}
-                      className="group flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-3.5 hover:border-[#FF4D4D]/30 hover:bg-[#FF4D4D]/[0.03] transition-all text-left cursor-pointer">
+                      className="group flex items-center gap-3 glass rounded-2xl p-3.5 hover:border-[#FF4D4D]/30 hover:bg-[#FF4D4D]/[0.03] transition-all text-left cursor-pointer">
                       <CompanyLogo company={co.name} size={34} className="shrink-0" />
                       <div className="min-w-0 flex-1">
                         <div className="text-[12px] font-semibold text-white truncate">{co.name}</div>
@@ -551,7 +551,7 @@ export default function PlaygroundLanding({
 
           {/* ============ RIGHT RAIL ============ */}
           <aside className="space-y-4 xl:sticky xl:top-[60px] self-start xl:max-h-[calc(100vh-76px)] xl:overflow-y-auto scrollbar-thin xl:pr-1">
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+            <div className="glass rounded-2xl p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-bold text-white flex items-center gap-1.5"><Sparkles size={13} className="text-[#FF4D4D]" /> Your Practice Plan</h3>
                 <span className="text-[9px] font-bold uppercase tracking-wider text-[#8A8A8A] bg-white/[0.05] border border-white/[0.08] px-1.5 py-0.5 rounded">Free Plan</span>
@@ -584,12 +584,12 @@ export default function PlaygroundLanding({
               </div>
 
               <button onClick={startPracticing}
-                className="mt-3 w-full py-2.5 rounded-xl bg-[#FF4D4D] hover:bg-[#E03A3A] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-[0_8px_24px_-6px_rgba(255,77,77,0.5)]">
+                className="mt-3 w-full py-2.5 rounded-xl glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-[0_8px_24px_-6px_rgba(255,77,77,0.5)]">
                 Start Practicing <ArrowRight size={13} />
               </button>
             </div>
 
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+            <div className="glass rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-white flex items-center gap-1.5"><SlidersHorizontal size={13} className="text-[#FF4D4D]" /> Filters</h3>
                 <button onClick={clearFilters} className={`text-[10px] font-mono transition-colors ${activeFilterCount ? 'text-[#FF4D4D] hover:text-[#E03A3A]' : 'text-[#4B5563]'}`} disabled={!activeFilterCount}>Clear All</button>
@@ -707,7 +707,7 @@ export default function PlaygroundLanding({
               </div>
               <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between gap-3">
                 <button type="button" onClick={() => setIsCustomModalOpen(false)} className="px-4 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs font-semibold text-[#8A8A8A] hover:text-white cursor-pointer transition-colors">Cancel</button>
-                <button type="button" onClick={handleLaunchCustom} className="flex-1 px-4 py-2.5 rounded-lg bg-[#FF4D4D] hover:bg-[#E03A3A] text-white font-bold text-xs shadow-[0_0_20px_rgba(255,77,77,0.4)] transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                <button type="button" onClick={handleLaunchCustom} className="flex-1 px-4 py-2.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white font-bold text-xs shadow-[0_0_20px_rgba(255,77,77,0.4)] transition-all cursor-pointer flex items-center justify-center gap-1.5">
                   <Play size={13} fill="currentColor" /><span>Start Practice Session</span>
                 </button>
               </div>

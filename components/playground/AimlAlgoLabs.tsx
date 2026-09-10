@@ -390,7 +390,7 @@ function Frame({
           </div>
         )}
         {meta.steps.length > 0 && (
-          <div className="rounded-xl border border-white/[0.08] bg-[#111114] p-3">
+          <div className="glass rounded-xl p-3">
             <div className="text-[10px] font-mono uppercase tracking-wider text-[#8B5CF6] mb-2">The steps</div>
             <ol className="space-y-2">
               {meta.steps.map((s, i) => (

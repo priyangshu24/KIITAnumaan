@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import {
   ArrowRight, Search, Sparkles, BookOpen, Target, ExternalLink,
   Check, Cpu, SlidersHorizontal, ClipboardCheck, ShieldCheck, Database, Bot,
@@ -102,26 +102,6 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
 
   return (
     <div className="max-w-[1600px] mx-auto pb-12 space-y-5">
-      {/* ============ TRACK SWITCHER ============ */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-thin pb-1">
-        {TRACKS.map((t) => {
-          const Icon = iconFor(t.icon)
-          const active = t.slug === track.slug
-          return (
-            <Link
-              key={t.slug}
-              href={`/workspace/playground/track/${t.slug}`}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all border shrink-0 ${
-                active ? 'text-white' : 'bg-white/[0.03] text-[#8A8A8A] hover:text-white border-transparent'
-              }`}
-              style={active ? { backgroundColor: `${t.accent}1A`, borderColor: `${t.accent}55`, color: t.accent } : undefined}
-            >
-              <Icon size={13} /> {t.short}
-            </Link>
-          )
-        })}
-      </div>
-
       {/* ============ HERO ============ */}
       <div className="relative overflow-hidden w-full bg-[#0B0B0D] border border-white/[0.08] rounded-[24px] p-6 lg:p-8 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
         <img
@@ -130,7 +110,8 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
           className="absolute inset-0 w-full h-full object-cover object-[75%_center] opacity-80 pointer-events-none z-0 rounded-[24px]"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0D] via-[#0B0B0D]/85 to-transparent pointer-events-none z-10 rounded-[24px]" />
-        <div className="relative z-20 flex flex-wrap items-end justify-between gap-5">
+        <div className="relative z-20 flex flex-col gap-5">
+        <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="max-w-2xl">
             <span
               className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider font-mono drop-shadow"
@@ -147,8 +128,8 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
             <div className="flex flex-wrap items-center gap-2 mt-4">
               <Link
                 href={trackWorkspaceHref(track)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-semibold transition-opacity hover:opacity-90"
-                style={{ backgroundColor: accent, boxShadow: `0 8px 24px -6px ${accent}8C` }}
+                className="glass-raised glass-accent inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-semibold"
+                style={{ '--acc': accent } as CSSProperties}
               >
                 Start Practising <ArrowRight size={13} />
               </Link>
@@ -169,6 +150,55 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
             ))}
           </div>
         </div>
+
+        {/* ---- track switcher, aligned inside the banner ---- */}
+        <style>{`
+          .tgls {
+            position: relative;
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(20px) saturate(190%);
+            -webkit-backdrop-filter: blur(20px) saturate(190%);
+            border: 1px solid rgba(255,255,255,0.14);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 10px -2px rgba(0,0,0,0.3);
+            transition: transform .3s cubic-bezier(.32,.72,0,1), background .3s cubic-bezier(.32,.72,0,1), border-color .3s cubic-bezier(.32,.72,0,1), color .3s ease;
+          }
+          .tgls:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255,255,255,0.24);
+            background: rgba(255,255,255,0.12);
+          }
+          .tgls:active { transform: scale(.97); filter: brightness(.92); transition-duration: .1s; }
+          .tgls:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 2px; }
+          @media (prefers-reduced-motion: reduce) { .tgls, .tgls:hover, .tgls:active { transform: none; } }
+        `}</style>
+        <div className="flex gap-2 overflow-x-auto scrollbar-thin pt-4 border-t border-white/[0.1]">
+          {TRACKS.map((t) => {
+            const Icon = iconFor(t.icon)
+            const active = t.slug === track.slug
+            return (
+              <Link
+                key={t.slug}
+                href={`/workspace/playground/track/${t.slug}`}
+                className={`tgls flex items-center gap-2 px-3.5 py-2.5 rounded-[13px] text-[11px] font-semibold whitespace-nowrap shrink-0 ${
+                  active ? '' : 'text-[#C2C2C6] hover:text-white'
+                }`}
+                style={
+                  active
+                    ? {
+                        color: t.accent,
+                        background: `linear-gradient(180deg, ${t.accent}38 0%, ${t.accent}14 55%, rgba(255,255,255,0) 100%), rgba(16,16,20,0.5)`,
+                        borderColor: `${t.accent}80`,
+                        boxShadow: `inset 0 1px 0 ${t.accent}66, inset 0 -10px 16px -10px rgba(0,0,0,0.55), 0 0 0 1px ${t.accent}2E, 0 12px 30px -8px ${t.accent}55, 0 2px 6px rgba(0,0,0,0.4)`,
+                      }
+                    : undefined
+                }
+              >
+                <Icon size={13} className={active ? 'drop-shadow-[0_0_6px_currentColor]' : ''} /> {t.short}
+              </Link>
+            )
+          })}
+        </div>
+        </div>
       </div>
 
       {/* ============ STATS ============ */}
@@ -179,7 +209,7 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
           { icon: <BookOpen size={17} />, v: stats.readings, l: 'Primary Sources' },
           { icon: <Target size={17} />, v: `${readyPct}%`, l: 'Your Readiness' },
         ].map((s) => (
-          <div key={s.l} className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 flex items-center gap-3">
+          <div key={s.l} className="glass rounded-2xl p-4 flex items-center gap-3">
             <span
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ color: accent, backgroundColor: `${accent}1A`, border: `1px solid ${accent}33` }}
@@ -195,7 +225,7 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
       <div className="grid xl:grid-cols-[1fr_330px] gap-5">
         {/* ============ MAIN ============ */}
         <div className="min-w-0 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 glass rounded-2xl p-3">
             <div className="flex items-center gap-1.5">
               {(['All', ...AIML_LEVELS] as const).map((l) => {
                 const active = level === l
@@ -238,7 +268,7 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
                 <Link
                   key={s.id}
                   href={`/workspace/playground/track/${track.slug}/topic/${s.id}`}
-                  className="group block rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 hover:bg-white/[0.025] hover:border-white/[0.14] transition-colors"
+                  className="group block glass rounded-2xl p-4 hover:bg-white/[0.025] hover:border-white/[0.14] transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span
@@ -281,7 +311,7 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
 
         {/* ============ RIGHT RAIL ============ */}
         <aside className="space-y-4 xl:sticky xl:top-2 self-start">
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+          <div className="glass rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
                 <Target size={13} style={{ color: accent }} /> Readiness Check
@@ -346,7 +376,7 @@ export default function TrackHub({ track }: { track: InterviewTrack }) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+          <div className="glass rounded-2xl p-4">
             <h3 className="text-sm font-bold text-white mb-2.5">Level guide</h3>
             <div className="space-y-2">
               {([

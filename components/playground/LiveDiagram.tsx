@@ -1430,7 +1430,7 @@ export default function LiveDiagram({ scene, accent }: { scene: Scene; accent: s
   return (
     <div
       ref={wrapRef}
-      className="w-full rounded-xl border border-white/[0.08] bg-[#0B0B0E] overflow-hidden"
+      className="w-full glass rounded-xl overflow-hidden"
       style={{ aspectRatio: '3 / 2', minHeight: 340, maxHeight: 560 }}
     >
       <canvas ref={cvRef} className="block w-full h-full" />

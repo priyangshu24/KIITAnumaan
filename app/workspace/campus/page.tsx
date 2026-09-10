@@ -525,7 +525,7 @@ export default function CampusWorkspacePage() {
             onClick={() => {
               alert(`Routing initiated to ${selectedPin.name} (${selectedPin.subtitle})`)
             }}
-            className="w-full bg-[#FF4D4D] hover:brightness-110 text-white text-xs font-bold uppercase tracking-wider rounded-[14px] h-[44px] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer mt-4"
+            className="w-full glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold uppercase tracking-wider rounded-[14px] h-[44px] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer mt-4"
           >
             <Navigation size={15} /> Route to Building
           </button>

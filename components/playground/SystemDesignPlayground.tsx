@@ -367,7 +367,7 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
                 const open = openCat === cat
                 const done = items.filter((i) => attempted.has(i.id)).length
                 return (
-                  <div key={cat} className="rounded-xl border border-white/[0.06] bg-[#111214] overflow-hidden">
+                  <div key={cat} className="glass rounded-xl overflow-hidden">
                     <button
                       onClick={() => setOpenCat(open ? null : cat)}
                       className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-white/[0.02] transition-colors text-left"
@@ -742,7 +742,7 @@ export default function SystemDesignPlayground() {
                   const c = SD_DIFFICULTY_COLOR[p.difficulty]
                   const done = attempted.has(p.id)
                   return (
-                    <div key={p.id} className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 flex flex-wrap items-center gap-4 hover:border-white/[0.12] transition-colors">
+                    <div key={p.id} className="glass rounded-2xl p-4 flex flex-wrap items-center gap-4 hover:border-white/[0.12] transition-colors">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-[13px] font-bold text-white">{p.title}</h3>

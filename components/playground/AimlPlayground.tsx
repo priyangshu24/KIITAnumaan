@@ -244,7 +244,7 @@ function Browse({
               const open = openTopic === t.id
               const done = qs.filter((q) => confident.has(q.id)).length
               return (
-                <div key={t.id} className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] overflow-hidden">
+                <div key={t.id} className="glass rounded-2xl overflow-hidden">
                   <button
                     onClick={() => setOpenTopic(open ? null : t.id)}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors text-left"
@@ -272,7 +272,7 @@ function Browse({
                             </div>
                             <button
                               onClick={() => onDrill(q)}
-                              className="px-3.5 py-1.5 rounded-lg bg-[#FF4D4D] hover:bg-[#E63946] text-white text-[12px] font-semibold transition-colors flex items-center gap-1.5 shrink-0"
+                              className="px-3.5 py-1.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-[12px] font-semibold transition-colors flex items-center gap-1.5 shrink-0"
                             >
                               <Play size={11} fill="currentColor" /> Drill
                             </button>
@@ -291,7 +291,7 @@ function Browse({
         {tab === 'estimation' && (
           <div className="grid md:grid-cols-2 gap-3">
             {ESTIMATORS.map((e) => (
-              <div key={e.id} className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 flex flex-col hover:border-white/[0.12] transition-colors">
+              <div key={e.id} className="glass rounded-2xl p-4 flex flex-col hover:border-white/[0.12] transition-colors">
                 <div className="flex items-center gap-2 text-[#FF4D4D]">
                   <Calculator size={15} />
                   <h3 className="text-[14px] font-bold text-white">{e.title}</h3>
@@ -304,7 +304,7 @@ function Browse({
                 </div>
                 <button
                   onClick={() => onEstimator(e)}
-                  className="mt-3 px-3.5 py-1.5 rounded-lg bg-[#FF4D4D] hover:bg-[#E63946] text-white text-[12px] font-semibold transition-colors flex items-center gap-1.5 self-start"
+                  className="mt-3 px-3.5 py-1.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-[12px] font-semibold transition-colors flex items-center gap-1.5 self-start"
                 >
                   <Play size={11} fill="currentColor" /> Open calculator
                 </button>
@@ -317,7 +317,7 @@ function Browse({
         {tab === 'algo' && (
           <div className="grid md:grid-cols-2 gap-3">
             {ALGO_LABS.map((a) => (
-              <div key={a.id} className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 flex flex-col hover:border-white/[0.12] transition-colors">
+              <div key={a.id} className="glass rounded-2xl p-4 flex flex-col hover:border-white/[0.12] transition-colors">
                 <div className="flex items-center gap-2 text-[#FF4D4D]">
                   <FlaskConical size={15} />
                   <h3 className="text-[14px] font-bold text-white">{a.title}</h3>
@@ -332,7 +332,7 @@ function Browse({
                 </div>
                 <button
                   onClick={() => onAlgo(a)}
-                  className="mt-3 px-3.5 py-1.5 rounded-lg bg-[#FF4D4D] hover:bg-[#E63946] text-white text-[12px] font-semibold transition-colors flex items-center gap-1.5 self-start"
+                  className="mt-3 px-3.5 py-1.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-[12px] font-semibold transition-colors flex items-center gap-1.5 self-start"
                 >
                   <Play size={11} fill="currentColor" /> Launch sim
                 </button>
@@ -344,7 +344,7 @@ function Browse({
         {/* ---- NOTEBOOK ---- */}
         {tab === 'notebook' && (
           <div className="space-y-3">
-            <div className="rounded-xl border border-white/[0.06] bg-[#0D0D10] p-3.5 flex items-start gap-2.5">
+            <div className="glass rounded-xl p-3.5 flex items-start gap-2.5">
               <FileCode2 size={14} className="text-[#FF4D4D] shrink-0 mt-0.5" />
               <p className="text-[12.5px] text-[#9CA3AF] leading-relaxed">
                 Opens a Colab-style notebook backed by a real CPython kernel compiled to WebAssembly (Pyodide).
@@ -355,7 +355,7 @@ function Browse({
             </div>
             <div className="grid md:grid-cols-2 gap-3">
               {NOTEBOOKS.map((n) => (
-                <div key={n.id} className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 flex flex-col hover:border-white/[0.12] transition-colors">
+                <div key={n.id} className="glass rounded-2xl p-4 flex flex-col hover:border-white/[0.12] transition-colors">
                   <div className="flex items-center gap-2 text-[#FF4D4D]">
                     <FileCode2 size={15} />
                     <h3 className="text-[14px] font-bold text-white">{n.title}</h3>
@@ -369,7 +369,7 @@ function Browse({
                   </div>
                   <button
                     onClick={() => onNotebook(n.id)}
-                    className="mt-3 px-3.5 py-1.5 rounded-lg bg-[#FF4D4D] hover:bg-[#E63946] text-white text-[12px] font-semibold transition-colors flex items-center gap-1.5 self-start"
+                    className="mt-3 px-3.5 py-1.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-[12px] font-semibold transition-colors flex items-center gap-1.5 self-start"
                   >
                     <Play size={11} fill="currentColor" /> Open notebook
                   </button>
@@ -497,7 +497,7 @@ function DrillWorkspace({
         {/* center — question, answer, concept, diagram */}
         <div className="flex-1 min-w-0 xl:overflow-y-auto xl:scrollbar-thin">
           <div className="max-w-[1080px] mx-auto px-6 sm:px-10 py-7 space-y-6">
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0D0D10] p-5 sm:p-6">
+            <div className="glass rounded-2xl p-5 sm:p-6">
               <div className="text-[10px] font-mono uppercase tracking-wider text-[#6B7280] mb-2">Question · {q.subtopic}</div>
               <p className="text-[18px] sm:text-[20px] text-white leading-relaxed font-medium">{q.q}</p>
               {hasConsole && (
@@ -535,7 +535,7 @@ function DrillWorkspace({
 
             {/* concept + diagram */}
             {concept && (
-              <div className="rounded-2xl border border-white/[0.07] bg-[#0B0B0E] p-5 sm:p-6 space-y-3.5">
+              <div className="glass rounded-2xl p-5 sm:p-6 space-y-3.5">
                 <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-[#8B5CF6]">
                   <ListChecks size={12} /> Concept · {q.subtopic}
                 </div>
@@ -636,7 +636,7 @@ function DrillRail({
           const open = openTopic === t.id
           const done = qs.filter((x) => confident.has(x.id)).length
           return (
-            <div key={t.id} className="rounded-xl border border-white/[0.06] bg-[#111214] overflow-hidden">
+            <div key={t.id} className="glass rounded-xl overflow-hidden">
               <button onClick={() => setOpenTopic(open ? null : t.id)} className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-white/[0.02] transition-colors text-left">
                 {open ? <ChevronDown size={12} className="text-[#6B7280] shrink-0" /> : <ChevronRight size={12} className="text-[#6B7280] shrink-0" />}
                 <TopicIcon name={t.icon} size={12} className="text-[#FF4D4D] shrink-0" />
@@ -876,7 +876,7 @@ function EstimatorWorkspace({
                     const db = leadNum(o.value)
                     const delta = a && isFinite(da) && isFinite(db) ? db - da : null
                     return (
-                      <div key={i} className="rounded-xl border border-white/[0.06] bg-[#0D0D10] px-3.5 py-3">
+                      <div key={i} className="glass rounded-xl px-3.5 py-3">
                         <span className="text-[12px] text-[#9CA3AF] leading-snug block">{o.label}</span>
                         <div className="flex items-baseline gap-2 mt-1 flex-wrap">
                           <span className="text-[15px] font-bold font-mono" style={{ color: toneColor[o.tone ?? 'neutral'] }}>{o.value}</span>
@@ -901,13 +901,13 @@ function EstimatorWorkspace({
 
               {/* context */}
               <div className="space-y-4 xl:col-span-1 lg:col-span-2">
-                <div className="rounded-xl border border-white/[0.06] bg-[#0D0D10] p-3.5">
+                <div className="glass rounded-xl p-3.5">
                   <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-[#8A8A8A] mb-2">
                     <Sigma size={11} /> The arithmetic
                   </div>
                   <pre className="text-[11.5px] font-mono text-[#B4B8BF] leading-[1.7] whitespace-pre-wrap">{est.formula}</pre>
                 </div>
-                <div className="rounded-xl border border-white/[0.06] bg-[#0D0D10] p-3.5">
+                <div className="glass rounded-xl p-3.5">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-[#FF4D4D] mb-2">What the interviewer is checking</div>
                   <ul className="space-y-1.5">
                     {est.checks.map((c) => (

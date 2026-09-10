@@ -15,8 +15,8 @@ export default function Card({ children, className, hoverLift = true, onClick }:
     <div
       onClick={onClick}
       className={cn(
-        'bg-[#151515] border border-[rgba(255,255,255,0.08)] rounded-[16px] p-6 text-white',
-        hoverLift && 'card-hover-lift cursor-pointer',
+        'glass rounded-[16px] p-6 text-white',
+        hoverLift && 'glass-card cursor-pointer',
         className
       )}
     >

@@ -7,6 +7,7 @@
 // its own scrollbar when its content is taller than the viewport.
 // ---------------------------------------------------------------------------
 
+import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft, BookOpen, ExternalLink, FlaskConical, Sparkles,
@@ -48,7 +49,7 @@ function Panel({ scene, sceneInfo, concept, accent }: {
       {concept?.diagram ? (
         <div>
           <h2 className="text-[10px] font-mono uppercase tracking-wider text-[#6B7280] mb-2">Schematic — the pieces</h2>
-          <div className="td-diagram rounded-2xl border border-white/[0.07] bg-[#0B0B0E] p-4">{concept.diagram}</div>
+          <div className="td-diagram glass rounded-2xl p-4">{concept.diagram}</div>
         </div>
       ) : (
         <p className="text-[11.5px] text-[#6B7280] leading-relaxed">
@@ -171,8 +172,8 @@ export default function TopicDoc({ trackSlug, topicId }: { trackSlug: string; to
               </p>
               <Link
                 href={practiceHref}
-                className="px-3.5 py-2 rounded-xl text-white text-[12px] font-semibold transition-opacity hover:opacity-90 whitespace-nowrap"
-                style={{ backgroundColor: accent }}
+                className="glass-raised glass-accent px-4 py-2 rounded-xl text-white text-[12px] font-semibold whitespace-nowrap"
+                style={{ '--acc': accent } as CSSProperties}
               >
                 {practiceLabel} →
               </Link>
@@ -184,7 +185,7 @@ export default function TopicDoc({ trackSlug, topicId }: { trackSlug: string; to
                 const lc = LEVEL_COLOR[q.level]
                 const src = q.source ?? sub.reading[0]
                 return (
-                  <article key={q.id} className="rounded-2xl border border-white/[0.07] bg-[#0D0D10] p-5">
+                  <article key={q.id} className="glass rounded-2xl p-5">
                     <div className="flex items-start gap-2 flex-wrap">
                       <span className="text-[12px] font-mono text-[#4B5563] mt-0.5">{i + 1}.</span>
                       <h3 className="text-[15px] font-bold text-white flex-1 min-w-0">{q.q}</h3>

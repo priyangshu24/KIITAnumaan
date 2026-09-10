@@ -31,7 +31,7 @@ export default function Badge({ status = 'primary', label, dot = true, className
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md border',
+        'inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md border backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]',
         statusStyles[status],
         className
       )}

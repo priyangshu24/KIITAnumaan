@@ -113,7 +113,7 @@ export default function FloatingAIAssistant() {
             />
             <button
               onClick={handleSend}
-              className="w-8 h-8 rounded-xl bg-[#FF453A] hover:brightness-110 text-white flex items-center justify-center transition-all shrink-0 shadow-sm cursor-pointer"
+              className="w-8 h-8 rounded-xl glass-raised glass-accent [--acc:#FF453A] text-white flex items-center justify-center transition-all shrink-0 shadow-sm cursor-pointer"
             >
               <Send size={14} />
             </button>

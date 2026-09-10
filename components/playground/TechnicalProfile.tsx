@@ -47,7 +47,7 @@ function toneFor(ratio: number, solved: number): string {
 
 function Card({ className = '', children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={`rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4 ${className}`}>{children}</div>
+    <div className={`glass rounded-2xl p-4 ${className}`}>{children}</div>
   )
 }
 
@@ -282,7 +282,7 @@ export default function TechnicalProfile() {
           {!reco ? (
             <p className="text-[11px] text-[#6B7280] py-6 text-center">Nothing to recommend — you&apos;re on top of it.</p>
           ) : (
-            <div className="rounded-xl border border-white/[0.06] bg-[#111214] p-3">
+            <div className="glass rounded-xl p-3">
               <div className="flex flex-col gap-3">
                 <div>
                   <span className="inline-block text-[9px] font-bold uppercase tracking-wider text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25 px-1.5 py-0.5 rounded">
@@ -321,7 +321,7 @@ export default function TechnicalProfile() {
                   <div className="flex items-center gap-2 mt-3">
                     <Link
                       href={`${SOLVE_HREF}?problem=${reco.problem.id}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF4D4D] hover:bg-[#E03A3A] text-white text-[11px] font-semibold transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-[11px] font-semibold transition-colors"
                     >
                       Practice This Question <Code2 size={12} />
                     </Link>

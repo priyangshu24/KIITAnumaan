@@ -843,12 +843,12 @@ function BriefPanel({ brief, onLeave }: { brief: DrillBrief; onLeave: () => void
           <p className="text-[11px] font-mono text-[#6B7280] mt-1">{brief.subtopic}</p>
         </div>
 
-        <div className="rounded-xl border border-white/[0.07] bg-[#0B0B0E] p-3.5">
+        <div className="glass rounded-xl p-3.5">
           <div className="text-[10px] font-mono uppercase tracking-wider text-[#6B7280] mb-1.5">Context — how to approach this in code</div>
           <p className="text-[12.5px] text-[#B4B8BF] leading-relaxed">{brief.context}</p>
         </div>
 
-        <div className="rounded-xl border border-white/[0.07] bg-[#0B0B0E] p-3.5">
+        <div className="glass rounded-xl p-3.5">
           <div className="text-[10px] font-mono uppercase tracking-wider text-[#FF4D4D] mb-1">How to work this</div>
           <div dangerouslySetInnerHTML={{ __html: renderMarkdown(stepsMd) }} />
         </div>
@@ -905,7 +905,7 @@ function CellView({
 
   const isMd = cell.type === 'markdown'
   return (
-    <div className="group relative rounded-xl border border-white/[0.07] bg-[#0D0D10] overflow-hidden">
+    <div className="group relative glass rounded-xl overflow-hidden">
       <div className="flex">
         {/* gutter */}
         <div className="w-11 shrink-0 flex flex-col items-center pt-2.5 gap-1 border-r border-white/[0.05] bg-[#0B0B0E]">

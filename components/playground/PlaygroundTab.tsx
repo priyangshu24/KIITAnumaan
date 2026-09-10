@@ -887,7 +887,7 @@ export default function PlaygroundTab() {
               {activePracticeSession.currentIndex < activePracticeSession.questionIds.length - 1 ? (
                 <button
                   onClick={handleNextPracticeQuestion}
-                  className="px-3 py-1 rounded bg-[#FF4D4D] hover:bg-[#FF3333] text-white text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_15px_rgba(255,77,77,0.3)]"
+                  className="px-3 py-1 rounded glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_15px_rgba(255,77,77,0.3)]"
                 >
                   <span>Next Question →</span>
                 </button>
@@ -1604,7 +1604,7 @@ export default function PlaygroundTab() {
 
                 <button
                   onClick={handlePracticeAgain}
-                  className="flex-1 min-w-[140px] px-3.5 py-2 rounded-lg bg-[#FF4D4D] hover:bg-[#FF3333] text-white text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(255,77,77,0.35)]"
+                  className="flex-1 min-w-[140px] px-3.5 py-2 rounded-lg glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(255,77,77,0.35)]"
                 >
                   <Play size={13} fill="currentColor" />
                   <span>Practice Again</span>

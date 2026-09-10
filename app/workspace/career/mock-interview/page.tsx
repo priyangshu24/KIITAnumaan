@@ -217,7 +217,7 @@ function MockInterviewContent() {
             </button>
             <Link
               href="/workspace/career"
-              className="bg-[#FF4D4D] hover:brightness-110 text-white text-xs font-bold px-4 py-2.5 rounded-[10px] transition-all"
+              className="glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold px-4 py-2.5 rounded-[10px] transition-all"
             >
               Back to Blueprint
             </Link>
@@ -302,14 +302,14 @@ function MockInterviewContent() {
                 {!feedback ? (
                   <button
                     onClick={handleSubmitAnswer}
-                    className="flex items-center gap-1.5 bg-[#FF4D4D] hover:brightness-110 text-white text-xs font-bold px-4 py-2.5 rounded-[10px] transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold px-4 py-2.5 rounded-[10px] transition-all cursor-pointer"
                   >
                     <Send size={13} /> Submit Answer
                   </button>
                 ) : (
                   <button
                     onClick={handleNext}
-                    className="flex items-center gap-1.5 bg-[#FF4D4D] hover:brightness-110 text-white text-xs font-bold px-4 py-2.5 rounded-[10px] transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 glass-raised glass-accent [--acc:#FF4D4D] text-white text-xs font-bold px-4 py-2.5 rounded-[10px] transition-all cursor-pointer"
                   >
                     {isLastQuestionInRound && isLastRound ? 'Finish Interview' : 'Next Question'}
                   </button>

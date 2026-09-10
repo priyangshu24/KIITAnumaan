@@ -19,14 +19,10 @@ const sizeClasses = {
 }
 
 const variantClasses = {
-  primary:
-    'bg-[#FF3B30] text-white hover:bg-[#E03126] shadow-[0_0_20px_rgba(255,59,48,0.25)] active:scale-95 transition-all duration-200',
-  secondary:
-    'bg-[#FF5A4D] text-white hover:bg-[#FF3B30] active:scale-95 transition-all duration-200',
-  outline:
-    'border border-[rgba(255,255,255,0.08)] bg-[#151515] text-[#FFFFFF] hover:bg-[#1A1A1A] hover:border-[#FF3B30]/50 transition-all duration-200',
-  ghost:
-    'text-[#A1A1AA] hover:bg-[#1A1A1A] hover:text-[#FFFFFF] transition-all duration-200',
+  primary: 'glass-raised glass-accent [--acc:#FF3B30]',
+  secondary: 'glass-raised glass-accent [--acc:#FF5A4D]',
+  outline: 'glass text-white hover:border-[#FF3B30]/50 transition-colors duration-200',
+  ghost: 'text-[#A1A1AA] hover:bg-white/[0.06] hover:text-white transition-colors duration-200',
 }
 
 export default function Button({
@@ -40,7 +36,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const classes = cn(
-    'inline-flex items-center justify-center tracking-wide uppercase transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none select-none',
+    'inline-flex items-center justify-center tracking-wide uppercase cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none select-none',
     sizeClasses[size],
     variantClasses[variant],
     fullWidth && 'w-full',

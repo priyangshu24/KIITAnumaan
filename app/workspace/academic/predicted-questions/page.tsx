@@ -275,7 +275,7 @@ export default function AcademicPredictedQuestionsPage() {
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
             <button
               onClick={() => setIsChoiceModalOpen(true)}
-              className="bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-[#FF453A]/20"
+              className="glass-raised glass-accent [--acc:#FF453A] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-[#FF453A]/20"
             >
               <Upload size={14} /> Import Paper Box
             </button>
@@ -377,7 +377,7 @@ export default function AcademicPredictedQuestionsPage() {
           <button
             onClick={handleGenerateAI}
             disabled={isGenerating}
-            className="w-full sm:w-[70%] bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-sm font-bold py-3.5 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-[#FF453A]/25 hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-[70%] glass-raised glass-accent [--acc:#FF453A] text-white text-sm font-bold py-3.5 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-[#FF453A]/25 hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
           >
             {isGenerating ? (
               <>
@@ -803,7 +803,7 @@ export default function AcademicPredictedQuestionsPage() {
 
               <button
                 onClick={handleImportFromPlatformPYQ}
-                className="px-5 py-2.5 rounded-xl bg-[#FF453A] hover:bg-[#FF453A]/90 text-white text-xs font-bold transition-all shadow-md shadow-[#FF453A]/20 cursor-pointer flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl glass-raised glass-accent [--acc:#FF453A] text-white text-xs font-bold transition-all shadow-md shadow-[#FF453A]/20 cursor-pointer flex items-center gap-2"
               >
                 <Plus size={14} /> Import Selected Paper
               </button>

@@ -71,7 +71,7 @@ function readBookmarkIds(): string[] {
 
 function Panel({ title, action, children }: { title: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+    <div className="glass rounded-2xl p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-bold text-white">{title}</h3>
         {action}
@@ -85,7 +85,7 @@ function StatTile({ icon, value, label, sub }: {
   icon: React.ReactNode; value: React.ReactNode; label: string; sub?: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+    <div className="glass rounded-2xl p-4">
       <div className="flex items-center gap-2.5">
         <span className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">{icon}</span>
         <div className="min-w-0">
@@ -353,7 +353,7 @@ export default function PlaygroundDashboard() {
                 </div>
                 <Link
                   href={resume.href}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#FF4D4D] hover:bg-[#E03A3A] text-white text-sm font-semibold shadow-[0_8px_24px_-6px_rgba(255,77,77,0.5)] transition-all shrink-0"
+                  className="glass-raised glass-accent [--acc:#FF4D4D] flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-white text-sm font-semibold shrink-0"
                 >
                   Resume <ArrowRight size={15} />
                 </Link>
@@ -362,7 +362,7 @@ export default function PlaygroundDashboard() {
           )}
 
           {/* Activity — full year contribution heatmap */}
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+          <div className="glass rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <TrendingUp size={14} className="text-[#FF4D4D]" /> Activity
@@ -517,19 +517,19 @@ export default function PlaygroundDashboard() {
 
         {/* ============ RIGHT RAIL ============ */}
         <aside className="space-y-4 lg:sticky lg:top-2 self-start">
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+          <div className="glass rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5"><Sparkles size={13} className="text-[#FF4D4D]" /> Your Plan</h3>
               <span className="text-[9px] font-bold uppercase tracking-wider text-[#8A8A8A] bg-white/[0.05] border border-white/[0.08] px-1.5 py-0.5 rounded">Free</span>
             </div>
             <p className="text-[11px] text-[#8A8A8A] leading-relaxed">Unlimited practice, deeper analytics and contest mode are on the way.</p>
-            <Link href="/workspace/profile" className="mt-3 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#FF4D4D] hover:bg-[#E03A3A] text-white text-xs font-semibold transition-colors">
+            <Link href="/workspace/profile" className="glass mt-3 flex items-center justify-center gap-1.5 py-2 rounded-xl text-white text-xs font-semibold hover:border-white/20 transition-colors">
               Manage Account <ArrowRight size={13} />
             </Link>
           </div>
 
           {/* Daily challenge */}
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0D0D10] p-4">
+          <div className="glass rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5"><Swords size={13} className="text-[#FF4D4D]" /> Daily Challenge</h3>
               <span className="text-[9px] font-mono text-[#6B7280]">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
@@ -555,10 +555,10 @@ export default function PlaygroundDashboard() {
             </div>
             <Link
               href={`${SOLVE}?problem=${daily.id}`}
-              className={`mt-3 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              className={`mt-3 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold ${
                 dailyDone
-                  ? 'border border-white/[0.1] text-[#D1D5DB] hover:text-white hover:border-white/25'
-                  : 'bg-[#FF4D4D] hover:bg-[#E03A3A] text-white'
+                  ? 'glass text-[#D1D5DB] hover:text-white hover:border-white/25 transition-colors'
+                  : 'glass-raised glass-accent [--acc:#F59E0B] text-white'
               }`}
             >
               {dailyDone ? 'Review' : 'Solve Today'} <ArrowRight size={13} />
