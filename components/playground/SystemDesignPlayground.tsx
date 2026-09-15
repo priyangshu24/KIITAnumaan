@@ -1,18 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow, ReactFlowProvider, Background, Controls, MiniMap, addEdge,
-  useNodesState, useEdgesState, useReactFlow, Handle, Position,
-  MarkerType, BackgroundVariant,
+  useNodesState, useEdgesState, useReactFlow, Handle, Position, NodeToolbar,
+  MarkerType, BackgroundVariant, BaseEdge, EdgeLabelRenderer,
+  getBezierPath, getSmoothStepPath, getStraightPath,
   type Node, type Edge, type Connection, type NodeProps, type NodeTypes,
+  type EdgeProps, type EdgeTypes,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import {
   ArrowLeft, Play, Trash2, Save, Check, ListChecks, Lightbulb, Network,
   Download, Plus, PanelLeftClose, PanelLeftOpen, CheckCircle2, Calculator,
-  Search, GripVertical, ChevronDown, ChevronRight, ListTree,
+  Search, GripVertical, ChevronDown, ChevronRight, ListTree, Pencil,
 } from 'lucide-react'
 import {
   SD_PROMPTS, SD_COMPONENTS, SD_COMPONENT_MAP, SD_DIFFICULTY_COLOR, SD_GROUP_ORDER,
@@ -35,20 +37,113 @@ interface SavedBoard {
 
 // ---- custom node --------------------------------------------------------
 
-function SdFlowNode({ data, selected }: NodeProps) {
+// In-app rename dialog — replaces window.prompt()'s native "site says" box.
+// Nodes/edges live deep inside <ReactFlow>'s render tree, so they ask for a
+// rename via this context rather than owning any dialog state themselves.
+interface RenameRequest { kind: 'node' | 'edge'; id: string; value: string; title: string }
+const RenameContext = createContext<(req: RenameRequest) => void>(() => {})
+
+function RenameModal({ req, onCancel, onSubmit }: {
+  req: RenameRequest | null
+  onCancel: () => void
+  onSubmit: (value: string) => void
+}) {
+  const [value, setValue] = useState('')
+  useEffect(() => { if (req) setValue(req.value) }, [req])
+  if (!req) return null
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onMouseDown={onCancel}
+    >
+      <form
+        onMouseDown={(e) => e.stopPropagation()}
+        onSubmit={(e) => { e.preventDefault(); onSubmit(value) }}
+        className="glass w-full max-w-[360px] rounded-2xl p-5"
+      >
+        <h3 className="text-[13px] font-bold text-white mb-3">{req.title}</h3>
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Escape') onCancel() }}
+          onFocus={(e) => e.currentTarget.select()}
+          autoFocus
+          placeholder="Enter a name…"
+          className="glass-well w-full px-3 py-2 rounded-lg text-[13px] text-white outline-none"
+        />
+        <div className="flex items-center justify-end gap-2 mt-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-3.5 py-1.5 rounded-lg text-[12px] font-semibold text-[#8A8A8A] hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="glass-raised glass-accent [--acc:#8B5CF6] px-4 py-1.5 rounded-lg text-[12px] font-bold text-white cursor-pointer"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// Small action pill shown once a node or edge is selected — Rename + Delete.
+function SelectionActions({ onRename, onDelete }: { onRename: (e: React.MouseEvent) => void; onDelete: (e: React.MouseEvent) => void }) {
+  return (
+    <div className="nodrag nopan flex items-center gap-1 rounded-lg bg-[#18181C] border border-white/[0.1] shadow-lg p-0.5">
+      <button
+        onClick={onRename}
+        className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-[#D1D5DB] hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+        title="Rename"
+      >
+        <Pencil size={10} /> Rename
+      </button>
+      <span className="w-px h-3.5 bg-white/[0.1]" />
+      <button
+        onClick={onDelete}
+        className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-[#FF8A80] hover:text-white hover:bg-[#FF4D4D] transition-colors cursor-pointer"
+        title="Delete"
+      >
+        <Trash2 size={10} /> Delete
+      </button>
+    </div>
+  )
+}
+
+function SdFlowNode({ id, data, selected }: NodeProps) {
   const kind = (data.kind as string) || 'service'
   const meta = SD_COMPONENT_MAP[kind]
   const iconKey = (meta?.icon as string) || kind
   const color = tileColorFor(iconKey, (meta?.color as string) || '#64748B')
+  const { deleteElements } = useReactFlow()
+  const requestRename = useContext(RenameContext)
+
+  const renameNode = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    requestRename({ kind: 'node', id, value: (data.label as string) || meta?.label || kind, title: 'Rename component' })
+  }, [id, data.label, meta?.label, kind, requestRename])
+
+  const deleteNode = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    deleteElements({ nodes: [{ id }] })
+  }, [id, deleteElements])
+
   return (
     <div
-      className="flex items-center gap-2.5 rounded-[12px] pl-2 pr-3.5 py-2 min-w-[164px] max-w-[240px]"
+      className="relative flex items-center gap-2.5 rounded-[12px] pl-2 pr-3.5 py-2 min-w-[164px] max-w-[240px]"
       style={{
         background: '#141418',
         border: `1px solid ${selected ? color : 'rgba(255,255,255,0.10)'}`,
         boxShadow: selected ? `0 0 0 2px ${color}55, 0 12px 30px rgba(0,0,0,0.5)` : '0 8px 24px rgba(0,0,0,0.35)',
       }}
     >
+      <NodeToolbar isVisible={selected} position={Position.Top} offset={10}>
+        <SelectionActions onRename={renameNode} onDelete={deleteNode} />
+      </NodeToolbar>
       <Handle type="target" position={Position.Left} style={{ background: color, width: 7, height: 7, border: 'none' }} />
       <Handle type="target" position={Position.Top} id="t" style={{ background: color, width: 7, height: 7, border: 'none' }} />
       <SdIcon kind={iconKey} size={26} />
@@ -69,6 +164,7 @@ const EDGE_SHAPES: { id: EdgeShape; label: string }[] = [
 ]
 
 const edgeBase = {
+  type: 'sd',
   animated: true,
   style: { stroke: '#8B5CF6', strokeWidth: 1.6 },
   markerEnd: { type: MarkerType.ArrowClosed, color: '#8B5CF6' },
@@ -77,6 +173,64 @@ const edgeBase = {
   labelBgPadding: [4, 3] as [number, number],
   labelBgBorderRadius: 4,
 }
+
+// Custom edge — draws the chosen shape (curved/orthogonal/straight, read
+// from data.shape) and, once selected, shows a Rename + Delete pill at its
+// midpoint so a connection can be edited or removed with a click, not just
+// double-click / Backspace.
+function SdEdge({
+  id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition,
+  style, markerEnd, label, labelStyle, labelBgStyle, labelBgPadding, labelBgBorderRadius,
+  data, selected,
+}: EdgeProps) {
+  const shape = (data?.shape as EdgeShape) || 'default'
+  const [path, labelX, labelY] =
+    shape === 'smoothstep'
+      ? getSmoothStepPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
+      : shape === 'straight'
+        ? getStraightPath({ sourceX, sourceY, targetX, targetY })
+        : getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
+  const { deleteElements } = useReactFlow()
+  const requestRename = useContext(RenameContext)
+
+  const renameEdge = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    requestRename({ kind: 'edge', id, value: (label as string) || '', title: 'Edge label (protocol, sync/async, etc.)' })
+  }, [id, label, requestRename])
+
+  const deleteEdge = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    deleteElements({ edges: [{ id }] })
+  }, [id, deleteElements])
+
+  return (
+    <>
+      <BaseEdge
+        id={id}
+        path={path}
+        style={selected ? { ...style, strokeWidth: ((style?.strokeWidth as number) || 1.6) + 0.6 } : style}
+        markerEnd={markerEnd}
+        label={label}
+        labelStyle={labelStyle}
+        labelBgStyle={labelBgStyle}
+        labelBgPadding={labelBgPadding}
+        labelBgBorderRadius={labelBgBorderRadius}
+      />
+      {selected && (
+        <EdgeLabelRenderer>
+          <div
+            className="absolute"
+            style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - (label ? 24 : 0)}px)`, pointerEvents: 'all' }}
+          >
+            <SelectionActions onRename={renameEdge} onDelete={deleteEdge} />
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  )
+}
+
+const edgeTypes: EdgeTypes = { sd: SdEdge }
 
 // ---- canvas (inside provider) -----------------------------------------
 
@@ -88,7 +242,7 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
   onAttempt: (id: string) => void
 }) {
   const dc = SD_DIFFICULTY_COLOR[prompt.difficulty]
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, deleteElements } = useReactFlow()
   const wrapRef = useRef<HTMLDivElement>(null)
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
@@ -137,7 +291,11 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
       position: { x: 60, y: 180 },
       data: { label: 'Web Client', kind: 'client' },
     }])
-    setEdges((board?.edges ?? []).map((e) => ({ ...edgeBase, type: (e.type as EdgeShape) || 'default', ...e })))
+    setEdges((board?.edges ?? []).map((e) => {
+      // legacy boards stored the shape directly on `type`; carry it into data.shape
+      const shape = ((e.data as { shape?: EdgeShape } | undefined)?.shape) || (EDGE_SHAPES.some((s) => s.id === e.type) ? (e.type as EdgeShape) : 'default')
+      return { ...edgeBase, ...e, type: 'sd', data: { ...e.data, shape } }
+    }))
     setNotes(board?.notes ?? '')
     setChecked(new Set(board?.checked ?? []))
     setPanel('requirements')
@@ -170,26 +328,51 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
   }, [setNodes])
 
   const onConnect = useCallback(
-    (c: Connection) => setEdges((es) => addEdge({ ...edgeBase, type: edgeShape, ...c }, es)),
+    (c: Connection) => setEdges((es) => addEdge({ ...edgeBase, data: { shape: edgeShape }, ...c }, es)),
     [setEdges, edgeShape],
   )
 
   // re-shape all existing edges when the toggle changes
   useEffect(() => {
-    setEdges((es) => es.map((e) => (e.type === edgeShape ? e : { ...e, type: edgeShape })))
+    setEdges((es) =>
+      es.map((e) => {
+        const shape = (e.data as { shape?: EdgeShape } | undefined)?.shape
+        return shape === edgeShape ? e : { ...e, data: { ...e.data, shape: edgeShape } }
+      }),
+    )
   }, [edgeShape, setEdges])
 
+  // ---- rename dialog (in-app, replaces window.prompt) ----
+  const [renameReq, setRenameReq] = useState<RenameRequest | null>(null)
+  const applyRename = useCallback((value: string) => {
+    if (!renameReq) return
+    const trimmed = value.trim()
+    if (renameReq.kind === 'node') {
+      if (trimmed) setNodes((ns) => ns.map((n) => (n.id === renameReq.id ? { ...n, data: { ...n.data, label: trimmed } } : n)))
+    } else {
+      setEdges((es) => es.map((e) => (e.id === renameReq.id ? { ...e, label: trimmed || undefined } : e)))
+    }
+    setRenameReq(null)
+  }, [renameReq, setNodes, setEdges])
+
   const onEdgeDoubleClick = useCallback((_: React.MouseEvent, edge: Edge) => {
-    const label = window.prompt('Edge label (protocol, sync/async, etc.)', (edge.label as string) || '')
-    if (label === null) return
-    setEdges((es) => es.map((e) => (e.id === edge.id ? { ...e, label: label || undefined } : e)))
-  }, [setEdges])
+    setRenameReq({ kind: 'edge', id: edge.id, value: (edge.label as string) || '', title: 'Edge label (protocol, sync/async, etc.)' })
+  }, [])
 
   const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
-    const label = window.prompt('Rename component', (node.data as { label?: string })?.label || '')
-    if (label === null || !label.trim()) return
-    setNodes((ns) => ns.map((n) => (n.id === node.id ? { ...n, data: { ...n.data, label: label.trim() } } : n)))
-  }, [setNodes])
+    setRenameReq({ kind: 'node', id: node.id, value: (node.data as { label?: string })?.label || '', title: 'Rename component' })
+  }, [])
+
+  // ---- select + delete ----
+  const selectedNodeIds = useMemo(() => nodes.filter((n) => n.selected).map((n) => n.id), [nodes])
+  const selectedEdgeIds = useMemo(() => edges.filter((e) => e.selected).map((e) => e.id), [edges])
+  const hasSelection = selectedNodeIds.length > 0 || selectedEdgeIds.length > 0
+  const deleteSelected = useCallback(() => {
+    deleteElements({
+      nodes: selectedNodeIds.map((id) => ({ id })),
+      edges: selectedEdgeIds.map((id) => ({ id })),
+    })
+  }, [deleteElements, selectedNodeIds, selectedEdgeIds])
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -301,6 +484,7 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
   }, [onPick])
 
   return (
+    <RenameContext.Provider value={setRenameReq}>
     <div className="flex flex-col h-full w-full bg-[#0A0A0D] text-white overflow-hidden">
       {/* top bar */}
       <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-white/[0.06] bg-[#0D0D10] shrink-0">
@@ -340,6 +524,18 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
               </button>
             ))}
           </div>
+          <button
+            onClick={deleteSelected}
+            disabled={!hasSelection}
+            title={hasSelection ? 'Delete selected (Backspace / Delete)' : 'Select a component or connection to delete it'}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-mono transition-colors ${
+              hasSelection
+                ? 'text-[#FF4D4D] bg-[#FF4D4D]/10 hover:bg-[#FF4D4D]/20 border border-[#FF4D4D]/25'
+                : 'text-[#4B5563] bg-white/[0.02] cursor-not-allowed'
+            }`}
+          >
+            <Trash2 size={11} /> Delete{hasSelection ? ` (${selectedNodeIds.length + selectedEdgeIds.length})` : ''}
+          </button>
           <button onClick={() => { setNodes([]); setEdges([]) }} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-mono text-[#8A8A8A] hover:text-white bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
             <Trash2 size={11} /> Clear
           </button>
@@ -495,6 +691,7 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
@@ -504,7 +701,7 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
             fitView
             minZoom={0.2}
             proOptions={{ hideAttribution: true }}
-            defaultEdgeOptions={{ ...edgeBase, type: edgeShape }}
+            defaultEdgeOptions={{ ...edgeBase, data: { shape: edgeShape } }}
           >
             <Background id="grid" variant={BackgroundVariant.Lines} gap={96} lineWidth={1} color="#18181B" />
             <Background id="dots" variant={BackgroundVariant.Dots} gap={16} size={1.4} color="#3A3A42" />
@@ -665,6 +862,8 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
         </div>
       </div>
     </div>
+    <RenameModal req={renameReq} onCancel={() => setRenameReq(null)} onSubmit={applyRename} />
+    </RenameContext.Provider>
   )
 }
 
