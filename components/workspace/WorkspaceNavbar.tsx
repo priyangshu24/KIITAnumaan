@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Search,
   Bell,
@@ -10,7 +11,11 @@ import {
   CheckCircle2,
   FileText,
   Sparkles,
+  LogOut,
+  UserRound,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
 const sampleNotifications = [
   {
@@ -40,6 +45,10 @@ const sampleNotifications = [
 ]
 
 export default function WorkspaceNavbar() {
+  const router = useRouter()
+  const [supabase] = useState(() => createClient())
+  const [user, setUser] = useState<User | null>(null)
+  const [showProfile, setShowProfile] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState(sampleNotifications)
@@ -56,6 +65,22 @@ export default function WorkspaceNavbar() {
     document.documentElement.classList.add('dark')
     document.documentElement.classList.remove('light')
   }, [])
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null))
+    return () => sub.subscription.unsubscribe()
+  }, [supabase])
+
+  const fullName = (user?.user_metadata as { full_name?: string } | undefined)?.full_name || user?.email?.split('@')[0] || 'Guest'
+  const initials = fullName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || '?'
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setShowProfile(false)
+    router.push('/login')
+    router.refresh()
+  }
 
   return (
     <header className="h-[56px] py-1 sticky top-0 z-20 flex items-center justify-end gap-4 px-2 sm:px-4 bg-transparent">
@@ -143,15 +168,54 @@ export default function WorkspaceNavbar() {
         </div>
 
         {/* User Profile Avatar Pill */}
-        <Link href="/workspace/profile" className="flex items-center gap-2.5 h-[44px] px-4 rounded-full bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] transition-all">
-          <div className="w-7 h-7 rounded-full bg-[#FF453A] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            SS
-          </div>
-          <div className="hidden md:flex flex-col text-left">
-            <span className="text-xs font-bold text-white leading-tight">Soumya S.</span>
-            <span className="text-[10px] text-[#8A8A8A] font-mono">CSE · Sem 6</span>
-          </div>
-        </Link>
+        <div className="relative">
+          <button
+            onClick={() => setShowProfile((v) => !v)}
+            className="flex items-center gap-2.5 h-[44px] px-4 rounded-full bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] transition-all cursor-pointer"
+          >
+            <div className="w-7 h-7 rounded-full bg-[#FF453A] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+              {initials}
+            </div>
+            <div className="hidden md:flex flex-col text-left min-w-0">
+              <span className="text-xs font-bold text-white leading-tight truncate max-w-[120px]">{fullName}</span>
+              <span className="text-[10px] text-[#8A8A8A] font-mono">{user ? 'Signed in' : 'Guest — sign in to sync'}</span>
+            </div>
+          </button>
+
+          {showProfile && (
+            <div className="absolute right-0 mt-3 w-56 bg-[#111214] border border-white/15 rounded-2xl shadow-2xl p-1.5 z-50 backdrop-blur-2xl">
+              {user ? (
+                <>
+                  <div className="px-3 py-2 border-b border-white/10 mb-1">
+                    <p className="text-xs font-bold text-white truncate">{fullName}</p>
+                    <p className="text-[10px] text-[#8A8A8A] font-mono truncate">{user.email}</p>
+                  </div>
+                  <Link
+                    href="/workspace/profile"
+                    onClick={() => setShowProfile(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-[#D1D5DB] hover:text-white hover:bg-white/[0.06] transition-colors"
+                  >
+                    <UserRound size={14} /> Profile
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors cursor-pointer"
+                  >
+                    <LogOut size={14} /> Sign out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/[0.06] transition-colors"
+                >
+                  <UserRound size={14} /> Sign in
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
 
       </div>
     </header>

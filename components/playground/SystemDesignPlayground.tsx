@@ -40,17 +40,24 @@ interface SavedBoard {
 // In-app rename dialog — replaces window.prompt()'s native "site says" box.
 // Nodes/edges live deep inside <ReactFlow>'s render tree, so they ask for a
 // rename via this context rather than owning any dialog state themselves.
-interface RenameRequest { kind: 'node' | 'edge'; id: string; value: string; title: string }
+interface RenameRequest { kind: 'node' | 'edge'; id: string; value: string; title: string; connType?: ConnType }
 const RenameContext = createContext<(req: RenameRequest) => void>(() => {})
 
 function RenameModal({ req, onCancel, onSubmit }: {
   req: RenameRequest | null
   onCancel: () => void
-  onSubmit: (value: string) => void
+  onSubmit: (value: string, connType?: ConnType) => void
 }) {
   const [value, setValue] = useState('')
-  useEffect(() => { if (req) setValue(req.value) }, [req])
+  const [connType, setConnType] = useState<ConnType>(DEFAULT_CONN_TYPE)
+  useEffect(() => {
+    if (req) {
+      setValue(req.value)
+      setConnType(req.connType || DEFAULT_CONN_TYPE)
+    }
+  }, [req])
   if (!req) return null
+  const isEdge = req.kind === 'edge'
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -58,8 +65,8 @@ function RenameModal({ req, onCancel, onSubmit }: {
     >
       <form
         onMouseDown={(e) => e.stopPropagation()}
-        onSubmit={(e) => { e.preventDefault(); onSubmit(value) }}
-        className="glass w-full max-w-[360px] rounded-2xl p-5"
+        onSubmit={(e) => { e.preventDefault(); onSubmit(value, isEdge ? connType : undefined) }}
+        className="glass w-full max-w-[380px] rounded-2xl p-5"
       >
         <h3 className="text-[13px] font-bold text-white mb-3">{req.title}</h3>
         <input
@@ -71,6 +78,35 @@ function RenameModal({ req, onCancel, onSubmit }: {
           placeholder="Enter a name…"
           className="glass-well w-full px-3 py-2 rounded-lg text-[13px] text-white outline-none"
         />
+        {isEdge && (
+          <div className="mt-4">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#6B7280] mb-2">Connection type</div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {CONNECTION_TYPES.map((t) => {
+                const active = connType === t.id
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setConnType(t.id)}
+                    title={t.hint}
+                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors cursor-pointer"
+                    style={{
+                      backgroundColor: active ? `${t.color}1F` : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${active ? `${t.color}80` : 'rgba(255,255,255,0.08)'}`,
+                    }}
+                  >
+                    <span className="w-6 h-0 shrink-0 border-t-[2px]" style={{ borderColor: t.color, borderStyle: t.dash ? 'dashed' : 'solid' }} />
+                    <span className="min-w-0">
+                      <span className="block text-[11px] font-semibold" style={{ color: active ? t.color : '#D1D5DB' }}>{t.label}</span>
+                      <span className="block text-[9px] text-[#6B7280] truncate">{t.hint}</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
         <div className="flex items-center justify-end gap-2 mt-4">
           <button
             type="button"
@@ -163,6 +199,20 @@ const EDGE_SHAPES: { id: EdgeShape; label: string }[] = [
   { id: 'straight', label: 'Straight' },
 ]
 
+// The kind of call a connection represents — drives its colour/dash so a
+// design reads correctly at a glance (solid sync vs dashed async, etc.).
+type ConnType = 'sync' | 'async' | 'data' | 'stream'
+const CONNECTION_TYPES: { id: ConnType; label: string; hint: string; color: string; dash?: string }[] = [
+  { id: 'sync', label: 'Sync', hint: 'Request/response — REST, RPC, gRPC', color: '#8B5CF6' },
+  { id: 'async', label: 'Async', hint: 'Fire-and-forget — queue, event, pub/sub', color: '#F59E0B', dash: '7 4' },
+  { id: 'data', label: 'Data', hint: 'Read/write — database, cache', color: '#10B981', dash: '2 3' },
+  { id: 'stream', label: 'Stream', hint: 'Long-lived — WebSocket, SSE, gRPC stream', color: '#EC4899', dash: '1 3 5 3' },
+]
+const CONNECTION_TYPE_MAP: Record<string, (typeof CONNECTION_TYPES)[number]> = Object.fromEntries(
+  CONNECTION_TYPES.map((t) => [t.id, t]),
+)
+const DEFAULT_CONN_TYPE: ConnType = 'sync'
+
 const edgeBase = {
   type: 'sd',
   animated: true,
@@ -172,6 +222,18 @@ const edgeBase = {
   labelBgStyle: { fill: '#0D0D10', stroke: 'rgba(255,255,255,0.08)' },
   labelBgPadding: [4, 3] as [number, number],
   labelBgBorderRadius: 4,
+}
+
+// Backfills a loaded board's edges to the current shape — legacy boards
+// stored the shape directly on `type`; newer ones carry it in data.shape.
+// Shared by the localStorage load and the account-sync fetch.
+function normalizeEdges(raw: Edge[]): Edge[] {
+  return raw.map((e) => {
+    const prevData = e.data as { shape?: EdgeShape; connType?: ConnType } | undefined
+    const shape = prevData?.shape || (EDGE_SHAPES.some((s) => s.id === e.type) ? (e.type as EdgeShape) : 'default')
+    const connType = prevData?.connType || DEFAULT_CONN_TYPE
+    return { ...edgeBase, ...e, type: 'sd', data: { ...e.data, shape, connType } }
+  })
 }
 
 // Custom edge — draws the chosen shape (curved/orthogonal/straight, read
@@ -184,6 +246,7 @@ function SdEdge({
   data, selected,
 }: EdgeProps) {
   const shape = (data?.shape as EdgeShape) || 'default'
+  const connType = (data?.connType as ConnType) || DEFAULT_CONN_TYPE
   const [path, labelX, labelY] =
     shape === 'smoothstep'
       ? getSmoothStepPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
@@ -195,8 +258,8 @@ function SdEdge({
 
   const renameEdge = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    requestRename({ kind: 'edge', id, value: (label as string) || '', title: 'Edge label (protocol, sync/async, etc.)' })
-  }, [id, label, requestRename])
+    requestRename({ kind: 'edge', id, value: (label as string) || '', title: 'Edit connection', connType })
+  }, [id, label, connType, requestRename])
 
   const deleteEdge = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -291,24 +354,42 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
       position: { x: 60, y: 180 },
       data: { label: 'Web Client', kind: 'client' },
     }])
-    setEdges((board?.edges ?? []).map((e) => {
-      // legacy boards stored the shape directly on `type`; carry it into data.shape
-      const shape = ((e.data as { shape?: EdgeShape } | undefined)?.shape) || (EDGE_SHAPES.some((s) => s.id === e.type) ? (e.type as EdgeShape) : 'default')
-      return { ...edgeBase, ...e, type: 'sd', data: { ...e.data, shape } }
-    }))
+    setEdges(normalizeEdges(board?.edges ?? []))
     setNotes(board?.notes ?? '')
     setChecked(new Set(board?.checked ?? []))
     setPanel('requirements')
     onAttempt(prompt.id)
+
+    // If the visitor is signed in, the account copy is the cross-device
+    // source of truth — fetch it and override the localStorage snapshot
+    // above once it arrives. Silently does nothing when signed out.
+    let cancelled = false
+    fetch(`/api/boards/${prompt.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { board: SavedBoard | null } | null) => {
+        if (cancelled || !data?.board) return
+        setNodes(data.board.nodes ?? [])
+        setEdges(normalizeEdges(data.board.edges ?? []))
+        setNotes(data.board.notes ?? '')
+        setChecked(new Set(data.board.checked ?? []))
+      })
+      .catch(() => { /* offline / signed out — localStorage snapshot stands */ })
+    return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prompt.id])
 
-  // ---- autosave ----
+  // ---- autosave (localStorage always; account sync when signed in) ----
   useEffect(() => {
     const t = setTimeout(() => {
+      const snapshot = { nodes, edges, notes, checked: [...checked] }
       try {
-        window.localStorage.setItem(STATE_KEY(prompt.id), JSON.stringify({ nodes, edges, notes, checked: [...checked] }))
+        window.localStorage.setItem(STATE_KEY(prompt.id), JSON.stringify(snapshot))
       } catch { /* quota */ }
+      fetch(`/api/boards/${prompt.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(snapshot),
+      }).catch(() => { /* offline / signed out — localStorage still has it */ })
     }, 700)
     return () => clearTimeout(t)
   }, [nodes, edges, notes, checked, prompt.id])
@@ -328,7 +409,7 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
   }, [setNodes])
 
   const onConnect = useCallback(
-    (c: Connection) => setEdges((es) => addEdge({ ...edgeBase, data: { shape: edgeShape }, ...c }, es)),
+    (c: Connection) => setEdges((es) => addEdge({ ...edgeBase, data: { shape: edgeShape, connType: DEFAULT_CONN_TYPE }, ...c }, es)),
     [setEdges, edgeShape],
   )
 
@@ -344,19 +425,33 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
 
   // ---- rename dialog (in-app, replaces window.prompt) ----
   const [renameReq, setRenameReq] = useState<RenameRequest | null>(null)
-  const applyRename = useCallback((value: string) => {
+  const applyRename = useCallback((value: string, connType?: ConnType) => {
     if (!renameReq) return
     const trimmed = value.trim()
     if (renameReq.kind === 'node') {
       if (trimmed) setNodes((ns) => ns.map((n) => (n.id === renameReq.id ? { ...n, data: { ...n.data, label: trimmed } } : n)))
     } else {
-      setEdges((es) => es.map((e) => (e.id === renameReq.id ? { ...e, label: trimmed || undefined } : e)))
+      const resolved = connType || DEFAULT_CONN_TYPE
+      const ct = CONNECTION_TYPE_MAP[resolved] || CONNECTION_TYPE_MAP[DEFAULT_CONN_TYPE]
+      setEdges((es) => es.map((e) => (e.id === renameReq.id ? {
+        ...e,
+        label: trimmed || undefined,
+        data: { ...e.data, connType: resolved },
+        style: { ...e.style, stroke: ct.color, strokeDasharray: ct.dash },
+        markerEnd: { type: MarkerType.ArrowClosed, color: ct.color },
+      } : e)))
     }
     setRenameReq(null)
   }, [renameReq, setNodes, setEdges])
 
   const onEdgeDoubleClick = useCallback((_: React.MouseEvent, edge: Edge) => {
-    setRenameReq({ kind: 'edge', id: edge.id, value: (edge.label as string) || '', title: 'Edge label (protocol, sync/async, etc.)' })
+    setRenameReq({
+      kind: 'edge',
+      id: edge.id,
+      value: (edge.label as string) || '',
+      title: 'Edit connection',
+      connType: (edge.data as { connType?: ConnType } | undefined)?.connType,
+    })
   }, [])
 
   const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
@@ -511,7 +606,15 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
           <span className="text-[10px] font-mono text-[#8A8A8A] hidden lg:inline">
             coverage <span className="text-[#8B5CF6] font-bold">{coverage}%</span> · {nodes.length} nodes · {edges.length} edges
           </span>
-          <div className="flex items-center rounded-lg bg-white/[0.03] border border-white/[0.08] p-0.5" title="Edge style">
+          <div className="hidden xl:flex items-center gap-2 px-2 rounded-lg bg-white/[0.03] border border-white/[0.08] h-[26px]" title="Connection type legend — set per connection via its Rename action">
+            {CONNECTION_TYPES.map((t) => (
+              <span key={t.id} className="flex items-center gap-1 text-[9px] font-mono text-[#8A8A8A]">
+                <span className="w-3 h-0 border-t-[2px]" style={{ borderColor: t.color, borderStyle: t.dash ? 'dashed' : 'solid' }} />
+                {t.label}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center rounded-lg bg-white/[0.03] border border-white/[0.08] p-0.5" title="Edge shape">
             {EDGE_SHAPES.map((s) => (
               <button
                 key={s.id}
@@ -701,7 +804,7 @@ function Canvas({ prompt, onBack, onAttempt, onPick, attempted }: {
             fitView
             minZoom={0.2}
             proOptions={{ hideAttribution: true }}
-            defaultEdgeOptions={{ ...edgeBase, data: { shape: edgeShape } }}
+            defaultEdgeOptions={{ ...edgeBase, data: { shape: edgeShape, connType: DEFAULT_CONN_TYPE } }}
           >
             <Background id="grid" variant={BackgroundVariant.Lines} gap={96} lineWidth={1} color="#18181B" />
             <Background id="dots" variant={BackgroundVariant.Dots} gap={16} size={1.4} color="#3A3A42" />

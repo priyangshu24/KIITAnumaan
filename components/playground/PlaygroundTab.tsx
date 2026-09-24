@@ -519,90 +519,123 @@ export default function PlaygroundTab() {
     }
   }, [activePracticeSession, handlePracticeAgain])
 
+  // Real, sandboxed execution for every non-JS language, via /api/judge
+  // (which proxies to Piston). JS still runs natively in-browser — no round
+  // trip needed and it's already a real interpreter.
+  const runViaJudge = useCallback(async (source: string, stdin: string) => {
+    const res = await fetch('/api/judge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language, source, stdin, problemId: selectedProblem.id }),
+    })
+    return (await res.json()) as { status?: string; stdout?: string; stderr?: string; timeMs?: number; compileError?: string; error?: string }
+  }, [language, selectedProblem.id])
+
   // Run and Submit evaluation with practice result tracking
-  const handleRun = useCallback(() => {
+  const handleRun = useCallback(async () => {
     setIsRunning(true)
     setActiveBottomTab('output')
     setOutput('Compiling and running...')
-    setTimeout(() => {
-      let isAllPassed = false
-      if (language === 'javascript') {
-        const result = executeJavaScript(code, customInput)
-        setOutput(result.error ? `${result.output}\n\nRuntime Error:\n${result.error}` : result.output)
-        setExecutionTime(`${result.time.toFixed(1)}ms`)
-        const results = selectedProblem.testCases.filter(tc => !tc.isHidden).map(tc => {
-          const tcResult = executeJavaScript(code, tc.input)
-          const yourOutput = tcResult.output.trim()
-          const passed = yourOutput === tc.expectedOutput.trim()
-          return { id: tc.id, passed, yourOutput, time: `${tcResult.time.toFixed(0)}ms`, memory: `${(Math.random() * 5 + 5).toFixed(1)} MB` }
-        })
-        setTestResults(results)
-        isAllPassed = results.every(r => r.passed)
-        if (isAllPassed) {
-          setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
-          recordSolve(selectedProblem.id, language)
-        }
-      } else {
-        const mockTime = Math.floor(Math.random() * 80 + 10)
-        const mockMemory = (Math.random() * 10 + 8).toFixed(1)
-        setExecutionTime(`${mockTime}ms`)
-        const hasStarter = code.includes('pass') || code.includes('return 0;') || code.includes('return {}')
-        if (hasStarter) {
-          setOutput(`Execution finished.\n\nWarning: Solution body appears unchanged from starter code.\nPlease implement your solution before running.`)
-          setTestResults(selectedProblem.testCases.filter(tc => !tc.isHidden).map(tc => ({ id: tc.id, passed: false, yourOutput: '(no output)', time: `${mockTime}ms`, memory: `${mockMemory} MB` })))
-          isAllPassed = false
+
+    let isAllPassed = false
+
+    if (language === 'javascript') {
+      const result = executeJavaScript(code, customInput)
+      setOutput(result.error ? `${result.output}\n\nRuntime Error:\n${result.error}` : result.output)
+      setExecutionTime(`${result.time.toFixed(1)}ms`)
+      const results = selectedProblem.testCases.filter(tc => !tc.isHidden).map(tc => {
+        const tcResult = executeJavaScript(code, tc.input)
+        const yourOutput = tcResult.output.trim()
+        const passed = yourOutput === tc.expectedOutput.trim()
+        return { id: tc.id, passed, yourOutput, time: `${tcResult.time.toFixed(0)}ms`, memory: '—' }
+      })
+      setTestResults(results)
+      isAllPassed = results.every(r => r.passed)
+      if (isAllPassed) {
+        setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
+        recordSolve(selectedProblem.id, language)
+      }
+    } else {
+      try {
+        const mainRun = await runViaJudge(code, customInput)
+        if (mainRun.error) {
+          setOutput(`Error: ${mainRun.error}`)
+          setExecutionTime('—')
+          setTestResults([])
         } else {
-          setOutput(`Execution successful.\nTime: ${mockTime}ms | Memory: ${mockMemory} MB\n\nNote: Full compilation for ${languageConfig[language].label} requires a backend runtime.\nJavaScript runs natively in-browser with real output.`)
-          const results = selectedProblem.testCases.filter(tc => !tc.isHidden).map(tc => ({ id: tc.id, passed: Math.random() > 0.3, yourOutput: tc.expectedOutput, time: `${mockTime}ms`, memory: `${mockMemory} MB` }))
-          setTestResults(results)
-          isAllPassed = results.every(r => r.passed)
+          setExecutionTime(`${mainRun.timeMs ?? 0}ms`)
+          setOutput(
+            mainRun.compileError
+              ? `Compile error:\n${mainRun.compileError}`
+              : (mainRun.stdout || '(no output)') + (mainRun.stderr ? `\n\nStderr:\n${mainRun.stderr}` : ''),
+          )
+
+          const visible = selectedProblem.testCases.filter(tc => !tc.isHidden)
+          const tcRuns = await Promise.all(visible.map(async (tc) => {
+            const r = await runViaJudge(code, tc.input)
+            const yourOutput = (r.stdout || '').trim()
+            const failMsg = r.error || r.compileError
+            return {
+              id: tc.id,
+              passed: !failMsg && yourOutput === tc.expectedOutput.trim(),
+              yourOutput: failMsg || yourOutput || '(no output)',
+              time: `${r.timeMs ?? 0}ms`,
+              memory: '—',
+            }
+          }))
+          setTestResults(tcRuns)
+          isAllPassed = tcRuns.length > 0 && tcRuns.every(r => r.passed)
           if (isAllPassed) {
             setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
             recordSolve(selectedProblem.id, language)
           }
         }
+      } catch {
+        setOutput('Network error reaching the execution service. Check your connection and try again.')
+        setExecutionTime('—')
+        setTestResults([])
       }
+    }
 
-      // Record result in practice session if active
-      if (companyWorkspaceView === 'practice' && activePracticeSession) {
-        const curResult = activePracticeSession.results[selectedProblem.id] || {
-          problemId: selectedProblem.id,
-          problemTitle: selectedProblem.title,
-          difficulty: selectedProblem.difficulty,
-          attempted: true,
-          solved: false,
-          failed: false,
-          timeSpentSeconds: 0,
-          hintsUsed: false,
-          debugUsed: false,
-          aiReviewUsed: false,
-        }
-        const updatedResult = {
-          ...curResult,
-          attempted: true,
-          solved: isAllPassed ? true : curResult.solved,
-          failed: isAllPassed ? false : true,
-        }
-        const updatedSession = {
-          ...activePracticeSession,
-          results: {
-            ...activePracticeSession.results,
-            [selectedProblem.id]: updatedResult,
-          },
-        }
-        setActivePracticeSession(updatedSession)
-        writeLS('kiit:pg:practice_session', JSON.stringify(updatedSession))
-
-        if (isAllPassed) {
-          setPracticeBanner({ type: 'success', text: '✓ All test cases passed! Ready for next question.' })
-        } else {
-          setPracticeBanner({ type: 'error', text: '✕ Needs Improvement: Review failed cases or request AI hint.' })
-        }
+    // Record result in practice session if active
+    if (companyWorkspaceView === 'practice' && activePracticeSession) {
+      const curResult = activePracticeSession.results[selectedProblem.id] || {
+        problemId: selectedProblem.id,
+        problemTitle: selectedProblem.title,
+        difficulty: selectedProblem.difficulty,
+        attempted: true,
+        solved: false,
+        failed: false,
+        timeSpentSeconds: 0,
+        hintsUsed: false,
+        debugUsed: false,
+        aiReviewUsed: false,
       }
+      const updatedResult = {
+        ...curResult,
+        attempted: true,
+        solved: isAllPassed ? true : curResult.solved,
+        failed: isAllPassed ? false : true,
+      }
+      const updatedSession = {
+        ...activePracticeSession,
+        results: {
+          ...activePracticeSession.results,
+          [selectedProblem.id]: updatedResult,
+        },
+      }
+      setActivePracticeSession(updatedSession)
+      writeLS('kiit:pg:practice_session', JSON.stringify(updatedSession))
 
-      setIsRunning(false)
-    }, 600)
-  }, [code, language, customInput, selectedProblem, companyWorkspaceView, activePracticeSession])
+      if (isAllPassed) {
+        setPracticeBanner({ type: 'success', text: '✓ All test cases passed! Ready for next question.' })
+      } else {
+        setPracticeBanner({ type: 'error', text: '✕ Needs Improvement: Review failed cases or request AI hint.' })
+      }
+    }
+
+    setIsRunning(false)
+  }, [code, language, customInput, selectedProblem, companyWorkspaceView, activePracticeSession, runViaJudge])
 
   const handleAIAnalyze = useCallback(() => {
     setShowAI(true)

@@ -12,10 +12,13 @@ import {
   BookOpen,
   Bot,
   FileText,
+  Loader2,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function AuthPage() {
   const router = useRouter()
+  const [supabase] = useState(() => createClient())
   const [mode, setMode] = useState<'login' | 'signup'>('login')
 
   // Form states
@@ -26,10 +29,65 @@ export default function AuthPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+
+    if (mode === 'signup' && password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+
+    setLoading(true)
+    const { error: authError } =
+      mode === 'login'
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { full_name: fullName },
+              emailRedirectTo: `${window.location.origin}/auth/callback`,
+            },
+          })
+    setLoading(false)
+
+    if (authError) {
+      setError(authError.message)
+      return
+    }
+    if (mode === 'signup') {
+      setError(null)
+      alert('Check your inbox to confirm your email, then log in.')
+      setMode('login')
+      return
+    }
     router.push('/workspace')
+    router.refresh()
+  }
+
+  const handleGoogle = async () => {
+    setError(null)
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    })
+    if (authError) setError(authError.message)
+  }
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Enter your email above first, then click "Forgot Password?" again.')
+      return
+    }
+    const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/workspace/settings`,
+    })
+    setError(authError ? authError.message : null)
+    if (!authError) alert('Password reset link sent to your email.')
   }
 
   return (
@@ -110,7 +168,7 @@ export default function AuthPage() {
               {/* Google OAuth Button */}
               <button
                 type="button"
-                onClick={() => router.push('/workspace')}
+                onClick={handleGoogle}
                 className="w-full h-[44px] bg-[#101014] border border-white/10 hover:border-[#ff3b30]/50 rounded-xl text-xs text-white font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm mb-4"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -194,20 +252,27 @@ export default function AuthPage() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => alert('Password reset link sent to your email')}
+                    onClick={handleForgotPassword}
                     className="text-[#ff3b30] text-[11px] font-semibold hover:underline cursor-pointer"
                   >
                     Forgot Password?
                   </button>
                 </div>
 
+                {error && (
+                  <p className="text-[11px] text-[#FF453A] bg-[#FF453A]/10 border border-[#FF453A]/25 rounded-lg px-3 py-2">{error}</p>
+                )}
+
                 {/* Primary Submit Button */}
                 <button
                   type="submit"
-                  className="w-full h-[48px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[14px] py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-2"
+                  disabled={loading}
+                  className="w-full h-[48px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[14px] py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-2 disabled:opacity-60 disabled:pointer-events-none"
                 >
-                  <span>Login</span>
-                  <ArrowRight className="w-4 h-4" />
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>
+                    <span>Login</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>}
                 </button>
               </form>
 
@@ -314,13 +379,20 @@ export default function AuthPage() {
                   </div>
                 </div>
 
+                {error && (
+                  <p className="text-[11px] text-[#FF453A] bg-[#FF453A]/10 border border-[#FF453A]/25 rounded-lg px-3 py-2">{error}</p>
+                )}
+
                 {/* Primary Submit Button */}
                 <button
                   type="submit"
-                  className="w-full h-[48px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[14px] py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-2"
+                  disabled={loading}
+                  className="w-full h-[48px] bg-gradient-to-r from-[#ff3b30] to-[#e03126] hover:from-[#e03126] hover:to-[#c40812] text-white rounded-[14px] py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-lg shadow-[#ff3b30]/25 mt-2 disabled:opacity-60 disabled:pointer-events-none"
                 >
-                  <span>Create Account</span>
-                  <ArrowRight className="w-4 h-4" />
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>
+                    <span>Create Account</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>}
                 </button>
               </form>
 
