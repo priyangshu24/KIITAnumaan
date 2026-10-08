@@ -16,6 +16,11 @@ import {
 } from '@/lib/playground-stats'
 import { analyzeProfile, type TopicMastery } from '@/lib/playground-profile'
 import TechnicalProfile from '@/components/playground/TechnicalProfile'
+import { createClient } from '@/lib/supabase/client'
+import {
+  fetchUserDashboardStats,
+  buildHeatmapFromActivity,
+} from '@/lib/services'
 
 const SOLVE = '/workspace/playground/solve'
 
@@ -166,17 +171,39 @@ export default function PlaygroundDashboard() {
   }, [])
 
   useEffect(() => {
-    setStats(computeStats())
-    setLog(readSolvedLog())
-    setSession(readPracticeSession())
-    setTopics(analyzeProfile().topics)
-    setSolvedIdList(readSolvedIds())
-    setBookmarkIds(readBookmarkIds())
-    setMounted(true)
-  }, [tick])
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data?.user
+      if (user) {
+        const dbStats = await fetchUserDashboardStats(user.id)
+        setStats(dbStats.stats)
+        setLog(dbStats.solvedLog)
+        setSolvedIdList(dbStats.solvedLog.map((s) => s.id))
+        setHeatmap(buildHeatmapFromActivity(dbStats.activity, year))
+      } else {
+        setStats(computeStats())
+        setLog(readSolvedLog())
+        setSolvedIdList(readSolvedIds())
+        setHeatmap(buildHeatmap(year))
+      }
+      setSession(readPracticeSession())
+      setTopics(analyzeProfile().topics)
+      setBookmarkIds(readBookmarkIds())
+      setMounted(true)
+    })
+  }, [tick, year])
 
   useEffect(() => {
-    setHeatmap(buildHeatmap(year))
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data?.user
+      if (user) {
+        const dbStats = await fetchUserDashboardStats(user.id)
+        setHeatmap(buildHeatmapFromActivity(dbStats.activity, year))
+      } else {
+        setHeatmap(buildHeatmap(year))
+      }
+    })
   }, [year, tick])
 
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })

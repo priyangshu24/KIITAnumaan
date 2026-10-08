@@ -1,95 +1,344 @@
 // ---------------------------------------------------------------------------
-// Hand-written to match supabase/schema.sql. Once the project is provisioned,
-// replace this file with the real generated types:
-//
-//   npx supabase gen types typescript --project-id <ref> > lib/supabase/types.ts
-//
+// Supabase Database TypeScript definitions matching supabase/schema.sql
 // ---------------------------------------------------------------------------
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export interface Database {
   public: {
     Tables: {
       profiles: {
-        Row: { id: string; full_name: string | null; avatar_url: string | null; is_admin: boolean; created_at: string }
-        Insert: { id: string; full_name?: string | null; avatar_url?: string | null; is_admin?: boolean }
-        Update: { full_name?: string | null; avatar_url?: string | null }
-        Relationships: []
-      }
-      boards: {
         Row: {
-          id: string; user_id: string; prompt_id: string
-          nodes: unknown; edges: unknown; notes: string; checked: string[]
+          id: string
+          user_id: string | null
+          full_name: string | null
+          username: string | null
+          avatar_url: string | null
+          college: string | null
+          course: string | null
+          year: string | null
+          is_admin: boolean
+          created_at: string
           updated_at: string
         }
         Insert: {
-          id?: string; user_id: string; prompt_id: string
-          nodes?: unknown; edges?: unknown; notes?: string; checked?: string[]
+          id: string
+          user_id?: string | null
+          full_name?: string | null
+          username?: string | null
+          avatar_url?: string | null
+          college?: string | null
+          course?: string | null
+          year?: string | null
+          is_admin?: boolean
+          created_at?: string
+          updated_at?: string
         }
-        Update: { nodes?: unknown; edges?: unknown; notes?: string; checked?: string[] }
+        Update: {
+          id?: string
+          user_id?: string | null
+          full_name?: string | null
+          username?: string | null
+          avatar_url?: string | null
+          college?: string | null
+          course?: string | null
+          year?: string | null
+          is_admin?: boolean
+          updated_at?: string
+        }
         Relationships: []
       }
-      bookmarks: {
-        Row: { user_id: string; problem_id: string; created_at: string }
-        Insert: { user_id: string; problem_id: string }
-        Update: Record<string, never>
+      topics: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          category: string | null
+          order_index: number
+          created_at: string
+        }
+        Insert: {
+          id: string
+          name: string
+          slug: string
+          description?: string | null
+          category?: string | null
+          order_index?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          category?: string | null
+          order_index?: number
+        }
         Relationships: []
       }
-      drill_progress: {
-        Row: { user_id: string; track_slug: string; question_id: string; known: boolean; updated_at: string }
-        Insert: { user_id: string; track_slug: string; question_id: string; known?: boolean }
-        Update: { known?: boolean }
-        Relationships: []
-      }
-      kv_store: {
-        Row: { user_id: string; key: string; value: unknown; updated_at: string }
-        Insert: { user_id: string; key: string; value: unknown }
-        Update: { value?: unknown }
+      questions: {
+        Row: {
+          id: string
+          topic_id: string | null
+          title: string
+          slug: string
+          difficulty: 'Easy' | 'Medium' | 'Hard'
+          description: string
+          examples: Json
+          constraints: string[]
+          starter_code: Json
+          solution: string | null
+          test_cases: Json
+          company: string[]
+          tags: string[]
+          order_index: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          topic_id?: string | null
+          title: string
+          slug: string
+          difficulty: 'Easy' | 'Medium' | 'Hard'
+          description: string
+          examples?: Json
+          constraints?: string[]
+          starter_code?: Json
+          solution?: string | null
+          test_cases?: Json
+          company?: string[]
+          tags?: string[]
+          order_index?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          topic_id?: string | null
+          title?: string
+          slug?: string
+          difficulty?: 'Easy' | 'Medium' | 'Hard'
+          description?: string
+          examples?: Json
+          constraints?: string[]
+          starter_code?: Json
+          solution?: string | null
+          test_cases?: Json
+          company?: string[]
+          tags?: string[]
+          order_index?: number
+          updated_at?: string
+        }
         Relationships: []
       }
       submissions: {
         Row: {
-          id: string; user_id: string | null; problem_id: string | null
-          language: string; source_code: string; stdin: string | null
-          status: string; stdout: string | null; stderr: string | null
-          time_ms: number | null; memory_kb: number | null; created_at: string
+          id: string
+          user_id: string | null
+          question_id: string | null
+          code: string
+          language: string
+          status: string
+          runtime: number | null
+          memory: number | null
+          created_at: string
         }
         Insert: {
-          id?: string; user_id?: string | null; problem_id?: string | null
-          language: string; source_code: string; stdin?: string | null
-          status: string; stdout?: string | null; stderr?: string | null
-          time_ms?: number | null; memory_kb?: number | null
+          id?: string
+          user_id?: string | null
+          question_id?: string | null
+          code: string
+          language: string
+          status: string
+          runtime?: number | null
+          memory?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          question_id?: string | null
+          code?: string
+          language?: string
+          status?: string
+          runtime?: number | null
+          memory?: number | null
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          id: string
+          user_id: string
+          question_id: string
+          status: 'attempted' | 'solved'
+          attempts: number
+          best_runtime: number | null
+          best_memory: number | null
+          solved_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          question_id: string
+          status?: 'attempted' | 'solved'
+          attempts?: number
+          best_runtime?: number | null
+          best_memory?: number | null
+          solved_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          question_id?: string
+          status?: 'attempted' | 'solved'
+          attempts?: number
+          best_runtime?: number | null
+          best_memory?: number | null
+          solved_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      streaks: {
+        Row: {
+          id: string
+          user_id: string
+          current_streak: number
+          longest_streak: number
+          last_active_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          current_streak?: number
+          longest_streak?: number
+          last_active_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          current_streak?: number
+          longest_streak?: number
+          last_active_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      activity: {
+        Row: {
+          id: string
+          user_id: string
+          activity_date: string
+          problems_solved: number
+          submissions_count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          activity_date?: string
+          problems_solved?: number
+          submissions_count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          activity_date?: string
+          problems_solved?: number
+          submissions_count?: number
+        }
+        Relationships: []
+      }
+      boards: {
+        Row: {
+          id: string
+          user_id: string
+          prompt_id: string
+          nodes: Json
+          edges: Json
+          notes: string
+          checked: string[]
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          prompt_id: string
+          nodes?: Json
+          edges?: Json
+          notes?: string
+          checked?: string[]
+        }
+        Update: {
+          nodes?: Json
+          edges?: Json
+          notes?: string
+          checked?: string[]
+        }
+        Relationships: []
+      }
+      bookmarks: {
+        Row: {
+          user_id: string
+          problem_id: string
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          problem_id: string
+          created_at?: string
         }
         Update: Record<string, never>
         Relationships: []
       }
-      tracks: {
+      drill_progress: {
         Row: {
-          slug: string; title: string; short: string; icon: string; accent: string
-          tagline: string; description: string; tags: string[]; practice_href: string | null
+          user_id: string
+          track_slug: string
+          question_id: string
+          known: boolean
+          updated_at: string
         }
-        Insert: Partial<Database['public']['Tables']['tracks']['Row']> & { slug: string; title: string; short: string; icon: string; accent: string; tagline: string; description: string }
-        Update: Partial<Database['public']['Tables']['tracks']['Row']>
+        Insert: {
+          user_id: string
+          track_slug: string
+          question_id: string
+          known?: boolean
+        }
+        Update: {
+          known?: boolean
+        }
         Relationships: []
       }
-      topics: {
-        Row: { id: string; track_slug: string; title: string; icon: string; tagline: string; definition: string; reading: unknown; sort_order: number }
-        Insert: Partial<Database['public']['Tables']['topics']['Row']> & { id: string; track_slug: string; title: string; icon: string; tagline: string; definition: string }
-        Update: Partial<Database['public']['Tables']['topics']['Row']>
-        Relationships: []
-      }
-      questions: {
-        Row: { id: string; topic_id: string; level: string; q: string; outline: string[]; follow_up: string | null; source: unknown }
-        Insert: Partial<Database['public']['Tables']['questions']['Row']> & { id: string; topic_id: string; level: string; q: string }
-        Update: Partial<Database['public']['Tables']['questions']['Row']>
-        Relationships: []
-      }
-      problems: {
+      kv_store: {
         Row: {
-          id: string; title: string; difficulty: string; topics: string[]; patterns: string[]; companies: string[]
-          description: string; examples: unknown; constraints: string[]; test_cases: unknown; starter_code: unknown
+          user_id: string
+          key: string
+          value: Json
+          updated_at: string
         }
-        Insert: Partial<Database['public']['Tables']['problems']['Row']> & { id: string; title: string; difficulty: string; description: string }
-        Update: Partial<Database['public']['Tables']['problems']['Row']>
+        Insert: {
+          user_id: string
+          key: string
+          value: Json
+        }
+        Update: {
+          value?: Json
+        }
         Relationships: []
       }
     }

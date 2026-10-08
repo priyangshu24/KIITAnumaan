@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import {
   Mail,
   MapPin,
@@ -18,6 +19,9 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { fetchUserProfile, fetchUserDashboardStats } from '@/lib/services'
+import type { User } from '@supabase/supabase-js'
 
 const semesterHistory = [
   { sem: 'Sem 1', sgpa: 8.4 },
@@ -29,12 +33,6 @@ const semesterHistory = [
 
 const skills = ['React', 'Next.js', 'TypeScript', 'Node.js', 'Python', 'C++', 'SQL', 'Docker', 'System Design']
 
-const achievements = [
-  { title: "Dean's List", detail: 'Top 5% of CSE Batch 2025-26', icon: Award },
-  { title: 'HackX Winner', detail: 'KIIT HackX 2025 — 1st Place', icon: Trophy },
-  { title: '12-Day Streak', detail: 'Daily notes & revision streak', icon: Flame },
-]
-
 const quickActions = [
   { name: 'Resume Builder', href: '/workspace/career', icon: FileCheck },
   { name: 'Section Swap', href: '/workspace/section-swap', icon: ArrowLeftRight },
@@ -42,11 +40,57 @@ const quickActions = [
 ]
 
 export default function StudentProfilePage() {
+  const [supabase] = useState(() => createClient())
+  const [user, setUser] = useState<User | null>(null)
+  const [name, setName] = useState('Soumya Samantray')
+  const [email, setEmail] = useState('soumya.samantray@kiit.ac.in')
+  const [roll, setRoll] = useState('22051892')
+  const [course, setCourse] = useState('B.Tech Computer Science & Engg')
+  const [streakDays, setStreakDays] = useState(12)
+  const [solvedCount, setSolvedCount] = useState(0)
+
   const cgpa = 8.92
   const currentSgpa = 9.1
   const backlogs = 0
   const section = 'CSE-14'
   const placementReadiness = 82
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const u = data?.user
+      if (u) {
+        setUser(u)
+        if (u.email) setEmail(u.email)
+        const profile = await fetchUserProfile(u.id)
+        if (profile) {
+          if (profile.full_name) setName(profile.full_name)
+          if (profile.username) setRoll(profile.username)
+          if (profile.course) setCourse(profile.course)
+        } else {
+          const metaName = (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string)
+          if (metaName) setName(metaName)
+        }
+        const dbStats = await fetchUserDashboardStats(u.id)
+        if (dbStats.stats.currentStreak > 0) {
+          setStreakDays(dbStats.stats.currentStreak)
+        }
+        setSolvedCount(dbStats.stats.totalSolved)
+      }
+    })
+  }, [supabase])
+
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join('') || 'SS'
+
+  const achievements = [
+    { title: "Dean's List", detail: 'Top 5% of CSE Batch 2025-26', icon: Award },
+    { title: 'HackX Winner', detail: 'KIIT HackX 2025 — 1st Place', icon: Trophy },
+    { title: `${streakDays}-Day Streak`, detail: `${solvedCount} coding problems solved`, icon: Flame },
+  ]
 
   return (
     <div className="space-y-6 pb-12 w-full text-white">
@@ -84,12 +128,12 @@ export default function StudentProfilePage() {
         <div className="lg:col-span-4 bg-[#111214] border border-white/[0.04] rounded-[24px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] space-y-5">
           <div className="flex flex-col items-center text-center space-y-3">
             <div className="w-20 h-20 rounded-full bg-[#FF453A]/15 border-2 border-[#FF453A] flex items-center justify-center text-[#FF453A] font-black text-2xl shadow-[0_0_24px_rgba(255,69,58,0.35)]">
-              SS
+              {initials}
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Soumya Samantray</h2>
-              <p className="text-xs text-[#FF453A] font-semibold mt-0.5">Roll: 22051892</p>
-              <p className="text-[11px] text-[#8A8A8A] font-mono mt-0.5">B.Tech Computer Science & Engg</p>
+              <h2 className="text-lg font-bold text-white">{name}</h2>
+              <p className="text-xs text-[#FF453A] font-semibold mt-0.5">Roll: {roll}</p>
+              <p className="text-[11px] text-[#8A8A8A] font-mono mt-0.5">{course}</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/30">
@@ -106,7 +150,7 @@ export default function StudentProfilePage() {
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2.5 text-[#9CA3AF]">
               <Mail size={13} className="text-[#FF453A] shrink-0" />
-              <span className="font-mono">soumya.samantray@kiit.ac.in</span>
+              <span className="font-mono">{email}</span>
             </div>
             <div className="flex items-center gap-2.5 text-[#9CA3AF]">
               <MapPin size={13} className="text-[#FF453A] shrink-0" />

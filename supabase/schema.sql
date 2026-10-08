@@ -1,51 +1,66 @@
 -- =============================================================================
--- KIITAnumaan — Supabase schema
---
--- Run once against a fresh Supabase project: paste this whole file into the
--- SQL Editor (Supabase dashboard → SQL Editor → New query) and run it, or
--- `supabase db push` if you've wired up the Supabase CLI locally.
---
--- Design:
---  · Auth is Supabase Auth (auth.users) — nothing custom to build there.
---  · Every per-user table is locked down with Row Level Security: a user can
---    only ever read/write rows where user_id = auth.uid(). The anon/public
---    key is safe to ship to the browser because Postgres enforces this, not
---    application code.
---  · Content tables (tracks/topics/questions/problems) are public-read so the
---    app works for signed-out visitors, and write-restricted to admins via
---    the `is_admin` flag on profiles.
+-- KIIT ANUMAAN — Comprehensive Supabase Database Schema & RLS Policies
 -- =============================================================================
 
+-- Enable UUID extension
+create extension if not exists "uuid-ossp";
+
 -- ---------------------------------------------------------------------------
--- profiles — one row per auth user; created automatically on signup.
+-- 1. profiles — Extended student profile tied to Supabase Auth
 -- ---------------------------------------------------------------------------
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete cascade,
   full_name text,
+  username text unique,
   avatar_url text,
+  college text default 'KIIT',
+  course text default 'B.Tech CSE',
+  year text default '3rd Year',
   is_admin boolean not null default false,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 alter table public.profiles enable row level security;
 
-create policy "profiles are readable by their owner"
+-- Policies for profiles
+create policy "Users can view their own profile"
   on public.profiles for select
-  using (auth.uid() = id);
+  using (auth.uid() = id or auth.uid() = user_id);
 
-create policy "profiles are updatable by their owner"
+create policy "Users can update their own profile"
   on public.profiles for update
-  using (auth.uid() = id);
+  using (auth.uid() = id or auth.uid() = user_id);
 
--- auto-create a profile row the moment someone signs up
+create policy "Users can insert their own profile"
+  on public.profiles for insert
+  with check (auth.uid() = id or auth.uid() = user_id);
+
+-- Auto-sync profile on signup
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name)
-  values (new.id, new.raw_user_meta_data ->> 'full_name');
+  insert into public.profiles (id, user_id, full_name, avatar_url)
+  values (
+    new.id,
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)),
+    new.raw_user_meta_data ->> 'avatar_url'
+  )
+  on conflict (id) do update set
+    full_name = excluded.full_name,
+    avatar_url = coalesce(excluded.avatar_url, profiles.avatar_url),
+    updated_at = now();
+
+  -- Initialize streaks record
+  insert into public.streaks (user_id, current_streak, longest_streak)
+  values (new.id, 0, 0)
+  on conflict (user_id) do nothing;
+
   return new;
 end;
 $$;
@@ -56,15 +71,174 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- ---------------------------------------------------------------------------
--- boards — System Design playground saves (replaces kiit:sd:board:<id> in
--- localStorage once a user is signed in).
+-- 2. topics — DSA and CS topics/categories
+-- ---------------------------------------------------------------------------
+create table if not exists public.topics (
+  id text primary key,
+  name text not null,
+  slug text not null unique,
+  description text,
+  category text default 'DSA',
+  order_index integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.topics enable row level security;
+
+create policy "Topics are readable by everyone"
+  on public.topics for select
+  using (true);
+
+create policy "Admins can insert/update topics"
+  on public.topics for all
+  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin))
+  with check (exists (select 1 from public.profiles where id = auth.uid() and is_admin));
+
+-- ---------------------------------------------------------------------------
+-- 3. questions — Problem bank (Two Sum, etc.)
+-- ---------------------------------------------------------------------------
+create table if not exists public.questions (
+  id text primary key,
+  topic_id text references public.topics(id) on delete cascade,
+  title text not null,
+  slug text not null,
+  difficulty text not null check (difficulty in ('Easy', 'Medium', 'Hard')),
+  description text not null,
+  examples jsonb not null default '[]'::jsonb,
+  constraints text[] not null default '{}',
+  starter_code jsonb not null default '{}'::jsonb,
+  solution text,
+  test_cases jsonb not null default '[]'::jsonb,
+  company text[] not null default '{}',
+  tags text[] not null default '{}',
+  order_index integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.questions enable row level security;
+
+create policy "Questions are readable by everyone"
+  on public.questions for select
+  using (true);
+
+create policy "Admins can insert/update questions"
+  on public.questions for all
+  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin))
+  with check (exists (select 1 from public.profiles where id = auth.uid() and is_admin));
+
+-- ---------------------------------------------------------------------------
+-- 4. submissions — Code submission logs
+-- ---------------------------------------------------------------------------
+create table if not exists public.submissions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  question_id text references public.questions(id) on delete set null,
+  code text not null,
+  language text not null,
+  status text not null, -- 'success' | 'error' | 'timeout'
+  runtime integer, -- runtime in ms
+  memory integer,  -- memory in KB
+  created_at timestamptz not null default now()
+);
+
+alter table public.submissions enable row level security;
+
+create policy "Users can read own submissions"
+  on public.submissions for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own submissions"
+  on public.submissions for insert
+  with check (auth.uid() = user_id or auth.uid() is not null or user_id is null);
+
+-- ---------------------------------------------------------------------------
+-- 5. user_progress — Solved and attempted problems per user
+-- ---------------------------------------------------------------------------
+create table if not exists public.user_progress (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  question_id text not null references public.questions(id) on delete cascade,
+  status text not null default 'solved' check (status in ('attempted', 'solved')),
+  attempts integer not null default 1,
+  best_runtime integer,
+  best_memory integer,
+  solved_at timestamptz default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, question_id)
+);
+
+alter table public.user_progress enable row level security;
+
+create policy "Users can read own progress"
+  on public.user_progress for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own progress"
+  on public.user_progress for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own progress"
+  on public.user_progress for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- 6. streaks — User daily solving streaks
+-- ---------------------------------------------------------------------------
+create table if not exists public.streaks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade unique,
+  current_streak integer not null default 0,
+  longest_streak integer not null default 0,
+  last_active_date date,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.streaks enable row level security;
+
+create policy "Users can read own streaks"
+  on public.streaks for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert/update own streaks"
+  on public.streaks for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- 7. activity — Heatmap contribution calendar
+-- ---------------------------------------------------------------------------
+create table if not exists public.activity (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  activity_date date not null default current_date,
+  problems_solved integer not null default 0,
+  submissions_count integer not null default 0,
+  created_at timestamptz not null default now(),
+  unique (user_id, activity_date)
+);
+
+alter table public.activity enable row level security;
+
+create policy "Users can read own activity"
+  on public.activity for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert/update own activity"
+  on public.activity for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- 8. Supporting tables: boards, bookmarks, drill_progress, kv_store
 -- ---------------------------------------------------------------------------
 create table if not exists public.boards (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   prompt_id text not null,
-  nodes jsonb not null default '[]',
-  edges jsonb not null default '[]',
+  nodes jsonb not null default '[]'::jsonb,
+  edges jsonb not null default '[]'::jsonb,
   notes text not null default '',
   checked text[] not null default '{}',
   updated_at timestamptz not null default now(),
@@ -72,15 +246,9 @@ create table if not exists public.boards (
 );
 
 alter table public.boards enable row level security;
+create policy "Users own their boards" on public.boards for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
-create policy "boards are owned by their user"
-  on public.boards for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- ---------------------------------------------------------------------------
--- bookmarks — starred coding problems (replaces kiit:pg:bookmarks).
--- ---------------------------------------------------------------------------
 create table if not exists public.bookmarks (
   user_id uuid not null references auth.users(id) on delete cascade,
   problem_id text not null,
@@ -89,15 +257,9 @@ create table if not exists public.bookmarks (
 );
 
 alter table public.bookmarks enable row level security;
+create policy "Users own their bookmarks" on public.bookmarks for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
-create policy "bookmarks are owned by their user"
-  on public.bookmarks for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- ---------------------------------------------------------------------------
--- drill_progress — "known" flags in the Q&A Drill / AI-ML drill trainers.
--- ---------------------------------------------------------------------------
 create table if not exists public.drill_progress (
   user_id uuid not null references auth.users(id) on delete cascade,
   track_slug text not null,
@@ -108,19 +270,9 @@ create table if not exists public.drill_progress (
 );
 
 alter table public.drill_progress enable row level security;
+create policy "Users own drill progress" on public.drill_progress for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
-create policy "drill progress is owned by its user"
-  on public.drill_progress for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- ---------------------------------------------------------------------------
--- kv_store — generic per-user JSON bucket. A low-effort landing spot for the
--- many small localStorage keys the app already has (solved log, streaks,
--- readiness checklists, notebook contents, editor settings, ...) so each one
--- can be migrated with a one-line `kv.set(key, value)` instead of a bespoke
--- table + route. Promote a key to its own typed table once it needs querying.
--- ---------------------------------------------------------------------------
 create table if not exists public.kv_store (
   user_id uuid not null references auth.users(id) on delete cascade,
   key text not null,
@@ -130,120 +282,11 @@ create table if not exists public.kv_store (
 );
 
 alter table public.kv_store enable row level security;
-
-create policy "kv rows are owned by their user"
-  on public.kv_store for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+create policy "Users own kv store" on public.kv_store for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------------
--- submissions — a durable log of FORCE-editor judge runs. user_id is
--- nullable so signed-out visitors can still run code; their rows just have
--- no owner and aren't retrievable later.
--- ---------------------------------------------------------------------------
-create table if not exists public.submissions (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete set null,
-  problem_id text,
-  language text not null,
-  source_code text not null,
-  stdin text,
-  status text not null, -- 'success' | 'error' | 'timeout'
-  stdout text,
-  stderr text,
-  time_ms integer,
-  memory_kb integer,
-  created_at timestamptz not null default now()
-);
-
-alter table public.submissions enable row level security;
-
-create policy "submissions are readable by their owner"
-  on public.submissions for select
-  using (auth.uid() = user_id);
-
-create policy "anyone can insert a submission"
-  on public.submissions for insert
-  with check (true);
-
--- ---------------------------------------------------------------------------
--- Content / admin layer — interview tracks, topics and coding problems.
--- Public-read (the app works for signed-out visitors); write is restricted
--- to profiles.is_admin. This does NOT migrate the data already hardcoded in
--- lib/*.ts — it gives that data a real home to move into next.
--- ---------------------------------------------------------------------------
-create table if not exists public.tracks (
-  slug text primary key,
-  title text not null,
-  short text not null,
-  icon text not null,
-  accent text not null,
-  tagline text not null,
-  description text not null,
-  tags text[] not null default '{}',
-  practice_href text
-);
-
-create table if not exists public.topics (
-  id text primary key,
-  track_slug text not null references public.tracks(slug) on delete cascade,
-  title text not null,
-  icon text not null,
-  tagline text not null,
-  definition text not null,
-  reading jsonb not null default '[]',
-  sort_order integer not null default 0
-);
-
-create table if not exists public.questions (
-  id text primary key,
-  topic_id text not null references public.topics(id) on delete cascade,
-  level text not null, -- 'Fresher' | 'SDE II' | 'SDE III'
-  q text not null,
-  outline text[] not null default '{}',
-  follow_up text,
-  source jsonb
-);
-
-create table if not exists public.problems (
-  id text primary key,
-  title text not null,
-  difficulty text not null, -- 'Easy' | 'Medium' | 'Hard'
-  topics text[] not null default '{}',
-  patterns text[] not null default '{}',
-  companies text[] not null default '{}',
-  description text not null,
-  examples jsonb not null default '[]',
-  constraints text[] not null default '{}',
-  test_cases jsonb not null default '[]',
-  starter_code jsonb not null default '{}'
-);
-
-alter table public.tracks enable row level security;
-alter table public.topics enable row level security;
-alter table public.questions enable row level security;
-alter table public.problems enable row level security;
-
-create policy "tracks are public read" on public.tracks for select using (true);
-create policy "topics are public read" on public.topics for select using (true);
-create policy "questions are public read" on public.questions for select using (true);
-create policy "problems are public read" on public.problems for select using (true);
-
-create policy "admins can write tracks" on public.tracks for all
-  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin))
-  with check (exists (select 1 from public.profiles where id = auth.uid() and is_admin));
-create policy "admins can write topics" on public.topics for all
-  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin))
-  with check (exists (select 1 from public.profiles where id = auth.uid() and is_admin));
-create policy "admins can write questions" on public.questions for all
-  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin))
-  with check (exists (select 1 from public.profiles where id = auth.uid() and is_admin));
-create policy "admins can write problems" on public.problems for all
-  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin))
-  with check (exists (select 1 from public.profiles where id = auth.uid() and is_admin));
-
--- ---------------------------------------------------------------------------
--- keep updated_at fresh on write
+-- Touch updated_at triggers
 -- ---------------------------------------------------------------------------
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$
@@ -253,24 +296,30 @@ begin
 end;
 $$;
 
-drop trigger if exists touch_boards on public.boards;
-create trigger touch_boards before update on public.boards
+drop trigger if exists touch_profiles on public.profiles;
+create trigger touch_profiles before update on public.profiles
   for each row execute procedure public.touch_updated_at();
 
-drop trigger if exists touch_drill_progress on public.drill_progress;
-create trigger touch_drill_progress before update on public.drill_progress
+drop trigger if exists touch_questions on public.questions;
+create trigger touch_questions before update on public.questions
   for each row execute procedure public.touch_updated_at();
 
-drop trigger if exists touch_kv_store on public.kv_store;
-create trigger touch_kv_store before update on public.kv_store
+drop trigger if exists touch_user_progress on public.user_progress;
+create trigger touch_user_progress before update on public.user_progress
+  for each row execute procedure public.touch_updated_at();
+
+drop trigger if exists touch_streaks on public.streaks;
+create trigger touch_streaks before update on public.streaks
   for each row execute procedure public.touch_updated_at();
 
 -- ---------------------------------------------------------------------------
--- indexes for the lookups the app actually does
+-- Indexes for optimized queries
 -- ---------------------------------------------------------------------------
-create index if not exists idx_boards_user on public.boards(user_id);
-create index if not exists idx_bookmarks_user on public.bookmarks(user_id);
-create index if not exists idx_drill_progress_user_track on public.drill_progress(user_id, track_slug);
-create index if not exists idx_submissions_user on public.submissions(user_id);
-create index if not exists idx_topics_track on public.topics(track_slug);
-create index if not exists idx_questions_topic on public.questions(topic_id);
+create index if not exists idx_questions_topic_id on public.questions(topic_id);
+create index if not exists idx_questions_difficulty on public.questions(difficulty);
+create index if not exists idx_submissions_user_id on public.submissions(user_id);
+create index if not exists idx_submissions_question_id on public.submissions(question_id);
+create index if not exists idx_user_progress_user_id on public.user_progress(user_id);
+create index if not exists idx_user_progress_question_id on public.user_progress(question_id);
+create index if not exists idx_activity_user_date on public.activity(user_id, activity_date);
+create index if not exists idx_streaks_user_id on public.streaks(user_id);

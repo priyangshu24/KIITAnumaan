@@ -124,15 +124,12 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('submissions').insert({
       user_id: user?.id ?? null,
-      problem_id: problemId ?? null,
+      question_id: problemId ?? null,
+      code: source,
       language,
-      source_code: source,
-      stdin,
       status,
-      stdout,
-      stderr,
-      time_ms: timeMs,
-      memory_kb: null,
+      runtime: timeMs,
+      memory: null,
     })
   } catch {
     /* logging is best-effort only */

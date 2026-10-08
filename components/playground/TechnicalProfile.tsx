@@ -13,6 +13,8 @@ import {
 import { analyzeProfile, type TechProfile } from '@/lib/playground-profile'
 import { computeStats, readSolvedIds } from '@/lib/playground-stats'
 import { PROBLEMS, type Difficulty, type Topic } from '@/lib/playground-data'
+import { createClient } from '@/lib/supabase/client'
+import { fetchUserDashboardStats } from '@/lib/services'
 
 const ACCENT = '#FF4D4D'
 const SOLVE_HREF = '/workspace/playground/solve'
@@ -112,11 +114,23 @@ export default function TechnicalProfile() {
   const [previewOpen, setPreviewOpen] = useState(false)
 
   useEffect(() => {
-    const s = computeStats()
-    setP(analyzeProfile())
-    setStreaks({ current: s.currentStreak, longest: s.longestStreak, xp: s.totalXp })
-    setSolvedSet(new Set(readSolvedIds()))
-    setMounted(true)
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data?.user
+      if (user) {
+        const dbStats = await fetchUserDashboardStats(user.id)
+        setP(analyzeProfile())
+        setStreaks({ current: dbStats.stats.currentStreak, longest: dbStats.stats.longestStreak, xp: dbStats.stats.totalXp })
+        const ids = dbStats.solvedLog.map((s) => s.id)
+        setSolvedSet(new Set(ids.length > 0 ? ids : readSolvedIds()))
+      } else {
+        const s = computeStats()
+        setP(analyzeProfile())
+        setStreaks({ current: s.currentStreak, longest: s.longestStreak, xp: s.totalXp })
+        setSolvedSet(new Set(readSolvedIds()))
+      }
+      setMounted(true)
+    })
   }, [])
 
   // per-topic × per-difficulty breakdown (for the Topic Mastery filter)

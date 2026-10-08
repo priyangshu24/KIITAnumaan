@@ -26,6 +26,15 @@ import {
   createPracticeSession,
 } from '@/lib/playground-data'
 import { recordSolve } from '@/lib/playground-stats'
+import { createClient } from '@/lib/supabase/client'
+import {
+  fetchAllQuestions,
+  createSubmission,
+  recordProblemSolved,
+  recordProblemAttempt,
+  fetchSolvedProblemIds,
+} from '@/lib/services'
+import type { User } from '@supabase/supabase-js'
 import QuestionExplorer from './QuestionExplorer'
 import CompanyIntelligenceWorkspace from './CompanyIntelligenceWorkspace'
 import PlaygroundLanding from './PlaygroundLanding'
@@ -148,6 +157,9 @@ export default function PlaygroundTab() {
   const initialNavMode: 'landing' | 'topics' | 'companies' =
     problemParam || modeParam === 'topics' ? 'topics' : modeParam === 'companies' ? 'companies' : 'landing'
 
+  const [supabase] = useState(() => createClient())
+  const [user, setUser] = useState<User | null>(null)
+  const [problems, setProblems] = useState<Problem[]>(PROBLEMS)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [selectedProblem, setSelectedProblem] = useState<Problem>(PROBLEMS[0])
   const [recentProblems, setRecentProblems] = useState<Problem[]>([PROBLEMS[0]])
@@ -204,7 +216,7 @@ export default function PlaygroundTab() {
     return TOP_COMPANIES.find(c => c.id === selectedCompanyId) || TOP_COMPANIES[0]
   }, [selectedCompanyId])
 
-  // Restore persisted progress + editor preferences once, on mount.
+  // Restore persisted progress + editor preferences once, on mount + fetch Supabase questions and progress.
   useEffect(() => {
     const solved = readLS(LS.solved)
     if (solved) { try { setSolvedSet(new Set(JSON.parse(solved))) } catch { /* corrupt */ } }
@@ -219,7 +231,30 @@ export default function PlaygroundTab() {
     const savedSession = readLS('kiit:pg:practice_session')
     if (savedSession) { try { setActivePracticeSession(JSON.parse(savedSession)) } catch { /* corrupt */ } }
     setHydrated(true)
-  }, [])
+
+    // Fetch dynamic questions from Supabase
+    fetchAllQuestions().then((all) => {
+      if (all && all.length > 0) {
+        setProblems(all)
+        if (problemParam) {
+          const match = all.find((p) => p.id === problemParam)
+          if (match) setSelectedProblem(match)
+        }
+      }
+    })
+
+    // Fetch authenticated user & Supabase progress
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUser(data.user)
+        fetchSolvedProblemIds(data.user.id).then((ids) => {
+          if (ids && ids.length > 0) {
+            setSolvedSet((prev) => new Set([...prev, ...ids]))
+          }
+        })
+      }
+    })
+  }, [supabase, problemParam])
 
   useEffect(() => { if (hydrated) writeLS(LS.solved, JSON.stringify([...solvedSet])) }, [solvedSet, hydrated])
   useEffect(() => { if (hydrated) writeLS(LS.bookmarks, JSON.stringify([...bookmarkSet])) }, [bookmarkSet, hydrated])
@@ -376,12 +411,12 @@ export default function PlaygroundTab() {
       questionCount: 10,
       mode: 'practice',
     }
-    const session = createPracticeSession(finalConfig, solvedSet, PROBLEMS)
+    const session = createPracticeSession(finalConfig, solvedSet, problems)
     setActivePracticeSession(session)
     writeLS('kiit:pg:practice_session', JSON.stringify(session))
 
     if (session.questionIds.length > 0) {
-      const firstProb = PROBLEMS.find(p => p.id === session.questionIds[0]) || PROBLEMS[0]
+      const firstProb = problems.find(p => p.id === session.questionIds[0]) || problems[0]
       setSelectedProblem(firstProb)
       setOutput('')
       setTestResults([])
@@ -390,19 +425,19 @@ export default function PlaygroundTab() {
 
     setCompanyWorkspaceView('practice')
     setSidebarOpen(false)
-  }, [selectedCompanyId, currentCompanyObj.name, selectedCompanyRole, selectedCompanyExp, selectedCompanyTopic, solvedSet])
+  }, [selectedCompanyId, currentCompanyObj.name, selectedCompanyRole, selectedCompanyExp, selectedCompanyTopic, solvedSet, problems])
 
   const handleContinuePracticeSession = useCallback(() => {
     if (!activePracticeSession || activePracticeSession.questionIds.length === 0) return
     const currentProbId = activePracticeSession.questionIds[activePracticeSession.currentIndex] || activePracticeSession.questionIds[0]
-    const prob = PROBLEMS.find(p => p.id === currentProbId) || PROBLEMS[0]
+    const prob = problems.find(p => p.id === currentProbId) || problems[0]
     setSelectedProblem(prob)
     setOutput('')
     setTestResults([])
     setPracticeBanner(null)
     setCompanyWorkspaceView('practice')
     setSidebarOpen(false)
-  }, [activePracticeSession])
+  }, [activePracticeSession, problems])
 
   const handleExitPractice = useCallback(() => {
     setCompanyWorkspaceView('intelligence')
@@ -419,7 +454,7 @@ export default function PlaygroundTab() {
       writeLS('kiit:pg:practice_session', JSON.stringify(nextSession))
 
       const nextProbId = activePracticeSession.questionIds[nextIdx]
-      const nextProb = PROBLEMS.find(p => p.id === nextProbId) || PROBLEMS[0]
+      const nextProb = problems.find(p => p.id === nextProbId) || problems[0]
       setSelectedProblem(nextProb)
       setOutput('')
       setTestResults([])
@@ -430,7 +465,7 @@ export default function PlaygroundTab() {
       writeLS('kiit:pg:practice_session', JSON.stringify(completedSession))
       setIsPracticeSummaryOpen(true)
     }
-  }, [activePracticeSession])
+  }, [activePracticeSession, problems])
 
   const handlePrevPracticeQuestion = useCallback(() => {
     if (!activePracticeSession || activePracticeSession.currentIndex <= 0) return
@@ -440,12 +475,12 @@ export default function PlaygroundTab() {
     writeLS('kiit:pg:practice_session', JSON.stringify(prevSession))
 
     const prevProbId = activePracticeSession.questionIds[prevIdx]
-    const prevProb = PROBLEMS.find(p => p.id === prevProbId) || PROBLEMS[0]
+    const prevProb = problems.find(p => p.id === prevProbId) || problems[0]
     setSelectedProblem(prevProb)
     setOutput('')
     setTestResults([])
     setPracticeBanner(null)
-  }, [activePracticeSession])
+  }, [activePracticeSession, problems])
 
   const handleFinishPracticeSession = useCallback(() => {
     if (!activePracticeSession) return
@@ -489,7 +524,7 @@ export default function PlaygroundTab() {
         results: {},
       }
       mistakeIds.forEach(id => {
-        const p = PROBLEMS.find(pr => pr.id === id)
+        const p = problems.find(pr => pr.id === id)
         if (p) {
           reviewSession.results[id] = {
             problemId: id,
@@ -507,7 +542,7 @@ export default function PlaygroundTab() {
       })
       setActivePracticeSession(reviewSession)
       writeLS('kiit:pg:practice_session', JSON.stringify(reviewSession))
-      const firstProb = PROBLEMS.find(p => p.id === mistakeIds[0]) || PROBLEMS[0]
+      const firstProb = problems.find(p => p.id === mistakeIds[0]) || problems[0]
       setSelectedProblem(firstProb)
       setOutput('')
       setTestResults([])
@@ -517,7 +552,7 @@ export default function PlaygroundTab() {
     } else {
       handlePracticeAgain()
     }
-  }, [activePracticeSession, handlePracticeAgain])
+  }, [activePracticeSession, handlePracticeAgain, problems])
 
   // Real, sandboxed execution for every non-JS language, via /api/judge
   // (which proxies to Piston). JS still runs natively in-browser — no round
@@ -550,10 +585,34 @@ export default function PlaygroundTab() {
         return { id: tc.id, passed, yourOutput, time: `${tcResult.time.toFixed(0)}ms`, memory: '—' }
       })
       setTestResults(results)
-      isAllPassed = results.every(r => r.passed)
+      isAllPassed = results.length > 0 && results.every(r => r.passed)
+      const runtimeMs = Math.round(result.time)
       if (isAllPassed) {
         setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
         recordSolve(selectedProblem.id, language)
+        if (user) {
+          recordProblemSolved(user.id, selectedProblem.id, runtimeMs, undefined)
+        }
+        createSubmission({
+          userId: user?.id,
+          questionId: selectedProblem.id,
+          code,
+          language,
+          status: 'success',
+          runtime: runtimeMs,
+        })
+      } else {
+        if (user) {
+          recordProblemAttempt(user.id, selectedProblem.id)
+        }
+        createSubmission({
+          userId: user?.id,
+          questionId: selectedProblem.id,
+          code,
+          language,
+          status: 'error',
+          runtime: runtimeMs,
+        })
       }
     } else {
       try {
@@ -562,6 +621,16 @@ export default function PlaygroundTab() {
           setOutput(`Error: ${mainRun.error}`)
           setExecutionTime('—')
           setTestResults([])
+          if (user) {
+            recordProblemAttempt(user.id, selectedProblem.id)
+          }
+          createSubmission({
+            userId: user?.id,
+            questionId: selectedProblem.id,
+            code,
+            language,
+            status: 'error',
+          })
         } else {
           setExecutionTime(`${mainRun.timeMs ?? 0}ms`)
           setOutput(
@@ -588,6 +657,29 @@ export default function PlaygroundTab() {
           if (isAllPassed) {
             setSolvedSet(prev => new Set([...prev, selectedProblem.id]))
             recordSolve(selectedProblem.id, language)
+            if (user) {
+              recordProblemSolved(user.id, selectedProblem.id, mainRun.timeMs, undefined)
+            }
+            createSubmission({
+              userId: user?.id,
+              questionId: selectedProblem.id,
+              code,
+              language,
+              status: 'success',
+              runtime: mainRun.timeMs,
+            })
+          } else {
+            if (user) {
+              recordProblemAttempt(user.id, selectedProblem.id)
+            }
+            createSubmission({
+              userId: user?.id,
+              questionId: selectedProblem.id,
+              code,
+              language,
+              status: 'error',
+              runtime: mainRun.timeMs,
+            })
           }
         }
       } catch {
@@ -688,7 +780,7 @@ export default function PlaygroundTab() {
     const strongTopics = new Set<string>()
     const weakTopics = new Set<string>()
     results.forEach(r => {
-      const prob = PROBLEMS.find(p => p.id === r.problemId)
+      const prob = problems.find(p => p.id === r.problemId)
       if (prob) {
         if (r.solved && !r.hintsUsed) {
           prob.topics.forEach(t => strongTopics.add(t))
@@ -711,7 +803,7 @@ export default function PlaygroundTab() {
       strongTopics: Array.from(strongTopics).slice(0, 4),
       weakTopics: Array.from(weakTopics).slice(0, 4),
     }
-  }, [activePracticeSession])
+  }, [activePracticeSession, problems])
 
   // 1. Landing Mode (Clean, premium home screen)
   if (playgroundNavMode === 'landing') {
@@ -732,7 +824,7 @@ export default function PlaygroundTab() {
           handleStartPracticeSession(config)
         }}
         onContinuePractice={handleContinuePracticeSession}
-        problems={PROBLEMS}
+        problems={problems}
       />
     )
   }
@@ -743,7 +835,7 @@ export default function PlaygroundTab() {
       <div className="flex h-full w-full bg-[#0A0A0D] overflow-hidden">
         {/* Left Column: Company Explorer */}
         <QuestionExplorer
-          problems={PROBLEMS}
+          problems={problems}
           selectedProblem={selectedProblem}
           onSelect={(problem) => {
             handleSelectProblem(problem)
@@ -827,7 +919,7 @@ export default function PlaygroundTab() {
             solvedSet={solvedSet}
             bookmarkSet={bookmarkSet}
             onToggleBookmark={handleToggleBookmark}
-            curatedProblems={PROBLEMS}
+            curatedProblems={problems}
             selectedRole={selectedCompanyRole}
             onChangeRole={setSelectedCompanyRole}
             selectedExp={selectedCompanyExp}
@@ -850,7 +942,7 @@ export default function PlaygroundTab() {
   return (
     <div className="flex h-full w-full bg-[#0A0A0D] overflow-hidden relative">
       <QuestionExplorer
-        problems={PROBLEMS}
+        problems={problems}
         selectedProblem={selectedProblem}
         onSelect={handleSelectProblem}
         isOpen={sidebarOpen}

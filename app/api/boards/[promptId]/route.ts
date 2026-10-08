@@ -44,8 +44,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ prom
     {
       user_id: user.id,
       prompt_id: promptId,
-      nodes: body.nodes ?? [],
-      edges: body.edges ?? [],
+      nodes: (body.nodes ?? []) as import('@/lib/supabase/types').Json,
+      edges: (body.edges ?? []) as import('@/lib/supabase/types').Json,
       notes: body.notes ?? '',
       checked: body.checked ?? [],
     },
